@@ -8,7 +8,8 @@ import Index from "./pages/Index";
 import About from "./pages/About";
 import CandidateAuth from "./pages/CandidateAuth";
 import EmployerAuth from "./pages/EmployerAuth";
-import AdminAuth from "./pages/AdminAuth"; // <--- Import AdminAuth
+import AdminAuth from "./pages/AdminAuth";
+import Onboard from "./pages/Onboard";
 import Dashboard from "./pages/Dashboard";
 import JobDetail from "./pages/JobDetail";
 import NotFound from "./pages/NotFound";
@@ -25,11 +26,12 @@ const App = () => {
           <Sonner />
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/onboard" element={<Onboard />} />
             <Route path="/jobs" element={<FindJobs />} />
             <Route path="/about" element={<About />} />
             <Route path="/candidate/auth" element={<CandidateAuth />} />
             <Route path="/employer/auth" element={<EmployerAuth />} />
-            <Route path="/admin/auth" element={<AdminAuth />} /> {/* <--- Add Route */}
+            <Route path="/admin/auth" element={<AdminAuth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/jobs/:id" element={<JobDetail />} />
             <Route path="*" element={<NotFound />} />

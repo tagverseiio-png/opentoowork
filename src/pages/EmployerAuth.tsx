@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Briefcase, Mail } from "lucide-react";
+import { Briefcase, Mail, ArrowLeft } from "lucide-react";
 
 const EmployerAuth = () => {
   const { toast } = useToast();
@@ -24,9 +24,9 @@ const EmployerAuth = () => {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) navigate("/dashboard");
+      if (session) navigate("/dashboard", { replace: true });
     });
-  }, [navigate]);
+  }, []);
 
   // STEP 1: Sign Up (Triggers Email)
   const handleSignUp = async (e: any) => {
@@ -109,7 +109,17 @@ const EmployerAuth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md mb-4">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/')}
+          className="gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+      </div>
       <Card className="w-full max-w-md p-8 shadow-lg">
         <div className="flex flex-col items-center gap-3 mb-8">
           {showOtpInput ? (
@@ -132,22 +142,14 @@ const EmployerAuth = () => {
           <form onSubmit={handleVerifyOtp} className="space-y-4">
             <Label>Verification Code</Label>
             <Input 
-              value={otp} 
-              onChange={(e) => setOtp(e.target.value)} 
-              placeholder="123456"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              placeholder="xxxxxx"
               className="text-center text-lg tracking-widest"
               required 
             />
             <Button type="submit" disabled={loading} className="w-full">
               {loading ? "Verifying..." : "Verify & Login"}
-            </Button>
-            <Button 
-              type="button" 
-              variant="ghost" 
-              className="w-full" 
-              onClick={() => setShowOtpInput(false)}
-            >
-              Back
             </Button>
           </form>
         ) : (

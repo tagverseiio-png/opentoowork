@@ -12,6 +12,7 @@ interface HeroSectionProps {
   visaFilter: string;
   setVisaFilter: (value: string) => void;
   onSearch: () => void;
+  heroImage?: string;
 }
 
 const HeroSection = ({
@@ -21,14 +22,16 @@ const HeroSection = ({
   setLocationFilter,
   visaFilter,
   setVisaFilter,
-  onSearch
+  onSearch,
+  heroImage
 }: HeroSectionProps) => {
+  const backgroundImage = heroImage || heroImage;
   return (
     <section className="relative min-h-[75vh] flex items-center bg-background text-foreground overflow-hidden">
       {/* Background Image with Overlay */}
       <div 
         className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${heroImage})` }}
+        style={{ backgroundImage: `url(${backgroundImage})` }}
       ></div>
       <div className="absolute inset-0 bg-black/35"></div>
       

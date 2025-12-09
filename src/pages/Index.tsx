@@ -4,6 +4,7 @@ import JobCard from "@/components/JobCard";
 import HeroSection from "@/components/sections/HeroSection";
 import WhyChooseUs from "@/components/sections/WhyChooseUs";
 import HowItWorks from "@/components/sections/HowItWorks";
+import EditableSection from "@/components/EditableSection";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -12,13 +13,56 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [heroContent, setHeroContent] = useState<any>(null);
+  const [whyChooseUsContent, setWhyChooseUsContent] = useState<any>(null);
+  const [howItWorksContent, setHowItWorksContent] = useState<any>(null);
   
   // Ref for scrolling
   const jobsSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchJobs();
+    checkUserRole();
+    fetchEditableContent();
   }, []);
+
+  const checkUserRole = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setUserRole(null);
+      return;
+    }
+    const { data } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", session.user.id)
+      .single();
+    setUserRole(data?.role);
+  };
+
+  const fetchEditableContent = async () => {
+    try {
+      const { data } = await supabase
+        .from("site_content")
+        .select("section_key, content")
+        .in("section_key", ["homepage_hero_section", "homepage_why_choose_us", "homepage_how_it_works"]);
+
+      if (data) {
+        data.forEach((item) => {
+          if (item.section_key === "homepage_hero_section") {
+            setHeroContent(item.content);
+          } else if (item.section_key === "homepage_why_choose_us") {
+            setWhyChooseUsContent(item.content);
+          } else if (item.section_key === "homepage_how_it_works") {
+            setHowItWorksContent(item.content);
+          }
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching editable content:", err);
+    }
+  };
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -77,21 +121,41 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <HeroSection 
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        locationFilter={locationFilter}
-        setLocationFilter={setLocationFilter}
-        // Use our new handler that includes scrolling
-        onSearch={handleSearch}
-        // Pass dummy props for unused interface requirements if any
-        visaFilter=""
-        setVisaFilter={() => {}}
-      />
+      <EditableSection
+        sectionKey="homepage_hero_section"
+        content={heroContent || {}}
+        userRole={userRole}
+        onSave={(newContent) => setHeroContent(newContent)}
+      >
+        <HeroSection 
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          locationFilter={locationFilter}
+          setLocationFilter={setLocationFilter}
+          onSearch={handleSearch}
+          visaFilter=""
+          setVisaFilter={() => {}}
+          heroImage={heroContent?.hero_image}
+        />
+      </EditableSection>
 
-      <WhyChooseUs />
-      <HowItWorks />
-      {/* SuccessStories removed */}
+      <EditableSection
+        sectionKey="homepage_why_choose_us"
+        content={whyChooseUsContent || {}}
+        userRole={userRole}
+        onSave={(newContent) => setWhyChooseUsContent(newContent)}
+      >
+        <WhyChooseUs sectionKey="homepage_why_choose_us" />
+      </EditableSection>
+
+      <EditableSection
+        sectionKey="homepage_how_it_works"
+        content={howItWorksContent || {}}
+        userRole={userRole}
+        onSave={(newContent) => setHowItWorksContent(newContent)}
+      >
+        <HowItWorks sectionKey="homepage_how_it_works" />
+      </EditableSection>
 
       {/* Jobs Listing Section with Ref */}
       <section 

@@ -37,7 +37,7 @@ const Footer = () => {
                 <Briefcase className="h-5 w-5 text-white" />
               </div>
               <span className="font-bold text-xl tracking-tight">
-                OPENTOOWORK
+                Open Too Work
               </span>
             </Link>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-xs">
@@ -150,11 +150,11 @@ const Footer = () => {
         </div>
 
         {/* Footer Bottom */}
-        <div className="pt-8 border-t border-border/50 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} OPENTOOWORK. All rights reserved.</p>
-          <div className="flex gap-6">
-            <Link to="/" className="hover:text-foreground transition-colors">Privacy Policy</Link>
-            <Link to="/" className="hover:text-foreground transition-colors">Terms of Service</Link>
+        <div className="pt-8 border-t border-border/50 text-center text-sm text-muted-foreground space-y-4">
+          <p>© {new Date().getFullYear()} Open Too Work. All rights reserved.</p>
+          <div className="flex items-center justify-center gap-3">
+            <span className="text-sm">Developed by:</span>
+            <img src="/devLogo.png" alt="Developer Logo" className="h-20" />
           </div>
         </div>
       </div>

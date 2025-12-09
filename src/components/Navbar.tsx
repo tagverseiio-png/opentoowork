@@ -130,12 +130,17 @@ const Navbar = () => {
             <Link to="/about" className={mobile ? "w-full" : ""}>
               <Button variant={variant} className={linkClass}>About</Button>
             </Link>
+            <Link to="/candidate/auth" className={mobile ? "w-full" : ""}>
+              <Button variant="ghost" className={`${linkClass} text-muted-foreground hover:text-primary`}>
+                For Candidates
+              </Button>
+            </Link>
             <Link to="/employer/auth" className={mobile ? "w-full" : ""}>
               <Button variant="ghost" className={`${linkClass} text-muted-foreground hover:text-primary`}>
                 For Employer
               </Button>
             </Link>
-            <Link to="/candidate/auth" className={mobile ? "w-full" : ""}>
+            <Link to="/onboard" className={mobile ? "w-full" : ""}>
               <Button className={`bg-gradient-to-r from-primary to-accent text-white shadow-md hover:opacity-90 ${linkClass}`}>
                 Get Started
               </Button>
@@ -157,11 +162,11 @@ const Navbar = () => {
           <Link to="/" className="flex items-center gap-2 group">
             <img
               src="/assets/opentoowork-icon1-BZ2bbVrF.png"
-              alt="Opentoowork Logo"
+              alt="Open Too Work Logo"
               className="h-10 w-10 object-contain transition-transform group-hover:scale-110"
             />
             <span className="text-xl font-bold text-primary tracking-wide hidden sm:block">
-              OPENTOOWORK
+              Open Too Work
             </span>
           </Link>
 
