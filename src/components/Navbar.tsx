@@ -131,12 +131,12 @@ const Navbar = () => {
               <Button variant={variant} className={linkClass}>About</Button>
             </Link>
             <Link to="/candidate/auth" className={mobile ? "w-full" : ""}>
-              <Button variant="ghost" className={`${linkClass} text-muted-foreground hover:text-primary`}>
+              <Button variant="ghost" className={`${linkClass} text-foreground hover:text-white font-semibold`}>
                 For Candidates
               </Button>
             </Link>
             <Link to="/employer/auth" className={mobile ? "w-full" : ""}>
-              <Button variant="ghost" className={`${linkClass} text-muted-foreground hover:text-primary`}>
+              <Button variant="ghost" className={`${linkClass} text-foreground hover:text-white font-semibold`}>
                 For Employer
               </Button>
             </Link>

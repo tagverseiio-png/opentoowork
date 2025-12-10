@@ -150,12 +150,14 @@ const Footer = () => {
         </div>
 
         {/* Footer Bottom */}
-        <div className="pt-8 border-t border-border/50 text-center text-sm text-muted-foreground space-y-4">
-          <p>© {new Date().getFullYear()} Open Too Work. All rights reserved.</p>
-          <div className="flex items-center justify-center gap-3">
-            <span className="text-sm">Developed by:</span>
-            <img src="/devLogo.png" alt="Developer Logo" className="h-20" />
+        <div className="pt-8 border-t border-border/50">
+          <div className="flex items-center justify-end gap-3 mb-4 pr-4">
+            <span className="text-sm text-muted-foreground">Developed by:</span>
+            <img src="/devLogo.png" alt="Developer Logo" className="h-8" />
           </div>
+          <p className="text-center text-sm text-muted-foreground">
+            © {new Date().getFullYear()} Open Too Work. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>

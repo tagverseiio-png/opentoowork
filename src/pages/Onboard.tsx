@@ -30,10 +30,10 @@ const Onboard = () => {
             {/* Choice Cards */}
             <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
               {/* Candidate Card */}
-              <Card className="p-8 md:p-12 border-border/50 hover:border-primary/50 transition-all hover:shadow-lg bg-card/50 backdrop-blur-sm cursor-pointer group">
+              <Card className="p-8 md:p-12 border-border/50 hover:border-primary/50 transition-all hover:shadow-lg bg-card/50 backdrop-blur-sm cursor-pointer group flex flex-col h-full">
                 <div 
                   onClick={() => navigate("/candidate/auth")}
-                  className="flex flex-col items-center text-center space-y-6"
+                  className="flex flex-col items-center text-center space-y-6 flex-1 justify-between"
                 >
                   <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
                     <Users className="h-10 w-10 text-blue-600" />
@@ -62,10 +62,10 @@ const Onboard = () => {
               </Card>
 
               {/* Employer Card */}
-              <Card className="p-8 md:p-12 border-border/50 hover:border-primary/50 transition-all hover:shadow-lg bg-card/50 backdrop-blur-sm cursor-pointer group">
+              <Card className="p-8 md:p-12 border-border/50 hover:border-primary/50 transition-all hover:shadow-lg bg-card/50 backdrop-blur-sm cursor-pointer group flex flex-col h-full">
                 <div 
                   onClick={() => navigate("/employer/auth")}
-                  className="flex flex-col items-center text-center space-y-6"
+                  className="flex flex-col items-center text-center space-y-6 flex-1 justify-between"
                 >
                   <div className="w-20 h-20 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
                     <Briefcase className="h-10 w-10 text-emerald-600" />
