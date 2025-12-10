@@ -62,9 +62,17 @@ const WhyChooseUs = ({ sectionKey = "homepage_why_choose_us" }: { sectionKey?: s
       <div className="container mx-auto px-4">
         <div className="text-center mb-16 space-y-4">
           <h2 className="text-4xl md:text-5xl font-bold">{title}</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            {subtitle}
-          </p>
+          <div className={`text-lg text-muted-foreground max-w-2xl mx-auto space-y-4 ${
+            subtitle?.length > 100 ? 'text-justify' : 'text-center'
+          }`}>
+            {subtitle?.split('\n').map((line: string, idx: number) => (
+              line.trim() === '' ? (
+                <div key={idx} className="h-2" />
+              ) : (
+                <p key={idx} className="whitespace-pre-wrap">{line}</p>
+              )
+            ))}
+          </div>
         </div>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">

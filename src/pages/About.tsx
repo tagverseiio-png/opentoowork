@@ -125,9 +125,17 @@ const About = () => {
                   <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                     {heroTitle}
                   </h1>
-                  <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed">
-                    {heroDesc}
-                  </p>
+                  <div className={`text-lg md:text-xl text-foreground/80 leading-relaxed space-y-4 ${
+                    heroDesc?.length > 100 ? 'text-justify' : 'text-center'
+                  }`}>
+                    {heroDesc?.split('\n').map((line: string, idx: number) => (
+                      line.trim() === '' ? (
+                        <div key={idx} className="h-4" />
+                      ) : (
+                        <p key={idx} className="whitespace-pre-wrap">{line}</p>
+                      )
+                    ))}
+                  </div>
                 </div>
               </div>
             </header>
@@ -146,9 +154,15 @@ const About = () => {
               <div className="container mx-auto px-4">
                 <div className="text-center mb-16 space-y-4">
                   <h2 className="text-4xl md:text-5xl font-bold">{whyChooseUs.title}</h2>
-                  <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                    {whyChooseUs.subtitle}
-                  </p>
+                  <div className="text-lg text-muted-foreground max-w-2xl mx-auto space-y-4">
+                    {whyChooseUs.subtitle?.split('\n').map((line: string, idx: number) => (
+                      line.trim() === '' ? (
+                        <div key={idx} className="h-2" />
+                      ) : (
+                        <p key={idx} className="whitespace-pre-wrap">{line}</p>
+                      )
+                    ))}
+                  </div>
                 </div>
                 <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
                   {whyChooseUs.items.map((item: any, idx: number) => (
@@ -184,8 +198,16 @@ const About = () => {
             <div className="container mx-auto px-4">
               <div className="max-w-3xl mx-auto text-center mb-16">
                 <h2 className="text-3xl md:text-4xl font-bold mb-6">{missionTitle}</h2>
-                <div className="prose prose-lg dark:prose-invert mx-auto text-muted-foreground">
-                  <p className="whitespace-pre-wrap leading-relaxed">{missionBody}</p>
+                <div className={`text-lg text-foreground leading-relaxed space-y-4 ${
+                  missionBody?.length > 100 ? 'text-justify' : 'text-center'
+                }`}>
+                  {missionBody?.split('\n').map((line: string, idx: number) => (
+                    line.trim() === '' ? (
+                      <div key={idx} className="h-4" />
+                    ) : (
+                      <p key={idx} className="whitespace-pre-wrap">{line}</p>
+                    )
+                  ))}
                 </div>
               </div>
             </div>
@@ -204,7 +226,17 @@ const About = () => {
               <div className="container mx-auto px-4">
                 <div className="text-center mb-16">
                   <h2 className="text-4xl font-bold mb-4">{howItWorks.title}</h2>
-                  <p className="text-xl text-muted-foreground">{howItWorks.subtitle}</p>
+                  <div className={`text-xl text-muted-foreground space-y-4 ${
+                    howItWorks.subtitle?.length > 100 ? 'text-justify max-w-2xl mx-auto' : 'text-center'
+                  }`}>
+                    {howItWorks.subtitle?.split('\n').map((line: string, idx: number) => (
+                      line.trim() === '' ? (
+                        <div key={idx} className="h-2" />
+                      ) : (
+                        <p key={idx} className="whitespace-pre-wrap">{line}</p>
+                      )
+                    ))}
+                  </div>
                 </div>
                 <div className="max-w-6xl mx-auto">
                   <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
