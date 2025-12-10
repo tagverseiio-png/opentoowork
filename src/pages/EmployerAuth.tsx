@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Briefcase, Mail, ArrowLeft } from "lucide-react";
+import { Briefcase, Mail } from "lucide-react";
 
 const EmployerAuth = () => {
   const { toast } = useToast();
@@ -15,12 +15,15 @@ const EmployerAuth = () => {
 
   const [loading, setLoading] = useState(false);
   const [showOtpInput, setShowOtpInput] = useState(false); // New state for OTP view
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
   
   const [companyName, setCompanyName] = useState("");
   const [location, setLocation] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState(""); // New state for OTP
+  const [resetEmail, setResetEmail] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -108,18 +111,34 @@ const EmployerAuth = () => {
     setLoading(false);
   };
 
+  // Forgot Password
+  const handleForgotPassword = async (e: any) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/employer/auth`,
+      });
+
+      if (error) throw error;
+
+      toast({ title: "Password reset link sent to your email!" });
+      setResetEmailSent(true);
+
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md mb-4">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/')}
-          className="gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-      </div>
       <Card className="w-full max-w-md p-8 shadow-lg">
         <div className="flex flex-col items-center gap-3 mb-8">
           {showOtpInput ? (
@@ -152,8 +171,53 @@ const EmployerAuth = () => {
               {loading ? "Verifying..." : "Verify & Login"}
             </Button>
           </form>
+        ) : showForgotPassword ? (
+          /* Forgot Password View */
+          <form onSubmit={handleForgotPassword} className="space-y-4">
+            {resetEmailSent ? (
+              <div className="space-y-4">
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-800">Check your email for a password reset link. Click the link to reset your password.</p>
+                </div>
+                <Button 
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowForgotPassword(false);
+                    setResetEmailSent(false);
+                    setResetEmail("");
+                  }}
+                  className="w-full"
+                >
+                  Back to Login
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Label>Email Address</Label>
+                <Input 
+                  type="email"
+                  value={resetEmail} 
+                  onChange={(e) => setResetEmail(e.target.value)} 
+                  placeholder="your@email.com"
+                  required 
+                />
+                <p className="text-sm text-muted-foreground">We'll send you a link to reset your password.</p>
+                <Button type="submit" disabled={loading} className="w-full">
+                  {loading ? "Sending..." : "Send Reset Link"}
+                </Button>
+                <Button 
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowForgotPassword(false)}
+                  className="w-full"
+                >
+                  Back to Login
+                </Button>
+              </>
+            )}
+          </form>
         ) : (
-          /* Standard Tabs */
           <Tabs defaultValue="signin">
             <TabsList className="grid grid-cols-2 mb-4">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
@@ -179,6 +243,14 @@ const EmployerAuth = () => {
                 />
                 <Button className="w-full" disabled={loading}>
                   {loading ? "Signing in..." : "Sign In"}
+                </Button>
+                <Button 
+                  type="button"
+                  variant="link"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="w-full text-muted-foreground hover:text-foreground"
+                >
+                  Forgot Password?
                 </Button>
               </form>
             </TabsContent>
