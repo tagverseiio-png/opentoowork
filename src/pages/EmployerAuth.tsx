@@ -118,7 +118,7 @@ const EmployerAuth = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/employer/auth`,
+        redirectTo: `${window.location.origin}/auth/reset#type=recovery`,
       });
 
       if (error) throw error;
