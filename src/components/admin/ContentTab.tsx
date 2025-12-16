@@ -830,16 +830,6 @@ const ContentTab = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="contact-phone">Contact Phone</Label>
-                  <Input
-                    id="contact-phone"
-                    value={contactSection.contact_phone || ""}
-                    onChange={(e) => handleChange("about_contact_section", "contact_phone", e.target.value)}
-                    placeholder="Phone number"
-                  />
-                </div>
-
-                <div>
                   <Label htmlFor="contact-address">Contact Address</Label>
                   <Textarea
                     id="contact-address"

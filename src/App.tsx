@@ -9,6 +9,7 @@ import About from "./pages/About";
 import CandidateAuth from "./pages/CandidateAuth";
 import EmployerAuth from "./pages/EmployerAuth";
 import AdminAuth from "./pages/AdminAuth";
+import ResetPassword from "./pages/ResetPassword";
 import Onboard from "./pages/Onboard";
 import Dashboard from "./pages/Dashboard";
 import JobDetail from "./pages/JobDetail";
@@ -32,6 +33,7 @@ const App = () => {
             <Route path="/candidate/auth" element={<CandidateAuth />} />
             <Route path="/employer/auth" element={<EmployerAuth />} />
             <Route path="/admin/auth" element={<AdminAuth />} />
+            <Route path="/auth/reset" element={<ResetPassword />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/jobs/:id" element={<JobDetail />} />
             <Route path="*" element={<NotFound />} />

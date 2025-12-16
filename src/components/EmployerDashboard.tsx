@@ -10,12 +10,12 @@ import { Switch } from "@/components/ui/switch";
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter 
 } from "./ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Plus, Briefcase, Users, Check, X, FileText, MapPin, 
-  DollarSign, Calendar, Trash2, Ban, Power 
+  DollarSign, Calendar, Trash2, Ban, Power, Mail 
 } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
@@ -214,12 +214,22 @@ const EmployerDashboard = () => {
           <p className="text-muted-foreground mt-1">Manage your job postings and applicants</p>
         </div>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="lg" className="shadow-md bg-gradient-to-r from-primary to-accent hover:opacity-90">
-              <Plus className="mr-2 h-5 w-5" /> Post New Job
-            </Button>
-          </DialogTrigger>
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="lg" 
+            className="hidden sm:flex items-center gap-2 border-primary/20 hover:bg-primary/5 text-primary"
+            onClick={() => window.location.href = 'mailto:support@opentoowork.com'}
+          >
+            <Mail className="h-5 w-5" /> Support
+          </Button>
+
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="lg" className="shadow-md bg-gradient-to-r from-primary to-accent hover:opacity-90">
+                <Plus className="mr-2 h-5 w-5" /> Post New Job
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-2xl">Post a New Opportunity</DialogTitle>
@@ -241,19 +251,18 @@ const EmployerDashboard = () => {
                 <Textarea required rows={6} placeholder="Describe the role, responsibilities, and requirements..." value={description} onChange={(e) => setDescription(e.target.value)} />
               </div>
 
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Job Type</Label>
-                  <Select value={jobType} onValueChange={setJobType}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Full-time">Full-time</SelectItem>
-                      <SelectItem value="Part-time">Part-time</SelectItem>
-                      <SelectItem value="Contract">Contract</SelectItem>
-                      <SelectItem value="Internship">Internship</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label>Job Type</Label>
+                <ToggleGroup type="single" value={jobType} onValueChange={(val) => val && setJobType(val)} className="justify-start flex-wrap gap-2">
+                  {["Full-time", "Part-time", "Contract", "Internship", "Hourly", "Monthly"].map(type => (
+                    <ToggleGroupItem key={type} value={type} variant="outline" className="h-9 px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                      {type}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Experience (Years)</Label>
                   <Input type="number" min="0" placeholder="e.g. 3" value={experienceRequired} onChange={(e) => setExperienceRequired(e.target.value)} />

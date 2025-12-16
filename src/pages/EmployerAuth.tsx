@@ -118,7 +118,7 @@ const EmployerAuth = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/employer/auth`,
+        redirectTo: `${window.location.origin}/auth/reset#type=recovery`,
       });
 
       if (error) throw error;
@@ -177,7 +177,7 @@ const EmployerAuth = () => {
             {resetEmailSent ? (
               <div className="space-y-4">
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-800">Check your email for a password reset link. Click the link to reset your password.</p>
+                  <p className="text-sm text-green-800">Link has been sent and Check in spam or junk folders as well.</p>
                 </div>
                 <Button 
                   type="button"

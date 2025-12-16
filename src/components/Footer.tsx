@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Briefcase, Facebook, Linkedin, Twitter, Instagram, Mail, Phone } from "lucide-react";
+import { Briefcase, Facebook, Linkedin, Twitter, Instagram, Mail } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -22,7 +22,7 @@ const Footer = () => {
   }, []);
 
   const hasSocials = content?.social_linkedin || content?.social_twitter || content?.social_facebook || content?.social_instagram;
-  const hasContact = content?.contact_email || content?.contact_phone;
+  const hasContact = content?.contact_email;
 
   return (
     <footer className="bg-background border-t border-border/50 pt-16 pb-8">
@@ -81,14 +81,6 @@ const Footer = () => {
                   <li>
                     <a href={`mailto:${content.contact_email}`} className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
                       <Mail className="h-4 w-4" /> {content.contact_email}
-                    </a>
-                  </li>
-                )}
-                
-                {content?.contact_phone && (
-                  <li>
-                    <a href={`tel:${content.contact_phone}`} className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
-                      <Phone className="h-4 w-4" /> {content.contact_phone}
                     </a>
                   </li>
                 )}

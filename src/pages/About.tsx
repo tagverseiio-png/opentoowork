@@ -3,7 +3,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import EditableSection from "@/components/EditableSection";
 import { supabase } from "@/lib/supabase";
-import { Mail, Phone, MapPin, Loader2, Edit } from "lucide-react";
+import { Mail, MapPin, Loader2, Edit } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -96,7 +96,7 @@ const About = () => {
   const heroDesc = aboutPage?.hero_description || "Open Too Work connects talented professionals with meaningful career opportunities across the United States.";
 
   // Check if any contact info exists
-  const showContact = contactSection?.contact_email || contactSection?.contact_phone || contactSection?.contact_address;
+  const showContact = contactSection?.contact_email || contactSection?.contact_address;
 
   if (loading) {
     return (
@@ -285,18 +285,6 @@ const About = () => {
                         <h3 className="font-semibold mb-2">Email Us</h3>
                         <a href={`mailto:${contactSection.contact_email}`} className="text-muted-foreground hover:text-primary transition-colors">
                           {contactSection.contact_email}
-                        </a>
-                      </div>
-                    )}
-
-                    {contactSection?.contact_phone && (
-                      <div className="flex flex-col items-center text-center p-6 bg-background rounded-2xl shadow-sm border border-border/50 min-w-[280px] flex-1 md:flex-none max-w-sm hover:-translate-y-1 transition-transform">
-                        <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4 text-primary">
-                          <Phone className="h-6 w-6" />
-                        </div>
-                        <h3 className="font-semibold mb-2">Call Us</h3>
-                        <a href={`tel:${contactSection.contact_phone}`} className="text-muted-foreground hover:text-primary transition-colors">
-                          {contactSection.contact_phone}
                         </a>
                       </div>
                     )}

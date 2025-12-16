@@ -429,11 +429,6 @@ const AdminContentEditor = () => {
                       onChange={(e) => updateNestedField("about_page", ["contact_email"], e.target.value)}
                       placeholder="Email"
                     />
-                    <Input
-                      value={editingForm.about_page?.contact_phone || ""}
-                      onChange={(e) => updateNestedField("about_page", ["contact_phone"], e.target.value)}
-                      placeholder="Phone"
-                    />
                     <Textarea
                       value={editingForm.about_page?.contact_address || ""}
                       onChange={(e) => updateNestedField("about_page", ["contact_address"], e.target.value)}
