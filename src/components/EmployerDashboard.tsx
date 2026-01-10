@@ -1,21 +1,20 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
-import { Card } from "./ui/card";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Textarea } from "./ui/textarea";
-import { Badge } from "./ui/badge";
-import { Switch } from "@/components/ui/switch";
+import { supabase } from "@/integrations/supabase/client"; // Checked path consistency
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter 
-} from "./ui/dialog";
+} from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Plus, Briefcase, Users, Check, X, FileText, MapPin, 
-  DollarSign, Calendar, Trash2, Ban, Power, Mail 
+  DollarSign, Power, Mail, Trash2, Ban
 } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
@@ -74,6 +73,7 @@ const EmployerDashboard = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
+    // First get the employer profile ID associated with this user
     const { data: employerProfile } = await supabase
       .from("employer_profiles")
       .select("id")
@@ -119,14 +119,14 @@ const EmployerDashboard = () => {
       salary_min: salaryMin ? parseInt(salaryMin) : null,
       salary_max: salaryMax ? parseInt(salaryMax) : null,
       job_type: jobType,
-      skills_required: skills.split(',').map(s => s.trim()).filter(Boolean),
+      skills_required: skills.split(',').map(s => s.trim()).filter(Boolean), // Converts string to Array
       experience_required: experienceRequired ? parseInt(experienceRequired) : 0,
-      work_authorization: selectedWorkAuth,
+      work_authorization: selectedWorkAuth, // Array
     });
 
     if (error) {
       console.error(error);
-      toast({ title: "Error posting job", variant: "destructive" });
+      toast({ title: "Error posting job", description: error.message, variant: "destructive" });
       return;
     }
 
@@ -169,7 +169,7 @@ const EmployerDashboard = () => {
       .eq("id", jobId);
 
     if (error) {
-      toast({ title: "Delete failed", variant: "destructive" });
+      toast({ title: "Delete failed", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Job deleted successfully" });
       fetchJobs();
@@ -230,81 +230,82 @@ const EmployerDashboard = () => {
                 <Plus className="mr-2 h-5 w-5" /> Post New Job
               </Button>
             </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-2xl">Post a New Opportunity</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handlePostJob} className="space-y-6 pt-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Job Title *</Label>
-                  <Input required placeholder="e.g. Senior Software Engineer" value={title} onChange={(e) => setTitle(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Location *</Label>
-                  <Input required placeholder="e.g. Remote, New York, NY" value={location} onChange={(e) => setLocation(e.target.value)} />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Description *</Label>
-                <Textarea required rows={6} placeholder="Describe the role, responsibilities, and requirements..." value={description} onChange={(e) => setDescription(e.target.value)} />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Job Type</Label>
-                <ToggleGroup type="single" value={jobType} onValueChange={(val) => val && setJobType(val)} className="justify-start flex-wrap gap-2">
-                  {["Full-time", "Part-time", "Contract", "Internship", "Hourly", "Monthly"].map(type => (
-                    <ToggleGroupItem key={type} value={type} variant="outline" className="h-9 px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-                      {type}
-                    </ToggleGroupItem>
-                  ))}
-                </ToggleGroup>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Experience (Years)</Label>
-                  <Input type="number" min="0" placeholder="e.g. 3" value={experienceRequired} onChange={(e) => setExperienceRequired(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Salary Range (Optional)</Label>
-                  <div className="flex gap-2">
-                    <Input type="number" placeholder="Min" value={salaryMin} onChange={(e) => setSalaryMin(e.target.value)} />
-                    <Input type="number" placeholder="Max" value={salaryMax} onChange={(e) => setSalaryMax(e.target.value)} />
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="text-2xl">Post a New Opportunity</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handlePostJob} className="space-y-6 pt-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Job Title *</Label>
+                    <Input required placeholder="e.g. Senior Software Engineer" value={title} onChange={(e) => setTitle(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Location *</Label>
+                    <Input required placeholder="e.g. Remote, New York, NY" value={location} onChange={(e) => setLocation(e.target.value)} />
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label>Required Skills (comma separated)</Label>
-                <Input value={skills} onChange={(e) => setSkills(e.target.value)} placeholder="React, Node.js, TypeScript, AWS" />
-              </div>
-
-              <div className="space-y-3">
-                <Label>Accepted Work Authorization *</Label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 border rounded-lg bg-muted/20">
-                  {WORK_AUTH_OPTIONS.map((auth) => (
-                    <div key={auth} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={auth} 
-                        checked={selectedWorkAuth.includes(auth)}
-                        onCheckedChange={() => toggleWorkAuth(auth)}
-                      />
-                      <label htmlFor={auth} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
-                        {auth}
-                      </label>
-                    </div>
-                  ))}
+                <div className="space-y-2">
+                  <Label>Description *</Label>
+                  <Textarea required rows={6} placeholder="Describe the role, responsibilities, and requirements..." value={description} onChange={(e) => setDescription(e.target.value)} />
                 </div>
-              </div>
 
-              <Button type="submit" className="w-full h-11 text-base bg-primary hover:bg-primary/90">
-                Publish Job Post
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+                <div className="space-y-2">
+                  <Label>Job Type</Label>
+                  <ToggleGroup type="single" value={jobType} onValueChange={(val) => val && setJobType(val)} className="justify-start flex-wrap gap-2">
+                    {["Full-time", "Part-time", "Contract", "Internship", "Hourly", "Monthly"].map(type => (
+                      <ToggleGroupItem key={type} value={type} variant="outline" className="h-9 px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                        {type}
+                      </ToggleGroupItem>
+                    ))}
+                  </ToggleGroup>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Experience (Years)</Label>
+                    <Input type="number" min="0" placeholder="e.g. 3" value={experienceRequired} onChange={(e) => setExperienceRequired(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Salary Range (Optional)</Label>
+                    <div className="flex gap-2">
+                      <Input type="number" placeholder="Min" value={salaryMin} onChange={(e) => setSalaryMin(e.target.value)} />
+                      <Input type="number" placeholder="Max" value={salaryMax} onChange={(e) => setSalaryMax(e.target.value)} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Required Skills (comma separated)</Label>
+                  <Input value={skills} onChange={(e) => setSkills(e.target.value)} placeholder="React, Node.js, TypeScript, AWS" />
+                </div>
+
+                <div className="space-y-3">
+                  <Label>Accepted Work Authorization *</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 border rounded-lg bg-muted/20">
+                    {WORK_AUTH_OPTIONS.map((auth) => (
+                      <div key={auth} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={auth} 
+                          checked={selectedWorkAuth.includes(auth)}
+                          onCheckedChange={() => toggleWorkAuth(auth)}
+                        />
+                        <label htmlFor={auth} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
+                          {auth}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Button type="submit" className="w-full h-11 text-base bg-primary hover:bg-primary/90">
+                  Publish Job Post
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Jobs Grid */}
@@ -348,7 +349,6 @@ const EmployerDashboard = () => {
                   
                   {/* Actions */}
                   <div className="flex items-center gap-3">
-                    {/* View Applicants */}
                     <Button 
                       onClick={() => handleViewApplications(job)} 
                       variant="outline"
@@ -360,7 +360,6 @@ const EmployerDashboard = () => {
 
                     <div className="h-6 w-px bg-border mx-1 hidden md:block"></div>
 
-                    {/* Toggle Active */}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -371,7 +370,6 @@ const EmployerDashboard = () => {
                       {job.is_active ? <Ban className="h-4 w-4" /> : <Power className="h-4 w-4" />}
                     </Button>
 
-                    {/* Delete Job */}
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 hover:text-destructive">
