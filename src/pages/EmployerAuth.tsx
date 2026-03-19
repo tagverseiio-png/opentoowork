@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Briefcase, Mail } from "lucide-react";
+import { Briefcase, Mail, CheckCircle } from "lucide-react";
 
 const EmployerAuth = () => {
   const { toast } = useToast();
@@ -19,6 +19,7 @@ const EmployerAuth = () => {
   const [resetEmailSent, setResetEmailSent] = useState(false);
   
   const [companyName, setCompanyName] = useState("");
+  const [companyWebsite, setCompanyWebsite] = useState("");
   const [location, setLocation] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -46,6 +47,7 @@ const EmployerAuth = () => {
           data: {
             role: "employer",
             company_name: companyName,
+            company_website: companyWebsite,
             location: location,
           },
         },
@@ -241,10 +243,20 @@ const EmployerAuth = () => {
                   minLength={6}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+
+                <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-border/50 my-6 shadow-inner group">
+                  <div className="w-6 h-6 border-2 border-primary/40 rounded-md flex items-center justify-center bg-background group-hover:border-primary transition-colors">
+                    <input type="checkbox" id="captcha-in-emp" required className="w-4 h-4 opacity-0 absolute cursor-pointer" />
+                    <CheckCircle className="h-4 w-4 text-primary opacity-0 group-has-[:checked]:opacity-100 transition-opacity" />
+                  </div>
+                  <Label htmlFor="captcha-in-emp" className="text-[10px] font-black uppercase tracking-[0.2em] cursor-pointer flex-1 text-muted-foreground group-hover:text-foreground">Employer Security protocol</Label>
+                  <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" alt="reCAPTCHA" className="h-6 w-6 opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
+                </div>
+
                 <Button className="w-full" disabled={loading}>
                   {loading ? "Signing in..." : "Sign In"}
                 </Button>
-                <Button 
+                <Button
                   type="button"
                   variant="link"
                   onClick={() => setShowForgotPassword(true)}
@@ -260,6 +272,9 @@ const EmployerAuth = () => {
                 <Label>Company Name</Label>
                 <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} required />
 
+                <Label>Company Website</Label>
+                <Input value={companyWebsite} onChange={(e) => setCompanyWebsite(e.target.value)} placeholder="https://..." required />
+
                 <Label>Company Location</Label>
                 <Input value={location} onChange={(e) => setLocation(e.target.value)} required />
 
@@ -274,6 +289,15 @@ const EmployerAuth = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+
+                <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-border/50 my-6 shadow-inner group">
+                  <div className="w-6 h-6 border-2 border-primary/40 rounded-md flex items-center justify-center bg-background group-hover:border-primary transition-colors">
+                    <input type="checkbox" id="captcha-up-emp" required className="w-4 h-4 opacity-0 absolute cursor-pointer" />
+                    <CheckCircle className="h-4 w-4 text-primary opacity-0 group-has-[:checked]:opacity-100 transition-opacity" />
+                  </div>
+                  <Label htmlFor="captcha-up-emp" className="text-[10px] font-black uppercase tracking-[0.2em] cursor-pointer flex-1 text-muted-foreground group-hover:text-foreground">Corporate Verification Active</Label>
+                  <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" alt="reCAPTCHA" className="h-6 w-6 opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
+                </div>
 
                 <Button className="w-full" disabled={loading}>
                   {loading ? "Sending Code..." : "Sign Up"}

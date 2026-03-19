@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { UserCircle, Mail } from "lucide-react";
+import { UserCircle, Mail, CheckCircle } from "lucide-react";
 
 const CandidateAuth = () => {
   const navigate = useNavigate();
@@ -263,6 +263,7 @@ const CandidateAuth = () => {
                 <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
                 <Label>Password</Label>
                 <Input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? "Signing in..." : "Sign In"}
                 </Button>
@@ -279,24 +280,51 @@ const CandidateAuth = () => {
 
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
-                <Label>Full Name</Label>
-                <Input required value={fullName} onChange={(e) => setFullName(e.target.value)} />
-                <Label>Email</Label>
-                <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-                
-                <div className="space-y-1">
-                  <Label>Phone <span className="text-muted-foreground text-xs font-normal">(with Country Code)</span></Label>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-name">Full Name</Label>
                   <Input 
-                    type="tel" 
-                    placeholder="+1 555 123 4567" 
-                    value={phone} 
-                    onChange={(e) => setPhone(e.target.value)} 
-                    required
+                    id="signup-name" 
+                    placeholder="Jane Doe" 
+                    value={fullName} 
+                    onChange={(e) => setFullName(e.target.value)} 
+                    required 
                   />
                 </div>
-
+                <div className="space-y-2">
+                  <Label htmlFor="signup-phone">Phone Number</Label>
+                  <Input 
+                    id="signup-phone" 
+                    type="tel" 
+                    placeholder="+1 (555) 000-0000" 
+                    value={phone} 
+                    onChange={(e) => setPhone(e.target.value)} 
+                    required 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email">Email</Label>
+                  <Input 
+                    id="signup-email" 
+                    type="email" 
+                    placeholder="jane@example.com" 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
+                    required 
+                  />
+                </div>
+                
                 <Label>Password</Label>
                 <Input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
+                
+                <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-border/50 my-6 shadow-inner group">
+                  <div className="w-6 h-6 border-2 border-primary/40 rounded-md flex items-center justify-center bg-background group-hover:border-primary transition-colors">
+                    <input type="checkbox" id="captcha-up-cand" required className="w-4 h-4 opacity-0 absolute cursor-pointer" />
+                    <CheckCircle className="h-4 w-4 text-primary opacity-0 group-has-[:checked]:opacity-100 transition-opacity" />
+                  </div>
+                  <Label htmlFor="captcha-up-cand" className="text-[10px] font-black uppercase tracking-[0.2em] cursor-pointer flex-1 text-muted-foreground group-hover:text-foreground">Secure Onboarding Verified</Label>
+                  <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" alt="reCAPTCHA" className="h-6 w-6 opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
+                </div>
+
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? "Sending Code..." : "Sign Up"}
                 </Button>

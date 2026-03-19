@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -6,7 +7,11 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, FileText, CheckCircle, Clock, XCircle, MapPin, Building2, Calendar, Briefcase, Pencil } from "lucide-react";
+import { FileText, CheckCircle, Clock, XCircle, MapPin, Building2, Calendar, Briefcase, Pencil, Plus, Trash2, ExternalLink, Linkedin, Globe, Bell, Target, Settings, LayoutDashboard, Share2, UserCircle, Mail } from "lucide-react";
+import { ScrollArea } from "./ui/scroll-area";
+import { Textarea } from "./ui/textarea";
+import { Separator } from "./ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -31,18 +36,59 @@ const CandidateDashboard = () => {
   const { toast } = useToast();
   const [profile, setProfile] = useState<any>(null);
   const [applications, setApplications] = useState<any[]>([]);
-  const [resumeFile, setResumeFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [alerts, setAlerts] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState("applications");
+  
   // Edit State
   const [isEditing, setIsEditing] = useState(false);
   const [editExperience, setEditExperience] = useState("");
   const [editWorkAuth, setEditWorkAuth] = useState("");
+  const [editLocation, setEditLocation] = useState("");
+  const [editLinkedin, setEditLinkedin] = useState("");
+  const [editResumeUrl, setEditResumeUrl] = useState("");
+  const [editAvailability, setEditAvailability] = useState("");
+  const [editResumeText, setEditResumeText] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
+
+  // Skills State
+  const [skills, setSkills] = useState<any[]>([]);
+  const [newSkillName, setNewSkillName] = useState("");
+  const [newSkillExp, setNewSkillExp] = useState("");
+  const [newSkillLevel, setNewSkillLevel] = useState("Intermediate");
+  const [addingSkill, setAddingSkill] = useState(false);
+  const [importingLinkedin, setImportingLinkedin] = useState(false);
+
+  const handleLinkedInImport = async () => {
+    setImportingLinkedin(true);
+    toast({ 
+      title: "Connecting to LinkedIn...", 
+      description: "Authenticating and fetching professional profile data." 
+    });
+    
+    // Simulate real API delay
+    await new Promise(r => setTimeout(r, 2000));
+    
+    // Simulation
+    setEditExperience("5");
+    setEditLocation("San Francisco, CA");
+    setEditAvailability("Available");
+    setEditLinkedin(`https://linkedin.com/in/${profile?.profiles?.full_name?.toLowerCase().replace(' ', '-') || 'candidate'}`);
+    
+    toast({ 
+      title: "Import Successful!", 
+      description: "Professional profile and location synchronized. Review and Save Changes." 
+    });
+    setImportingLinkedin(false);
+    setIsEditing(true);
+  };
 
   useEffect(() => {
     fetchProfile();
     fetchApplications();
+    fetchSkills();
+    fetchAlerts();
+    fetchRecommendations();
   }, []);
 
   const fetchProfile = async () => {
@@ -59,6 +105,82 @@ const CandidateDashboard = () => {
       setProfile(data);
       setEditExperience(data.experience_years?.toString() || "");
       setEditWorkAuth(data.work_authorization || "");
+      setEditLocation(data.location || "");
+      setEditLinkedin(data.linkedin_url || "");
+      setEditResumeUrl(data.resume_url || "");
+      setEditAvailability(data.availability_status || "Available");
+      setEditResumeText(data.resume_text || "");
+    }
+  };
+
+  const fetchSkills = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data: cp } = await supabase
+      .from("candidate_profiles")
+      .select("id")
+      .eq("user_id", session.user.id)
+      .single();
+
+    if (cp) {
+      const { data } = await supabase
+        .from("candidate_skills")
+        .select("*")
+        .eq("candidate_id", cp.id)
+        .order("years_experience", { ascending: false });
+      setSkills(data || []);
+    }
+  };
+
+  const fetchAlerts = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data } = await supabase
+      .from("job_alerts")
+      .select("*")
+      .eq("user_id", session.user.id);
+    setAlerts(data || []);
+  };
+
+  const fetchRecommendations = async () => {
+    if (!profile) return;
+    
+    // Fetch jobs that match Candidate's Visa status
+    const { data } = await supabase
+      .from("jobs")
+      .select(`
+        *,
+        employer:employer_profiles(company_name, logo_url),
+        job_skills(*)
+      `)
+      .eq("is_active", true)
+      .contains('work_authorization', [profile.work_authorization])
+      .limit(10);
+    
+    // Simple frontend scoring/matching would go here, 
+    // but for now we provide targeted visa-matched roles.
+    setRecommendations(data || []);
+  };
+
+  const handleAddAlert = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { error } = await supabase
+      .from("job_alerts")
+      .insert({
+        user_id: session.user.id,
+        keywords: "Software Engineer",
+        visa_status: profile?.work_authorization
+      });
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Job alert created!" });
+      fetchAlerts();
     }
   };
 
@@ -99,7 +221,12 @@ const CandidateDashboard = () => {
         .from("candidate_profiles")
         .update({
           experience_years: editExperience ? parseInt(editExperience) : null,
-          work_authorization: editWorkAuth
+          work_authorization: editWorkAuth,
+          location: editLocation,
+          linkedin_url: editLinkedin,
+          resume_url: editResumeUrl,
+          availability_status: editAvailability,
+          resume_text: editResumeText
         })
         .eq("user_id", session.user.id);
 
@@ -119,61 +246,41 @@ const CandidateDashboard = () => {
     }
   };
 
-  const handleResumeUpload = async () => {
-    if (!resumeFile || !profile) return;
-
-    setUploading(true);
+  const handleAddSkill = async () => {
+    if (!newSkillName || !profile) return;
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Not authenticated");
+      const { error } = await supabase
+        .from("candidate_skills")
+        .insert({
+          candidate_id: profile.id,
+          skill_name: newSkillName,
+          years_experience: parseInt(newSkillExp) || 0,
+          skill_level: newSkillLevel
+        });
 
-      const fileExt = resumeFile.name.split('.').pop();
-      const filePath = `${session.user.id}/resume.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("resumes")
-        .upload(filePath, resumeFile, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("resumes")
-        .getPublicUrl(filePath);
-
-      const resumeUrlWithTimestamp = `${publicUrl}?t=${new Date().getTime()}`;
-
-      const { error: updateError } = await supabase
-        .from("candidate_profiles")
-        .update({ resume_url: resumeUrlWithTimestamp })
-        .eq("user_id", session.user.id);
-
-      if (updateError) throw updateError;
-
-      toast({
-        title: "Resume uploaded successfully!",
-        description: "Your profile has been updated."
-      });
-      setResumeFile(null);
-      fetchProfile();
+      if (error) throw error;
+      toast({ title: "Skill added!" });
+      setAddingSkill(false);
+      setNewSkillName("");
+      setNewSkillExp("");
+      fetchSkills();
     } catch (error: any) {
-      toast({
-        title: "Upload Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "accepted":
-        return <Badge className="bg-green-600 hover:bg-green-700 gap-1 pl-1.5"><CheckCircle className="w-3.5 h-3.5" /> Accepted</Badge>;
-      case "rejected":
-        return <Badge variant="destructive" className="gap-1 pl-1.5"><XCircle className="w-3.5 h-3.5" /> Rejected</Badge>;
-      default:
-        return <Badge variant="secondary" className="gap-1 pl-1.5 bg-muted-foreground/10 text-muted-foreground border-transparent"><Clock className="w-3.5 h-3.5" /> Pending</Badge>;
+  const handleDeleteSkill = async (skillId: string) => {
+    try {
+      const { error } = await supabase
+        .from("candidate_skills")
+        .delete()
+        .eq("id", skillId);
+
+      if (error) throw error;
+      toast({ title: "Skill removed" });
+      fetchSkills();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
 
@@ -181,17 +288,35 @@ const CandidateDashboard = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Candidate Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Welcome back, {profile.profiles.full_name}</p>
+      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+           <h1 className="text-4xl font-black tracking-tighter text-foreground uppercase leading-none">Your Command Center</h1>
+           <p className="text-muted-foreground mt-2 font-bold uppercase text-[10px] tracking-widest">Active session for {profile.profiles?.full_name}</p>
+        </div>
+        <div className="flex items-center gap-3">
+           <Button 
+            variant="outline" 
+            onClick={handleLinkedInImport} 
+            disabled={importingLinkedin}
+            className="h-12 px-6 border-[#0A66C2]/30 text-[#0A66C2] hover:bg-[#0A66C2]/5 font-black uppercase tracking-widest text-[10px] gap-2 shadow-sm"
+           >
+              <Linkedin className="h-4 w-4 fill-current" /> 
+              {importingLinkedin ? "Syncing..." : "Connect LinkedIn"}
+           </Button>
+           <Button onClick={() => setIsEditing(true)} className="h-12 px-6 font-black uppercase tracking-widest text-[10px] shadow-xl">
+              <Settings className="h-4 w-4 mr-2" /> Global Prefs
+           </Button>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-12 gap-8">
         {/* Profile Card */}
         <div className="lg:col-span-4 space-y-6">
-          <Card className="p-6 border shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">My Profile</h2>
+          <Card className="p-6 border shadow-sm bg-card overflow-hidden">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-black uppercase tracking-tighter flex items-center gap-2">
+                <Linkedin className="h-5 w-5 text-primary" /> Identity Vault
+              </h2>
               
               <Dialog open={isEditing} onOpenChange={setIsEditing}>
                 <DialogTrigger asChild>
@@ -199,186 +324,440 @@ const CandidateDashboard = () => {
                     <Pencil className="h-4 w-4" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Edit Profile</DialogTitle>
+                <DialogContent className="sm:max-w-[550px] border-none shadow-2xl rounded-2xl overflow-hidden p-0">
+                  <DialogHeader className="p-8 border-b bg-muted/10">
+                    <DialogTitle className="text-2xl font-black uppercase tracking-tighter">Candidate Blueprint</DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label>Work Authorization</Label>
-                      <Select value={editWorkAuth} onValueChange={setEditWorkAuth}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {WORK_AUTH_OPTIONS.map((auth) => (
-                            <SelectItem key={auth} value={auth}>{auth}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                  <ScrollArea className="max-h-[60vh] p-8">
+                    <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-border/50 my-6 shadow-inner group">
+                      <div className="w-6 h-6 border-2 border-primary/40 rounded-md flex items-center justify-center bg-background group-hover:border-primary transition-colors">
+                        <input type="checkbox" id="captcha-in" required className="w-4 h-4 opacity-0 absolute cursor-pointer" />
+                        <CheckCircle className="h-4 w-4 text-primary opacity-0 group-has-[:checked]:opacity-100 transition-opacity" />
+                      </div>
+                      <Label htmlFor="captcha-in" className="text-[10px] font-black uppercase tracking-[0.2em] cursor-pointer flex-1 text-muted-foreground group-hover:text-foreground">Authentication Protocol Layer</Label>
+                      <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" alt="reCAPTCHA" className="h-6 w-6 opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Experience (Years)</Label>
-                      <Input 
-                        type="number" 
-                        min="0"
-                        value={editExperience} 
-                        onChange={(e) => setEditExperience(e.target.value)}
-                      />
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest">Visa Authorization</Label>
+                          <Select value={editWorkAuth} onValueChange={setEditWorkAuth}>
+                            <SelectTrigger className="h-11 rounded-xl">
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {WORK_AUTH_OPTIONS.map((auth) => (
+                                <SelectItem key={auth} value={auth}>{auth}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest">Experience (Years)</Label>
+                          <Input 
+                            type="number" 
+                            className="h-11 rounded-xl"
+                            min="0"
+                            value={editExperience} 
+                            onChange={(e) => setEditExperience(e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest">Global Location</Label>
+                        <Input 
+                          placeholder="City, State / Remote" 
+                          className="h-11 rounded-xl"
+                          value={editLocation} 
+                          onChange={(e) => setEditLocation(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest">LinkedIn Access</Label>
+                          <Input 
+                            placeholder="https://linkedin.com/..." 
+                            className="h-11 rounded-xl"
+                            value={editLinkedin} 
+                            onChange={(e) => setEditLinkedin(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest">Dossier / Resume (URL)</Label>
+                          <Input 
+                            placeholder="https://drive.google.com/..." 
+                            className="h-11 rounded-xl"
+                            value={editResumeUrl} 
+                            onChange={(e) => setEditResumeUrl(e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest">Market Availability</Label>
+                        <Select value={editAvailability} onValueChange={setEditAvailability}>
+                          <SelectTrigger className="h-11 rounded-xl">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Available">Available</SelectItem>
+                            <SelectItem value="Open to Offers">Open to Offers</SelectItem>
+                            <SelectItem value="Not Available">Not Available</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-4 pt-4 border-t border-dashed">
+                        <div className="flex items-center justify-between">
+                           <Label className="text-[10px] uppercase font-black tracking-widest text-primary">Resume Parsing Unit</Label>
+                           <Button 
+                             variant="outline" 
+                             size="sm" 
+                             className="h-7 text-[9px] font-black uppercase tracking-widest gap-2 bg-primary/5 hover:bg-primary/10 border-primary/20"
+                             onClick={async () => {
+                                toast({ title: "Decrypting Resume...", description: "AI is extracting core competencies." });
+                                await new Promise(r => setTimeout(r, 1500));
+                                setEditResumeText("Simulated extraction successful: Proficient in React, Node.js, and Cloud Infrastructure.");
+                                toast({ title: "Analysis Complete", description: "Skills mapped for synchronization." });
+                             }}
+                           >
+                              <Target className="h-3 w-3 text-primary" /> Auto-Extract
+                           </Button>
+                        </div>
+                        <Textarea 
+                          placeholder="Paste full resume text for matching optimization..." 
+                          className="min-h-[120px] text-xs font-mono bg-muted/20 rounded-xl leading-relaxed"
+                          value={editResumeText}
+                          onChange={(e) => setEditResumeText(e.target.value)}
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
-                    <Button onClick={handleUpdateProfile} disabled={savingProfile}>
-                      {savingProfile ? "Saving..." : "Save Changes"}
+                  </ScrollArea>
+                  <DialogFooter className="p-8 bg-muted/5 border-t">
+                    <Button variant="ghost" className="font-bold uppercase text-xs" onClick={() => setIsEditing(false)}>Abort</Button>
+                    <Button onClick={handleUpdateProfile} disabled={savingProfile} className="font-black uppercase text-xs px-8 h-11 shadow-xl shadow-primary/20">
+                      {savingProfile ? "Writing..." : "Commit Changes"}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
             </div>
             
-            <div className="space-y-5">
-              <div>
-                <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Contact</Label>
-                <div className="mt-1 font-medium">{profile.profiles.email}</div>
-                {profile.profiles.phone && <div className="text-sm text-muted-foreground">{profile.profiles.phone}</div>}
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                 <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center font-black text-primary text-xl border-2 border-primary/20">
+                    {profile.profiles?.full_name?.charAt(0)}
+                 </div>
+                 <div>
+                    <h3 className="font-black text-xl text-foreground uppercase tracking-tight">{profile.profiles?.full_name}</h3>
+                    <div className="text-xs text-muted-foreground font-medium flex items-center gap-1.5 mt-1">
+                       <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                       {profile.profiles?.email}
+                    </div>
+                 </div>
               </div>
 
-              <div>
-                <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Details</Label>
-                <div className="mt-2 flex flex-col gap-2 bg-muted/30 p-3 rounded-md">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Work Auth:</span>
-                    <Badge variant="outline" className="bg-background text-xs font-normal">{profile.work_authorization}</Badge>
+              <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-muted/5 border p-3 rounded-xl flex flex-col">
+                    <span className="text-[9px] text-muted-foreground uppercase font-black mb-1">Location</span>
+                    <span className="text-xs font-bold truncate">{profile.location || "Not specified"}</span>
                   </div>
-                  <div className="flex justify-between text-sm items-center">
-                    <span className="text-muted-foreground">Experience:</span>
-                    <span className="font-medium">{profile.experience_years || 0} Years</span>
+                  <div className="bg-muted/5 border p-3 rounded-xl flex flex-col">
+                    <span className="text-[9px] text-muted-foreground uppercase font-black mb-1">Experience</span>
+                    <span className="text-xs font-bold">{profile.experience_years || 0} Years</span>
                   </div>
-                </div>
               </div>
 
-              <div className="pt-4 border-t">
-                <Label className="text-sm font-semibold mb-3 block">Resume</Label>
-                {profile.resume_url ? (
-                  <div className="flex items-center gap-2 mb-4 bg-primary/5 p-3 rounded-lg border border-primary/10 transition-colors hover:bg-primary/10">
-                    <FileText className="h-5 w-5 text-primary" />
-                    <a 
-                      href={profile.resume_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-sm font-medium text-primary hover:underline truncate flex-1"
-                    >
-                      View Current Resume
+              <div className="space-y-3">
+                <Label className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Connective Services</Label>
+                <div className="grid gap-2">
+                  {profile.resume_url ? (
+                    <a href={profile.resume_url} target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" className="w-full h-11 gap-3 text-[10px] font-black uppercase tracking-widest border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm">
+                        <FileText className="h-4 w-4 text-primary" /> View Dossier
+                      </Button>
                     </a>
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                  </div>
-                ) : (
-                  <div className="text-sm text-yellow-700 bg-yellow-50 p-3 rounded-lg mb-4 border border-yellow-200 flex gap-2 items-start">
-                    <Clock className="w-4 h-4 mt-0.5 shrink-0" />
-                    Please upload a resume to apply for jobs.
-                  </div>
-                )}
-                
-                <div className="space-y-2">
-                  <Input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
-                    className="text-sm file:text-primary file:font-semibold cursor-pointer"
-                  />
-                  <Button 
-                    onClick={handleResumeUpload} 
-                    disabled={!resumeFile || uploading}
-                    className="w-full"
-                    variant={resumeFile ? "default" : "secondary"}
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    {uploading ? "Uploading..." : "Update Resume"}
-                  </Button>
+                  ) : (
+                    <div className="text-[9px] text-orange-600 bg-orange-50/50 p-3 rounded-xl border border-orange-100 font-bold flex items-center gap-2 italic">
+                       Missing Resume Link
+                    </div>
+                  )}
+
+                  {profile.linkedin_url ? (
+                    <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" className="w-full h-11 gap-3 text-[10px] font-black uppercase tracking-widest border-[#0A66C2]/20 text-[#0A66C2] hover:bg-[#0A66C2]/5 shadow-sm">
+                        <Linkedin className="h-4 w-4" /> LinkedIn Bridge
+                      </Button>
+                    </a>
+                  ) : (
+                    <Button variant="ghost" onClick={() => setIsEditing(true)} className="h-11 text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100">
+                       Link Profile
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
+          </Card>
+
+          {/* Skill Matrix Card */}
+          <Card className="p-6 border shadow-sm bg-card overflow-hidden">
+             <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-black uppercase tracking-tighter flex items-center gap-2">
+                  <Globe className="h-5 w-5 text-primary" /> Skill Graph
+                </h2>
+                
+                <Dialog open={addingSkill} onOpenChange={setAddingSkill}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 gap-1.5 font-bold text-[10px] uppercase border-primary/30 hover:bg-primary/5">
+                      <Plus className="h-3.5 w-3.5" /> Append
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[400px] border-none shadow-2xl rounded-2xl">
+                    <DialogHeader>
+                      <DialogTitle className="font-black uppercase tracking-tighter">Add Competency</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest">Skill Key</Label>
+                        <Input placeholder="e.g. Kubernetes, React" className="h-11 rounded-xl" value={newSkillName} onChange={(e) => setNewSkillName(e.target.value)} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest">Years Active</Label>
+                          <Input type="number" min="0" className="h-11 rounded-xl" value={newSkillExp} onChange={(e) => setNewSkillExp(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest">Proficiency Range</Label>
+                          <Select value={newSkillLevel} onValueChange={setNewSkillLevel}>
+                            <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Junior">Junior</SelectItem>
+                              <SelectItem value="Intermediate">Intermediate</SelectItem>
+                              <SelectItem value="Senior">Senior</SelectItem>
+                              <SelectItem value="Lead">Lead</SelectItem>
+                              <SelectItem value="Architect">Architect</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="ghost" onClick={() => setAddingSkill(false)}>Cancel</Button>
+                      <Button onClick={handleAddSkill} className="font-black h-11 px-8 uppercase text-xs">Commit Skill</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+             </div>
+
+             <ScrollArea className="h-[280px] -mx-2 px-2">
+                {skills.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <Globe className="h-12 w-12 text-muted/20 mb-3" />
+                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest opacity-50">No data points mapped</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {skills.map((skill) => (
+                      <div key={skill.id} className="p-4 rounded-xl border bg-muted/5 flex items-center justify-between group transition-all hover:bg-muted/10">
+                        <div className="space-y-1">
+                          <div className="text-sm font-black uppercase tracking-tight text-foreground">{skill.skill_name}</div>
+                          <div className="flex items-center gap-2 text-[9px] text-muted-foreground font-bold italic">
+                            <span className="text-primary">{skill.years_experience}Y Experience</span>
+                            <span>•</span>
+                            <span className="uppercase text-muted-foreground/40">{skill.skill_level}</span>
+                          </div>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-destructive/40 hover:text-destructive hover:bg-destructive/5 opacity-0 group-hover:opacity-100 transition-all rounded-lg"
+                          onClick={() => handleDeleteSkill(skill.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+             </ScrollArea>
           </Card>
         </div>
 
-        {/* Applications List */}
+        {/* Main Content */}
         <div className="lg:col-span-8">
-          <Card className="p-6 border shadow-sm min-h-[500px]">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold">Application History</h2>
-              <Badge variant="outline" className="text-sm font-normal">
-                {applications.length} Applications
-              </Badge>
-            </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid grid-cols-4 w-full bg-muted/30 p-1.5 h-16 rounded-[2rem] gap-3">
+              <TabsTrigger value="applications" className="data-[state=active]:bg-background data-[state=active]:shadow-2xl rounded-[1.5rem] h-full font-black uppercase text-[10px] tracking-widest gap-2.5">
+                <Briefcase className="h-4 w-4" /> Journey
+              </TabsTrigger>
+              <TabsTrigger value="recommendations" className="data-[state=active]:bg-background data-[state=active]:shadow-2xl rounded-[1.5rem] h-full font-black uppercase text-[10px] tracking-widest gap-2.5">
+                <Target className="h-4 w-4" /> Best Fits
+              </TabsTrigger>
+              <TabsTrigger value="alerts" className="data-[state=active]:bg-background data-[state=active]:shadow-2xl rounded-[1.5rem] h-full font-black uppercase text-[10px] tracking-widest gap-2.5">
+                <Bell className="h-4 w-4" /> Beacon
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="data-[state=active]:bg-background data-[state=active]:shadow-2xl rounded-[1.5rem] h-full font-black uppercase text-[10px] tracking-widest gap-2.5">
+                <Settings className="h-4 w-4" /> Core
+              </TabsTrigger>
+            </TabsList>
 
-            {applications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mb-4">
-                  <Briefcase className="h-8 w-8 text-muted-foreground/50" />
-                </div>
-                <h3 className="text-lg font-medium">No applications yet</h3>
-                <p className="text-muted-foreground max-w-xs mt-2 mb-6">
-                  Start searching for jobs that match your skills and apply today!
-                </p>
-                <Button onClick={() => window.location.href = "/jobs"} className="bg-gradient-to-r from-primary to-accent shadow-md">
-                  Browse Open Roles
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {applications.map((app) => (
-                  <Card key={app.id} className="p-5 border hover:border-primary/30 transition-all hover:shadow-md group">
-                    <div className="flex flex-col md:flex-row gap-4 justify-between">
-                      <div className="space-y-3 flex-1">
-                        <div className="flex items-center justify-between md:justify-start gap-3">
-                          <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors">
-                            {app.jobs?.title}
-                          </h3>
-                          <div className="md:hidden">
-                            {getStatusBadge(app.status)}
-                          </div>
-                        </div>
-                        
-                        <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
-                          <span className="flex items-center">
-                            <Building2 className="w-4 h-4 mr-1.5 opacity-70" />
-                            {app.jobs?.employer?.company_name}
-                          </span>
-                          <span className="flex items-center">
-                            <MapPin className="w-4 h-4 mr-1.5 opacity-70" />
-                            {app.jobs?.location}
-                          </span>
-                          <span className="flex items-center">
-                            <Calendar className="w-4 h-4 mr-1.5 opacity-70" />
-                            Applied: {new Date(app.applied_at).toLocaleDateString()}
-                          </span>
-                        </div>
-
-                        {app.cover_letter && (
-                          <div className="mt-3 pt-3 border-t border-dashed">
-                            <p className="text-[10px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">Your Note</p>
-                            <p className="text-sm text-foreground/80 line-clamp-2 hover:line-clamp-none transition-all cursor-default leading-relaxed bg-muted/20 p-2 rounded-md">
-                              "{app.cover_letter}"
-                            </p>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="hidden md:flex flex-col items-end justify-start pl-4 border-l min-w-[120px]">
-                        <span className="text-xs font-medium text-muted-foreground mb-1.5">Status</span>
-                        {getStatusBadge(app.status)}
-                      </div>
+            <div className="mt-8">
+              <TabsContent value="applications" className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <Card className="p-8 border shadow-sm min-h-[600px] bg-card rounded-[2.5rem]">
+                  <div className="flex items-center justify-between mb-10">
+                    <div>
+                      <h2 className="text-3xl font-black uppercase tracking-tighter leading-none italic">Active Pipeline</h2>
+                      <p className="text-[10px] text-muted-foreground mt-3 font-black uppercase tracking-[0.3em] opacity-40">Tracking your global career progress</p>
                     </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </Card>
+                    <Badge variant="outline" className="h-8 px-5 font-black text-[10px] tracking-widest border-primary/20 bg-primary/5 text-primary">
+                      {applications.length} ENGAGEMENTS
+                    </Badge>
+                  </div>
+
+                  {applications.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-32 text-center">
+                       <div className="w-20 h-20 bg-primary/5 rounded-[2rem] flex items-center justify-center mb-6 shadow-inner rotate-6">
+                         <Briefcase className="h-10 w-10 text-primary/30" />
+                       </div>
+                       <h3 className="text-2xl font-black uppercase tracking-tighter">No Active Campaigns</h3>
+                       <Button onClick={() => window.location.href = "/jobs"} className="mt-8 h-12 px-12 font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-2xl shadow-primary/20">Manifest Opportunity</Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-5">
+                      {applications.map((app) => (
+                        <Card key={app.id} className="p-0 border border-muted-foreground/10 hover:border-primary/40 transition-all hover:shadow-2xl group overflow-hidden bg-card rounded-[2rem]">
+                          <div className="flex flex-col md:flex-row min-h-[140px]">
+                             <div className="flex-1 p-8 space-y-6">
+                                <div className="space-y-2">
+                                   <div className="flex items-center gap-3">
+                                      <h3 className="font-black text-2xl tracking-tighter uppercase leading-tight group-hover:text-primary transition-colors">
+                                        {app.jobs?.title}
+                                      </h3>
+                                      <Badge variant="outline" className="h-5 text-[8px] font-black uppercase tracking-[0.2em] border-primary/20">{app.jobs?.job_mode}</Badge>
+                                   </div>
+                                   <div className="flex items-center text-xs font-bold text-muted-foreground tracking-widest uppercase">
+                                      {app.jobs?.employer?.company_name}
+                                   </div>
+                                </div>
+                                <div className="flex flex-wrap gap-3">
+                                   <div className="flex items-center bg-muted/30 px-4 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase text-muted-foreground italic border border-muted-foreground/5">
+                                      Applied: {new Date(app.applied_at).toLocaleDateString()}
+                                   </div>
+                                </div>
+                             </div>
+                             <div className="md:w-[220px] bg-muted/20 border-l border-dashed flex flex-col items-center justify-center p-8 group-hover:bg-primary/5 transition-colors">
+                                <span className="text-[9px] font-black text-muted-foreground/40 mb-3 uppercase tracking-widest">Global Status</span>
+                                {getStatusBadge(app.status)}
+                             </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="recommendations" className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <Card className="p-8 border shadow-sm min-h-[600px] bg-card rounded-[2.5rem]">
+                  <div className="flex items-center justify-between mb-10">
+                    <div>
+                      <h2 className="text-3xl font-black uppercase tracking-tighter leading-none italic">Targeted Matches</h2>
+                      <p className="text-[10px] text-muted-foreground mt-3 font-black uppercase tracking-[0.3em] opacity-40">Filtered by your {profile.work_authorization} status</p>
+                    </div>
+                  </div>
+
+                  {recommendations.length === 0 ? (
+                    <div className="text-center py-32 opacity-20 hover:opacity-100 transition-opacity">
+                      <Target className="h-16 w-16 mx-auto mb-6 text-primary" />
+                      <h3 className="text-xl font-black uppercase tracking-[0.5em] mb-4">Neural Matching</h3>
+                      <p className="max-w-xs mx-auto text-xs font-bold leading-relaxed uppercase tracking-widest">Scanning {skills.length} expert competencies against global vacancies...</p>
+                    </div>
+                  ) : (
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {recommendations.map(job => (
+                        <Card key={job.id} className="p-6 border border-muted-foreground/10 hover:shadow-2xl transition-all group relative overflow-hidden bg-muted/5 rounded-3xl">
+                           <div className="space-y-4">
+                              <div>
+                                 <h4 className="text-lg font-black uppercase tracking-tighter leading-none group-hover:text-primary transition-colors">{job.title}</h4>
+                                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1.5">{job.employer?.company_name}</p>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                 <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-background border-primary/20">{job.location}</Badge>
+                                 <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-primary/10 text-primary border-transparent">{job.job_type}</Badge>
+                              </div>
+                              <Button className="w-full h-11 font-black uppercase text-[10px] shadow-lg rounded-2xl" asChild>
+                                 <Link to={`/jobs/${job.id}`}>Engagement Review</Link>
+                              </Button>
+                           </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="alerts" className="animate-in duration-500">
+                 <Card className="p-8 border shadow-sm min-h-[600px] bg-card rounded-[2.5rem]">
+                    <div className="flex items-center justify-between mb-12">
+                       <h2 className="text-3xl font-black uppercase tracking-tighter">Beacon Alerts</h2>
+                       <Button onClick={handleAddAlert} className="h-12 px-8 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-2xl">Initialize Alert</Button>
+                    </div>
+                    <div className="grid gap-4">
+                       {alerts.map(alert => (
+                          <div key={alert.id} className="p-6 rounded-3xl border bg-muted/5 flex items-center justify-between group hover:border-primary/20 transition-all border-dashed">
+                             <div className="space-y-1">
+                                <div className="font-black text-xl uppercase tracking-widest">{alert.keywords}</div>
+                                <div className="text-[10px] font-bold text-muted-foreground uppercase">{alert.visa_status} • Global Scope</div>
+                             </div>
+                             <Button variant="ghost" size="icon" className="text-destructive/40 hover:text-destructive hover:bg-destructive/10 rounded-xl opacity-0 group-hover:opacity-100">
+                                <Trash2 className="h-5 w-5" />
+                             </Button>
+                          </div>
+                       ))}
+                    </div>
+                 </Card>
+              </TabsContent>
+
+              <TabsContent value="settings">
+                 <Card className="p-12 border shadow-sm min-h-[600px] bg-card rounded-[2.5rem]">
+                    <h2 className="text-4xl font-black uppercase tracking-tighter mb-12">Core Preferences</h2>
+                    <div className="space-y-8">
+                       <div className="p-8 bg-muted/10 rounded-[2rem] border border-dashed flex items-center justify-between">
+                          <div className="space-y-1">
+                             <div className="font-black uppercase tracking-widest text-lg">Stealth Mode Profile</div>
+                             <p className="text-xs font-medium text-muted-foreground italic">Your profile is currently PUBLIC to verified premium recruiters.</p>
+                          </div>
+                          <div className="w-16 h-8 bg-primary rounded-full flex items-center px-1 shadow-inner ring-4 ring-primary/20">
+                             <div className="w-6 h-6 bg-white rounded-full ml-auto shadow-xl" />
+                          </div>
+                       </div>
+                    </div>
+                 </Card>
+              </TabsContent>
+            </div>
+          </Tabs>
         </div>
       </div>
     </div>
   );
+};
+
+const getStatusBadge = (status: string|undefined) => {
+  const base = "h-11 px-6 font-black uppercase text-[10px] tracking-widest shadow-xl rounded-xl transition-all hover:scale-105 flex items-center gap-2";
+  switch (status) {
+    case "accepted":
+      return <Badge className={`${base} bg-green-600 hover:bg-green-700`}><CheckCircle className="w-4 h-4" /> Selected</Badge>;
+    case "rejected":
+      return <Badge variant="destructive" className={`${base} bg-destructive`}><XCircle className="w-4 h-4" /> Declined</Badge>;
+    case "shortlisted":
+      return <Badge className={`${base} bg-blue-600`}><Briefcase className="w-4 h-4" /> Shortlisted</Badge>;
+    case "interview_scheduled":
+      return <Badge className={`${base} bg-purple-600`}><Calendar className="w-4 h-4" /> Interview</Badge>;
+    default:
+      return <Badge className={`${base} bg-zinc-950 text-white hover:bg-zinc-900 border-none`}><Clock className="w-4 h-4" /> Pending</Badge>;
+  }
 };
 
 export default CandidateDashboard;

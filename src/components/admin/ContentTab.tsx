@@ -6,8 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Plus, Trash2, Upload } from "lucide-react";
+import { Save, Plus, Trash2, Upload, FileEdit, Layout, Info, Layers, Phone } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 type PageType = "homepage" | "about";
 
@@ -105,25 +107,33 @@ const ContentTab = () => {
           <h2 className="text-2xl font-bold">Site Content Management</h2>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setEditPage("homepage")}>
-            <CardHeader>
-              <CardTitle>Edit Homepage</CardTitle>
+        <div className="grid md:grid-cols-2 gap-8">
+          <Card className="group cursor-pointer border-border/50 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all duration-500 rounded-[2rem] overflow-hidden" onClick={() => setEditPage("homepage")}>
+            <div className="h-2 bg-primary/10 group-hover:bg-primary transition-colors duration-500" />
+            <CardHeader className="p-8">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-500">
+                <Layout className="h-6 w-6 text-primary" />
+              </div>
+              <CardTitle className="text-2xl font-black uppercase tracking-tighter">Homepage Matrix</CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Manage hero section, why choose us, and how it works for the homepage.
+            <CardContent className="p-8 pt-0">
+              <p className="text-muted-foreground font-medium leading-relaxed">
+                Configure the primary entry point: Hero sequences, value propositions, and operational workflows.
               </p>
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setEditPage("about")}>
-            <CardHeader>
-              <CardTitle>Edit About Page</CardTitle>
+          <Card className="group cursor-pointer border-border/50 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all duration-500 rounded-[2rem] overflow-hidden" onClick={() => setEditPage("about")}>
+            <div className="h-2 bg-primary/10 group-hover:bg-primary transition-colors duration-500" />
+            <CardHeader className="p-8">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-500">
+                <Info className="h-6 w-6 text-primary" />
+              </div>
+              <CardTitle className="text-2xl font-black uppercase tracking-tighter">About Sector</CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Manage hero section, why choose us, mission, how it works, and contact information for the about page.
+            <CardContent className="p-8 pt-0">
+              <p className="text-muted-foreground font-medium leading-relaxed">
+                Manage the narrative: Mission statements, core values, and communication channels.
               </p>
             </CardContent>
           </Card>
@@ -162,10 +172,10 @@ const ContentTab = () => {
         </div>
 
         <Tabs defaultValue="hero" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="hero">Hero Section</TabsTrigger>
-            <TabsTrigger value="why">Why Choose Us</TabsTrigger>
-            <TabsTrigger value="how">How It Works</TabsTrigger>
+          <TabsList className="flex w-fit bg-muted/30 p-1.5 rounded-2xl border border-border/40 mb-8">
+            <TabsTrigger value="hero" className="px-8 rounded-xl font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Core Hero</TabsTrigger>
+            <TabsTrigger value="why" className="px-8 rounded-xl font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Value Prop</TabsTrigger>
+            <TabsTrigger value="how" className="px-8 rounded-xl font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Workflow</TabsTrigger>
           </TabsList>
 
           {/* Hero Section Tab */}
@@ -508,12 +518,12 @@ const ContentTab = () => {
         </div>
 
         <Tabs defaultValue="hero" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-6">
-            <TabsTrigger value="hero">Hero</TabsTrigger>
-            <TabsTrigger value="why">Why Choose Us</TabsTrigger>
-            <TabsTrigger value="mission">Mission</TabsTrigger>
-            <TabsTrigger value="how">How It Works</TabsTrigger>
-            <TabsTrigger value="contact">Contact</TabsTrigger>
+          <TabsList className="flex flex-wrap w-fit bg-muted/30 p-1.5 rounded-2xl border border-border/40 mb-8 gap-1">
+            <TabsTrigger value="hero" className="px-6 rounded-xl font-black uppercase tracking-widest text-[9px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Hero</TabsTrigger>
+            <TabsTrigger value="why" className="px-6 rounded-xl font-black uppercase tracking-widest text-[9px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Value</TabsTrigger>
+            <TabsTrigger value="mission" className="px-6 rounded-xl font-black uppercase tracking-widest text-[9px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Mission</TabsTrigger>
+            <TabsTrigger value="how" className="px-6 rounded-xl font-black uppercase tracking-widest text-[9px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Process</TabsTrigger>
+            <TabsTrigger value="contact" className="px-6 rounded-xl font-black uppercase tracking-widest text-[9px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Registry</TabsTrigger>
           </TabsList>
 
           {/* Hero Section Tab */}

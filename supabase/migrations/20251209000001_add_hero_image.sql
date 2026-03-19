@@ -1,5 +1,5 @@
 -- Add hero_image field to site_content for storing base64 images
-ALTER TABLE site_content ADD COLUMN hero_image TEXT;
+ALTER TABLE site_content ADD COLUMN IF NOT EXISTS hero_image TEXT;
 
 -- Update homepage_hero_section with placeholder base64 image
 UPDATE site_content 

@@ -33,8 +33,8 @@ const Footer = () => {
           {/* 1. Brand Section */}
           <div className="space-y-6 max-w-xs w-full md:w-auto">
             <Link to="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md">
-                <Briefcase className="h-5 w-5 text-white" />
+              <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md group-hover:shadow-primary/20 transition-all">
+                <img src="/favicon.ico" alt="Logo" className="w-full h-full object-cover p-1.5" />
               </div>
               <span className="font-bold text-xl tracking-tight">
                 Open Too Work
@@ -143,9 +143,10 @@ const Footer = () => {
 
         {/* Footer Bottom */}
         <div className="pt-8 border-t border-border/50">
-          <div className="flex items-center justify-end gap-3 mb-4 pr-4">
-            <span className="text-sm text-muted-foreground">Developed by:</span>
-            <img src="/devLogo.png" alt="Developer Logo" className="h-8" />
+          <div className="flex items-center justify-center sm:justify-end gap-3 mb-6 pr-0 sm:pr-4">
+            <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest bg-muted/20 px-4 py-2 rounded-full border border-border/50">
+               Developed by <span className="text-primary font-black ml-1.5 tracking-tighter">Tagverse</span>
+            </span>
           </div>
           <p className="text-center text-sm text-muted-foreground">
             © {new Date().getFullYear()} Open Too Work. All rights reserved.

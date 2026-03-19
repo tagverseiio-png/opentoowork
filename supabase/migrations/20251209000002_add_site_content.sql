@@ -14,19 +14,28 @@ CREATE INDEX IF NOT EXISTS idx_site_content_section_key ON site_content(section_
 ALTER TABLE site_content ENABLE ROW LEVEL SECURITY;
 
 -- Allow public to read all content
-CREATE POLICY "Allow public read access" ON site_content
-  FOR SELECT USING (true);
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname='Allow public read access' AND tablename='site_content') THEN
+        CREATE POLICY "Allow public read access" ON site_content FOR SELECT USING (true);
+    END IF;
+END $$;
 
 -- Allow admin to update all content
-CREATE POLICY "Allow admin full access" ON site_content
-  FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-      AND profiles.role = 'admin'
-    )
-  );
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname='Allow admin full access' AND tablename='site_content') THEN
+        CREATE POLICY "Allow admin full access" ON site_content
+          FOR ALL
+          USING (
+            EXISTS (
+              SELECT 1 FROM profiles
+              WHERE profiles.id = auth.uid()
+              AND profiles.role = 'admin'
+            )
+          );
+    END IF;
+END $$;
 
 -- Insert default content for all sections
 INSERT INTO site_content (section_key, content) VALUES

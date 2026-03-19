@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { NotificationBell } from "./NotificationBell";
 
 // Define role type locally if not exported from lib/supabase
 type UserRole = 'candidate' | 'employer' | 'admin';
@@ -161,7 +162,7 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <img
-              src="/assets/opentoowork-icon1-BZ2bbVrF.png"
+              src="/favicon.ico"
               alt="Open Too Work Logo"
               className="h-10 w-10 object-contain transition-transform group-hover:scale-110"
             />
@@ -174,9 +175,12 @@ const Navbar = () => {
           <div className="hidden md:flex items-center gap-4">
             <NavLinks />
             {userRole && (
-              <Button onClick={handleSignOut} variant="outline" size="icon" className="ml-2" title="Sign Out">
-                <LogOut className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-2 border-l border-border/40 pl-4 ml-2">
+                <NotificationBell />
+                <Button onClick={handleSignOut} variant="outline" size="icon" className="h-10 w-10 border-border/40 hover:bg-destructive/10 hover:text-destructive rounded-xl transition-all duration-300" title="Sign Out">
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
             )}
           </div>
 
@@ -194,10 +198,14 @@ const Navbar = () => {
                   {userRole && (
                     <>
                       <div className="h-px bg-border my-1" />
+                      <div className="px-2 py-4 flex items-center justify-between bg-primary/5 rounded-xl mb-2">
+                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Alert Protocols</span>
+                         <NotificationBell />
+                      </div>
                       <Button 
                         onClick={handleSignOut} 
                         variant="ghost" 
-                        className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+                        className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 font-black uppercase tracking-widest text-[10px]"
                       >
                         <LogOut className="h-4 w-4 mr-2" />
                         Sign Out
