@@ -50,6 +50,7 @@ const CandidateDashboard = () => {
   const [editAvailability, setEditAvailability] = useState("");
   const [editResumeText, setEditResumeText] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
+  const [uploadingResume, setUploadingResume] = useState(false);
 
   // Skills State
   const [skills, setSkills] = useState<any[]>([]);
@@ -385,13 +386,44 @@ const CandidateDashboard = () => {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase tracking-widest">Dossier / Resume (URL)</Label>
-                          <Input 
-                            placeholder="https://drive.google.com/..." 
-                            className="h-11 rounded-xl"
-                            value={editResumeUrl} 
-                            onChange={(e) => setEditResumeUrl(e.target.value)}
-                          />
+                          <Label className="text-[10px] font-black uppercase tracking-widest">Dossier / Resume (Upload or URL)</Label>
+                          <div className="flex gap-2">
+                            <Input 
+                              placeholder="https://drive.google.com/..." 
+                              className="h-11 rounded-xl flex-1"
+                              value={editResumeUrl} 
+                              onChange={(e) => setEditResumeUrl(e.target.value)}
+                            />
+                            <div className="relative w-12 h-11 bg-muted/20 border border-border/50 rounded-xl hover:bg-muted/30 transition-colors flex items-center justify-center cursor-pointer">
+                               {uploadingResume ? <Clock className="h-4 w-4 animate-spin text-muted-foreground" /> : <Plus className="h-4 w-4 text-muted-foreground" />}
+                               <input 
+                                  type="file" 
+                                  className="absolute inset-0 opacity-0 cursor-pointer w-full" 
+                                  accept=".pdf,.doc,.docx" 
+                                  disabled={uploadingResume}
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    setUploadingResume(true);
+                                    try {
+                                      const { data: { session } } = await supabase.auth.getSession();
+                                      if (!session) throw new Error("Not authenticated");
+                                      const fileExt = file.name.split('.').pop();
+                                      const filePath = `${session.user.id}/resume.${fileExt}`;
+                                      const { error: uploadError } = await supabase.storage.from("resumes").upload(filePath, file, { upsert: true });
+                                      if (uploadError) throw uploadError;
+                                      const { data: { publicUrl } } = supabase.storage.from("resumes").getPublicUrl(filePath);
+                                      setEditResumeUrl(`${publicUrl}?t=${new Date().getTime()}`);
+                                      toast({ title: "Resume Uploaded" });
+                                    } catch (err: any) {
+                                      toast({ title: "Upload Failed", description: err.message, variant: "destructive" });
+                                    } finally {
+                                      setUploadingResume(false);
+                                    }
+                                  }} 
+                               />
+                            </div>
+                          </div>
                         </div>
                       </div>
 

@@ -29,6 +29,7 @@ const FindJobs = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [minSalary, setMinSalary] = useState("");
   const [jobTypeFilter, setJobTypeFilter] = useState("all");
+  const [taxTermFilter, setTaxTermFilter] = useState("all");
   const [jobModeFilter, setJobModeFilter] = useState("all");
   const [visaFilter, setVisaFilter] = useState("all");
 
@@ -155,12 +156,13 @@ const FindJobs = () => {
       (job.salary_max && job.salary_max >= parseInt(minSalary)) || 
       (job.salary_min && job.salary_min >= parseInt(minSalary));
 
-    const matchesType = jobTypeFilter === "all" || job.job_type === jobTypeFilter;
+    const matchesType = jobTypeFilter === "all" || (job.job_type && job.job_type.includes(jobTypeFilter));
+    const matchesTaxTerm = taxTermFilter === "all" || (job.job_type && job.job_type.includes(taxTermFilter));
     const matchesMode = jobModeFilter === "all" || job.job_mode === jobModeFilter;
     
     const matchesVisa = visaFilter === "all" || (job.work_authorization && job.work_authorization.includes(visaFilter));
 
-    return matchesSearch && matchesLocation && matchesSalary && matchesType && matchesMode && matchesVisa;
+    return matchesSearch && matchesLocation && matchesSalary && matchesType && matchesTaxTerm && matchesMode && matchesVisa;
   });
 
   // Attach match score and sort if logged in
@@ -213,7 +215,7 @@ const FindJobs = () => {
 
         {/* Advanced Filters Panel */}
         {showFilters && (
-           <div className="bg-muted/30 border p-5 rounded-lg mb-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 animate-in slide-in-from-top-4 fade-in duration-300">
+           <div className="bg-muted/30 border p-5 rounded-lg mb-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 animate-in slide-in-from-top-4 fade-in duration-300">
               <div className="space-y-2">
                  <label className="text-xs font-semibold text-muted-foreground uppercase px-1">Min Salary</label>
                  <div className="relative">
@@ -235,10 +237,24 @@ const FindJobs = () => {
                     </SelectTrigger>
                     <SelectContent>
                        <SelectItem value="all">Any Type</SelectItem>
-                       <SelectItem value="Full-time">Full-time</SelectItem>
-                       <SelectItem value="Part-time">Part-time</SelectItem>
+                       <SelectItem value="Full time">Full time</SelectItem>
+                       <SelectItem value="Part time">Part time</SelectItem>
                        <SelectItem value="Contract">Contract</SelectItem>
                        <SelectItem value="Internship">Internship</SelectItem>
+                    </SelectContent>
+                 </Select>
+              </div>
+              <div className="space-y-2">
+                 <label className="text-xs font-semibold text-muted-foreground uppercase px-1">Tax Terms</label>
+                 <Select value={taxTermFilter} onValueChange={setTaxTermFilter}>
+                    <SelectTrigger className="bg-background">
+                       <SelectValue placeholder="Any Term" />
+                    </SelectTrigger>
+                    <SelectContent>
+                       <SelectItem value="all">Any Term</SelectItem>
+                       <SelectItem value="W2">W2</SelectItem>
+                       <SelectItem value="C2C">C2C</SelectItem>
+                       <SelectItem value="1099">1099</SelectItem>
                     </SelectContent>
                  </Select>
               </div>
@@ -281,6 +297,7 @@ const FindJobs = () => {
                   <Button variant="ghost" size="sm" onClick={() => {
                      setMinSalary("");
                      setJobTypeFilter("all");
+                     setTaxTermFilter("all");
                      setJobModeFilter("all");
                      setVisaFilter("all");
                   }} className="text-muted-foreground hover:text-foreground text-[11px] font-bold uppercase tracking-widest">
@@ -314,7 +331,7 @@ const FindJobs = () => {
               variant="outline" 
               onClick={() => { 
                 setSearchTerm(""); setLocationFilter(""); setMinSalary("");
-                setJobTypeFilter("all"); setJobModeFilter("all"); setVisaFilter("all");
+                setJobTypeFilter("all"); setTaxTermFilter("all"); setJobModeFilter("all"); setVisaFilter("all");
               }}
               className="min-w-[150px]"
             >

@@ -94,6 +94,22 @@ const EmployerAuth = () => {
   };
 
   // Standard Login
+  const handleResendOtp = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+      });
+      if (error) throw error;
+      toast({ title: "Verification code resent!" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSignIn = async (e: any) => {
     e.preventDefault();
     setLoading(true);
@@ -171,6 +187,12 @@ const EmployerAuth = () => {
             />
             <Button type="submit" disabled={loading} className="w-full">
               {loading ? "Verifying..." : "Verify & Login"}
+            </Button>
+            <p className="text-sm text-center text-muted-foreground mt-4">
+              Check Inbox / Spam / Junk folders.
+            </p>
+            <Button type="button" variant="outline" className="w-full mt-2" onClick={handleResendOtp} disabled={loading}>
+              Resend Code
             </Button>
           </form>
         ) : showForgotPassword ? (

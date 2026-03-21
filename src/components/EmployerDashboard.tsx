@@ -94,7 +94,8 @@ const EmployerDashboard = () => {
   const [salaryMin, setSalaryMin] = useState("");
   const [salaryMax, setSalaryMax] = useState("");
   const [salaryPeriod, setSalaryPeriod] = useState("Yearly");
-  const [jobType, setJobType] = useState("Full-time");
+  const [jobType, setJobType] = useState("Full time");
+  const [taxTerm, setTaxTerm] = useState("");
   const [jobMode, setJobMode] = useState("On-Site");
   const [expiresAt, setExpiresAt] = useState("");
   const [experienceRequired, setExperienceRequired] = useState("");
@@ -290,12 +291,11 @@ const EmployerDashboard = () => {
       location,
       salary_min: salaryMin ? parseInt(salaryMin) : null,
       salary_max: salaryMax ? parseInt(salaryMax) : null,
-      job_type: jobType,
+      job_type: taxTerm ? `${jobType} - ${taxTerm}` : jobType,
       job_mode: jobMode,
       expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
       experience_required: experienceRequired ? parseInt(experienceRequired) : 0,
       work_authorization: selectedWorkAuth,
-      benefits: benefits,
       salary_period: salaryPeriod,
     };
 
@@ -348,7 +348,8 @@ const EmployerDashboard = () => {
     setExperienceRequired("");
     setSelectedWorkAuth([]);
     setJobMode("On-Site");
-    setJobType("Full-time");
+    setJobType("Full time");
+    setTaxTerm("");
     setExpiresAt("");
     setBenefits("");
     setJobSkills([]);
@@ -363,7 +364,21 @@ const EmployerDashboard = () => {
     setSalaryMin(job.salary_min?.toString() || "");
     setSalaryMax(job.salary_max?.toString() || "");
     setSalaryPeriod(job.salary_period || "Yearly");
-    setJobType(job.job_type || "Full-time");
+    
+    if (job.job_type) {
+      if (job.job_type.includes(" - ")) {
+        const parts = job.job_type.split(" - ");
+        setJobType(parts[0]);
+        setTaxTerm(parts[1]);
+      } else {
+        setJobType(job.job_type);
+        setTaxTerm("");
+      }
+    } else {
+      setJobType("Full time");
+      setTaxTerm("");
+    }
+    
     setJobMode(job.job_mode || "On-Site");
     setExperienceRequired(job.experience_required?.toString() || "");
     setSelectedWorkAuth(job.work_authorization || []);
@@ -678,15 +693,32 @@ const EmployerDashboard = () => {
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
+                    <div className="space-y-4 md:col-span-2">
                        <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Job Classification</Label>
-                       <ToggleGroup type="single" value={jobType} onValueChange={(val) => val && setJobType(val)} className="justify-start flex-wrap gap-2">
-                          {["Full-time", "Part-time", "Contract", "Internship", "W2", "C2C", "1099"].map(type => (
-                            <ToggleGroupItem key={type} value={type} variant="outline" className="h-9 px-3 text-[10px] font-black uppercase tracking-widest border-muted-foreground/20 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-                              {type}
-                            </ToggleGroupItem>
-                          ))}
-                       </ToggleGroup>
+                       
+                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-bold text-muted-foreground uppercase">Job Type</Label>
+                            <ToggleGroup type="single" value={jobType} onValueChange={(val) => val && setJobType(val)} className="justify-start flex-wrap gap-2">
+                               {["Full time", "Part time", "Contract", "Internship"].map(type => (
+                                 <ToggleGroupItem key={type} value={type} variant="outline" className="h-8 px-3 text-[10px] font-bold uppercase tracking-widest border-muted-foreground/20 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                                   {type}
+                                 </ToggleGroupItem>
+                               ))}
+                            </ToggleGroup>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-bold text-muted-foreground uppercase">Tax Terms</Label>
+                            <ToggleGroup type="single" value={taxTerm} onValueChange={(val) => val && setTaxTerm(val)} className="justify-start flex-wrap gap-2">
+                               {["W2", "C2C", "1099"].map(type => (
+                                 <ToggleGroupItem key={type} value={type} variant="outline" className="h-8 px-3 text-[10px] font-bold uppercase tracking-widest border-muted-foreground/20 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                                   {type}
+                                 </ToggleGroupItem>
+                               ))}
+                            </ToggleGroup>
+                          </div>
+                       </div>
                     </div>
                   </div>
 
@@ -695,10 +727,7 @@ const EmployerDashboard = () => {
                     <Textarea required rows={8} placeholder="Dive deep into the expectations, company culture, and mandatory qualifications..." value={description} onChange={(e) => setDescription(e.target.value)} className="resize-none leading-relaxed" />
                   </div>
 
-                  <div className="space-y-3">
-                    <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Benefits & Perks</Label>
-                    <Textarea rows={4} placeholder="e.g. Health Insurance, 401k, Unlimited PTO, etc." value={benefits} onChange={(e) => setBenefits(e.target.value)} className="resize-none leading-relaxed" />
-                  </div>
+
 
                   <div className="grid md:grid-cols-2 gap-8">
                      <div className="p-5 border rounded-xl bg-gradient-to-br from-primary/5 to-transparent border-primary/10 space-y-6">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,10 +7,12 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { UserCircle, Mail, CheckCircle } from "lucide-react";
+import { UserCircle, Mail, CheckCircle, Eye, EyeOff } from "lucide-react";
 
 const CandidateAuth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = location.state?.returnTo || "/dashboard";
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(false);
@@ -18,6 +20,7 @@ const CandidateAuth = () => {
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -38,7 +41,7 @@ const CandidateAuth = () => {
         .single();
 
       if (profile?.role === "candidate") {
-        navigate("/dashboard", { replace: true });
+        navigate(returnTo, { replace: true });
       }
     };
 
@@ -105,7 +108,7 @@ const CandidateAuth = () => {
       if (error) throw error;
 
       toast({ title: "Email verified successfully!" });
-      navigate("/dashboard");
+      navigate(returnTo);
 
     } catch (error: any) {
       toast({
@@ -113,6 +116,22 @@ const CandidateAuth = () => {
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+      });
+      if (error) throw error;
+      toast({ title: "Verification code resent!" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -131,7 +150,7 @@ const CandidateAuth = () => {
 
       if (error) throw error;
       toast({ title: "Welcome back!" });
-      navigate("/dashboard");
+      navigate(returnTo);
 
     } catch (error: any) {
       toast({
@@ -200,6 +219,12 @@ const CandidateAuth = () => {
             <Button type="submit" disabled={loading} className="w-full">
               {loading ? "Verifying..." : "Verify & Login"}
             </Button>
+            <p className="text-sm text-center text-muted-foreground mt-4">
+              Check Inbox / Spam / Junk folders.
+            </p>
+            <Button type="button" variant="outline" className="w-full mt-2" onClick={handleResendOtp} disabled={loading}>
+              Resend Code
+            </Button>
           </form>
         ) : showForgotPassword ? (
           /* Forgot Password View */
@@ -262,7 +287,12 @@ const CandidateAuth = () => {
                 <Label>Email</Label>
                 <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
                 <Label>Password</Label>
-                <Input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                <div className="relative">
+                  <Input type={showPassword ? "text" : "password"} required value={password} onChange={(e) => setPassword(e.target.value)} />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? "Signing in..." : "Sign In"}
@@ -314,7 +344,12 @@ const CandidateAuth = () => {
                 </div>
                 
                 <Label>Password</Label>
-                <Input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
+                <div className="relative">
+                  <Input type={showPassword ? "text" : "password"} required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 
                 <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-border/50 my-6 shadow-inner group">
                   <div className="w-6 h-6 border-2 border-primary/40 rounded-md flex items-center justify-center bg-background group-hover:border-primary transition-colors">

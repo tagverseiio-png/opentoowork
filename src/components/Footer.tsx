@@ -69,6 +69,11 @@ const Footer = () => {
                   For Candidates
                 </Link>
               </li>
+              <li>
+                <Link to="/admin/auth" className="text-muted-foreground hover:text-primary transition-colors">
+                  Admin Portal
+                </Link>
+              </li>
             </ul>
           </div>
 
