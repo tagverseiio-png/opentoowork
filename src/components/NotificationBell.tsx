@@ -187,11 +187,7 @@ export const NotificationBell = () => {
                       <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
                         {n.message}
                       </p>
-                      {n.link && (
-                        <div className="flex items-center gap-1 text-[9px] font-black text-primary uppercase tracking-widest pt-1">
-                          Access Resource <ExternalLink className="h-2.5 w-2.5" />
-                        </div>
-                      )}
+                      {/* Removed 'Access Resource' text block as requested */}
                     </div>
                   </div>
                   <Button
