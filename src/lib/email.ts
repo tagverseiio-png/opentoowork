@@ -34,7 +34,7 @@ export async function sendEmail({ to, subject, html, text }: EmailParams) {
         to: [{ email: to }],
         subject,
         htmlContent: html,
-        textContent: text || '',
+        textContent: text || subject || 'OpenToWork Notification',
       }),
     });
 
