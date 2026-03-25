@@ -229,7 +229,7 @@ const EmployerDashboard = () => {
           company_name: editCompanyName,
           description: editDescription,
           company_website: editWebsite,
-          logo_url: editLogoUrl
+          logo_url: finalLogoUrl || editLogoUrl
         })
         .eq("user_id", session.user.id);
 
