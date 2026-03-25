@@ -84,7 +84,7 @@ const JobDetail = () => {
       .select("id")
       .eq("job_id", jobId)
       .eq("candidate_id", candidateId)
-      .single();
+      .maybeSingle();
     
     if (data) {
       setHasApplied(true);
