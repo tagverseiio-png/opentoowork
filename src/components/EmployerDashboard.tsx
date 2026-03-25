@@ -700,6 +700,7 @@ const EmployerDashboard = () => {
             >
               <Users className="h-3 w-3" /> Talent Pool
             </Button>
+            {/* Subscription tab hidden — not yet implemented
             <Button
               variant={activeTab === "subscription" ? "default" : "ghost"}
               onClick={() => setActiveTab("subscription")}
@@ -707,6 +708,7 @@ const EmployerDashboard = () => {
             >
               <DollarSign className="h-3 w-3" /> Subscription
             </Button>
+            */}
           </div>
 
           <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
