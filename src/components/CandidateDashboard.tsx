@@ -11,6 +11,7 @@ import { FileText, CheckCircle, Clock, XCircle, MapPin, Building2, Calendar, Bri
 import { ScrollArea } from "./ui/scroll-area";
 import { Textarea } from "./ui/textarea";
 import { Separator } from "./ui/separator";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
@@ -442,8 +443,8 @@ const CandidateDashboard = () => {
                       </div>
 
                       <div className="space-y-4 pt-4 border-t border-dashed">
-                        <div className="flex items-center justify-between">
-                           <Label className="text-[10px] uppercase font-black tracking-widest text-primary">Resume Parsing Unit</Label>
+                         <div className="flex items-center justify-between">
+                           <Label className="text-[10px] uppercase font-black tracking-widest text-primary">Copy and Paste Resume</Label>
                            <Button 
                              variant="outline" 
                              size="sm" 
@@ -459,7 +460,7 @@ const CandidateDashboard = () => {
                            </Button>
                         </div>
                         <Textarea 
-                          placeholder="Paste full resume text for matching optimization..." 
+                          placeholder="Manually copy and paste your entire resume here for skill matching..." 
                           className="min-h-[120px] text-xs font-mono bg-muted/20 rounded-xl leading-relaxed"
                           value={editResumeText}
                           onChange={(e) => setEditResumeText(e.target.value)}
@@ -583,35 +584,48 @@ const CandidateDashboard = () => {
                 </Dialog>
              </div>
 
-             <ScrollArea className="h-[280px] -mx-2 px-2">
+             <ScrollArea className="h-[280px]">
                 {skills.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <Globe className="h-12 w-12 text-muted/20 mb-3" />
                     <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest opacity-50">No data points mapped</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {skills.map((skill) => (
-                      <div key={skill.id} className="p-4 rounded-xl border bg-muted/5 flex items-center justify-between group transition-all hover:bg-muted/10">
-                        <div className="space-y-1">
-                          <div className="text-sm font-black uppercase tracking-tight text-foreground">{skill.skill_name}</div>
-                          <div className="flex items-center gap-2 text-[9px] text-muted-foreground font-bold italic">
-                            <span className="text-primary">{skill.years_experience}Y Experience</span>
-                            <span>•</span>
-                            <span className="uppercase text-muted-foreground/40">{skill.skill_level}</span>
-                          </div>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-destructive/40 hover:text-destructive hover:bg-destructive/5 opacity-0 group-hover:opacity-100 transition-all rounded-lg"
-                          onClick={() => handleDeleteSkill(skill.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
+                  <Table className="w-full text-left border-collapse">
+                    <TableHeader>
+                      <TableRow className="bg-muted/10 hover:bg-muted/10 border-b border-border/50">
+                        <TableHead className="h-10 text-[10px] font-black uppercase tracking-widest w-[40%]">Skill</TableHead>
+                        <TableHead className="h-10 text-[10px] font-black uppercase tracking-widest text-center">Experience</TableHead>
+                        <TableHead className="h-10 text-[10px] font-black uppercase tracking-widest text-center">Level</TableHead>
+                        <TableHead className="h-10 w-[50px]"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {skills.map((skill) => (
+                        <TableRow key={skill.id} className="group hover:bg-muted/5 transition-colors border-b border-border/50 last:border-0">
+                          <TableCell className="py-3">
+                            <span className="text-xs font-black uppercase tracking-tight text-foreground">{skill.skill_name}</span>
+                          </TableCell>
+                          <TableCell className="py-3 text-center">
+                            <span className="text-[10px] font-bold text-primary">{skill.years_experience} Yrs</span>
+                          </TableCell>
+                          <TableCell className="py-3 text-center">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{skill.skill_level}</span>
+                          </TableCell>
+                          <TableCell className="py-3 text-right">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6 text-destructive/40 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all rounded"
+                              onClick={() => handleDeleteSkill(skill.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 )}
              </ScrollArea>
           </Card>

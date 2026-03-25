@@ -12,6 +12,7 @@ import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Building2, DollarSign, Briefcase, Calendar, Lock, CheckCircle2, Globe, Target, Share2, Users } from "lucide-react";
 import { ToastAction } from "@/components/ui/toast";
+import { sendApplicationConfirmation, sendEmployerNewApplicantAlert, calculateMatchScore } from "@/lib/email";
 
 const JobDetail = () => {
   const { id } = useParams();
@@ -134,41 +135,8 @@ const JobDetail = () => {
 
   const getMatchScore = () => {
     if (!job || !candidateSkills || candidateSkills.length === 0) return 0;
-    
-    const reqSkills = job.job_skills?.filter((s: any) => s.is_required) || [];
-    const optSkills = job.job_skills?.filter((s: any) => !s.is_required) || [];
-    
-    if (reqSkills.length === 0 && optSkills.length === 0) return 0;
-
-    let score = 0;
-    const reqWeight = 0.8;
-    const optWeight = 0.2;
-
-    if (reqSkills.length > 0) {
-      let matched = 0;
-      reqSkills.forEach((js: any) => {
-        const hasSkill = candidateSkills.find(cs => cs.skill_name.toLowerCase() === js.skill_name.toLowerCase());
-        if (hasSkill) {
-          const expRatio = Math.min(hasSkill.years_experience / (js.years_experience || 1), 1.2);
-          matched += 1 * expRatio;
-        }
-      });
-      score += (matched / reqSkills.length) * reqWeight * 100;
-    } else {
-      score += reqWeight * 100;
-    }
-
-    if (optSkills.length > 0) {
-      let matched = 0;
-      optSkills.forEach((js: any) => {
-        if (candidateSkills.some(cs => cs.skill_name.toLowerCase() === js.skill_name.toLowerCase())) {
-          matched += 1;
-        }
-      });
-      score += (matched / optSkills.length) * optWeight * 100;
-    }
-
-    return Math.min(Math.round(score), 100);
+    if (!job.job_skills || job.job_skills.length === 0) return 0;
+    return calculateMatchScore(candidateSkills, job.job_skills);
   };
 
   const matchScore = getMatchScore();
@@ -225,6 +193,35 @@ const JobDetail = () => {
       });
       setHasApplied(true);
       setCoverLetter("");
+
+      // ── Send email notifications (fire & forget) ──
+      const candidateName = candidateProfile?.profiles?.full_name || user?.user_metadata?.full_name || 'Candidate';
+      const candidateEmail = user?.email;
+      const employerEmail = job.employer?.profiles?.email;
+
+      if (candidateEmail) {
+        sendApplicationConfirmation(
+          candidateEmail,
+          candidateName,
+          job.title,
+          job.employer?.company_name || 'Company'
+        );
+      }
+
+      // Fetch employer email for the alert
+      const { data: employerUser } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', job.employer?.user_id)
+        .single();
+
+      if (employerUser?.email) {
+        sendEmployerNewApplicantAlert(
+          employerUser.email,
+          candidateName,
+          job.title
+        );
+      }
     } catch (error: any) {
       toast({
         title: "Info",

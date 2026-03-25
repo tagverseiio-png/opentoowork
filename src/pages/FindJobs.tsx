@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { calculateMatchScore } from "@/lib/email";
 
 const FindJobs = () => {
   const [jobs, setJobs] = useState<any[]>([]);
@@ -88,52 +89,8 @@ const FindJobs = () => {
 
   const getMatchScore = (job: any) => {
     if (!candidateSkills || candidateSkills.length === 0) return 0;
-    
-    // Hard Filter: Visa Match
-    // If job has work auth requirements and candidate doesn't match any, score is 0
-    // (Assuming candidate_profiles has a work_authorization field)
-    // We'll fetch the candidate profile first to be sure
-    // For now, let's focus on skills to avoid excessive DB calls in the scoring loop
-    
-    const reqSkills = job.job_skills?.filter((s: any) => s.is_required) || [];
-    const optSkills = job.job_skills?.filter((s: any) => !s.is_required) || [];
-    
-    if (reqSkills.length === 0 && optSkills.length === 0) return 0;
-
-    let score = 0;
-    const reqWeight = 0.8;
-    const optWeight = 0.2;
-
-    // Required Skills Calculation
-    if (reqSkills.length > 0) {
-      let reqMatchedScore = 0;
-      reqSkills.forEach((js: any) => {
-        const candidateHasSkill = candidateSkills.find(cs => cs.skill_name.toLowerCase() === js.skill_name.toLowerCase());
-        if (candidateHasSkill) {
-          // Experience multiplier
-          const expRatio = Math.min(candidateHasSkill.years_experience / (js.years_experience || 1), 1.2);
-          reqMatchedScore += 1 * expRatio;
-        }
-      });
-      score += (reqMatchedScore / reqSkills.length) * reqWeight * 100;
-    } else {
-      // If no required skills, give full weight to weight (or adjust logic)
-      score += reqWeight * 100;
-    }
-
-    // Optional Skills Calculation
-    if (optSkills.length > 0) {
-      let optMatchedScore = 0;
-      optSkills.forEach((js: any) => {
-        const candidateHasSkill = candidateSkills.find(cs => cs.skill_name.toLowerCase() === js.skill_name.toLowerCase());
-        if (candidateHasSkill) {
-          optMatchedScore += 1;
-        }
-      });
-      score += (optMatchedScore / optSkills.length) * optWeight * 100;
-    }
-
-    return Math.min(Math.round(score), 100);
+    if (!job.job_skills || job.job_skills.length === 0) return 0;
+    return calculateMatchScore(candidateSkills, job.job_skills);
   };
 
   // Filter jobs

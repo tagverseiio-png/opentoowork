@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "./ui/separator";
+import { sendStatusChangeNotification, calculateMatchScore } from "@/lib/email";
 
 const WORK_AUTH_OPTIONS = [
   "H1B", "CPT-EAD", "OPT-EAD", "GC", "GC-EAD", "USC", "TN"
@@ -426,6 +427,9 @@ const EmployerDashboard = () => {
   };
 
   const updateApplicationStatus = async (appId: string, newStatus: string) => {
+    // Find the application to get candidate details for email
+    const app = applications.find(a => a.id === appId);
+
     const { error } = await supabase
       .from("applications")
       .update({ status: newStatus })
@@ -438,6 +442,16 @@ const EmployerDashboard = () => {
         title: `Application marked as ${newStatus.replace('_', ' ')}`, 
       });
       if (selectedJob) fetchApplications(selectedJob.id);
+
+      // Fire email notification to candidate (fire & forget)
+      if (app?.candidate?.profiles?.email && selectedJob) {
+        sendStatusChangeNotification(
+          app.candidate.profiles.email,
+          app.candidate.profiles.full_name || 'Candidate',
+          selectedJob.title,
+          newStatus
+        );
+      }
     }
   };
 
@@ -1391,7 +1405,15 @@ const EmployerDashboard = () => {
                               <h3 className="font-black text-lg leading-tight uppercase tracking-tighter">{talent.profiles?.full_name}</h3>
                               <p className="text-xs text-muted-foreground font-black uppercase tracking-widest">{talent.work_authorization} • {talent.experience_years}Y EXP</p>
                            </div>
-                           <Badge className="bg-primary/10 text-primary border-transparent">92% MATCH</Badge>
+                           <Badge className="bg-primary/10 text-primary border-transparent tabular-nums text-xs font-black">
+                             {(() => {
+                               // Real math-based match score using the first active job's skills
+                               const activeJobWithSkills = jobs.find(j => j.is_active && j.job_skills?.length > 0);
+                               if (!activeJobWithSkills || !talent.candidate_skills?.length) return '—';
+                               const score = calculateMatchScore(talent.candidate_skills, activeJobWithSkills.job_skills);
+                               return `${score}% MATCH`;
+                             })()}
+                           </Badge>
                         </div>
                         
                         <div className="flex flex-wrap gap-1.5 h-20 content-start">
