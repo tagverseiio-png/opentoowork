@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "./ui/separator";
-import { sendStatusChangeNotification, calculateMatchScore } from "@/lib/email";
+import { sendStatusChangeNotification, sendJobAlertEmail, calculateMatchScore } from "@/lib/email";
 
 const WORK_AUTH_OPTIONS = [
   "H1B", "CPT-EAD", "OPT-EAD", "GC", "GC-EAD", "USC", "TN"
@@ -332,8 +332,75 @@ const EmployerDashboard = () => {
     setEditingJobId(null);
     fetchJobs();
 
+    // ── Fire match-based email notifications for NEW jobs (not edits) ──
+    if (!editingJobId && jobResult && jobSkills.length > 0) {
+      notifyMatchingCandidates(jobResult, jobSkills);
+    }
+
     // Reset Form
     resetJobForm();
+  };
+
+  /**
+   * Finds candidates whose skills match the newly posted job
+   * and sends them a job alert email. Fire-and-forget.
+   * Only notifies candidates with match score >= 50%.
+   */
+  const notifyMatchingCandidates = async (
+    job: any,
+    skills: { name: string; exp: string; isRequired: boolean }[]
+  ) => {
+    try {
+      // Build job_skills format for calculateMatchScore
+      const jobSkillsFormatted = skills.map(s => ({
+        skill_name: s.name,
+        years_experience: parseInt(s.exp) || 0,
+        is_required: s.isRequired,
+      }));
+
+      // Fetch candidates whose work_authorization overlaps with the job's
+      let query = supabase
+        .from("candidate_profiles")
+        .select("*, profiles!inner(full_name, email), candidate_skills(*)");
+
+      // Filter by visa if job has specific work auth requirements
+      if (job.work_authorization && job.work_authorization.length > 0) {
+        query = query.overlaps("work_authorization", job.work_authorization);
+      }
+
+      const { data: candidates } = await query;
+      if (!candidates || candidates.length === 0) return;
+
+      const companyName = profile?.profiles?.full_name || profile?.company_name || "Employer";
+      let notifiedCount = 0;
+
+      for (const candidate of candidates) {
+        if (!candidate.candidate_skills?.length) continue;
+        if (!candidate.profiles?.email) continue;
+
+        const score = calculateMatchScore(candidate.candidate_skills, jobSkillsFormatted);
+
+        // Only notify candidates with >= 50% match
+        if (score >= 50) {
+          sendJobAlertEmail(
+            candidate.profiles.email,
+            candidate.profiles.full_name || "Candidate",
+            job.title,
+            companyName,
+            job.location || "Remote",
+            job.id
+          );
+          notifiedCount++;
+        }
+      }
+
+      if (notifiedCount > 0) {
+        console.log(`Match notifications sent to ${notifiedCount} candidates (>=50% match)`);
+        toast({ title: `${notifiedCount} matching candidate${notifiedCount > 1 ? 's' : ''} notified via email!` });
+      }
+    } catch (err) {
+      console.warn("Match notification error (non-blocking):", err);
+    }
   };
 
   const resetJobForm = () => {

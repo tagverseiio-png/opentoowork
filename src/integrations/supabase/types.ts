@@ -62,7 +62,6 @@ export type Database = {
           },
         ]
       }
-      candidate_
       candidate_skills: {
         Row: {
           id: string
@@ -222,7 +221,7 @@ export type Database = {
           }
         ]
       }
-      profiles: {
+      candidate_profiles: {
         Row: {
           bio: string | null
           created_at: string | null

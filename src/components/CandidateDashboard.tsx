@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { calculateMatchScore, sendEmail } from "@/lib/email";
 
 const WORK_AUTH_OPTIONS = [
   "H1B", "CPT-EAD", "OPT-EAD", "GC", "GC-EAD", "USC", "TN"
@@ -139,11 +140,17 @@ const CandidateDashboard = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    const { data } = await supabase
-      .from("job_alerts")
-      .select("*")
-      .eq("user_id", session.user.id);
-    setAlerts(data || []);
+    try {
+      const { data, error } = await supabase
+        .from("job_alerts")
+        .select("*")
+        .eq("user_id", session.user.id);
+      if (error) throw error;
+      setAlerts(data || []);
+    } catch (err: any) {
+      console.warn("job_alerts table may not exist:", err.message);
+      setAlerts([]);
+    }
   };
 
   const fetchRecommendations = async () => {
@@ -161,8 +168,6 @@ const CandidateDashboard = () => {
       .contains('work_authorization', [profile.work_authorization])
       .limit(10);
     
-    // Simple frontend scoring/matching would go here, 
-    // but for now we provide targeted visa-matched roles.
     setRecommendations(data || []);
   };
 
@@ -170,19 +175,21 @@ const CandidateDashboard = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    const { error } = await supabase
-      .from("job_alerts")
-      .insert({
-        user_id: session.user.id,
-        keywords: "Software Engineer",
-        visa_status: profile?.work_authorization
-      });
+    try {
+      const { error } = await supabase
+        .from("job_alerts")
+        .insert({
+          user_id: session.user.id,
+          keywords: "Software Engineer",
+          visa_status: profile?.work_authorization
+        });
 
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
+      if (error) throw error;
       toast({ title: "Job alert created!" });
       fetchAlerts();
+    } catch (err: any) {
+      console.warn("job_alerts table may not exist:", err.message);
+      toast({ title: "Could not create alert", description: "The job_alerts feature requires database setup.", variant: "destructive" });
     }
   };
 
@@ -237,6 +244,9 @@ const CandidateDashboard = () => {
       toast({ title: "Profile updated successfully!" });
       setIsEditing(false);
       fetchProfile();
+
+      // Fire match-based email with matching jobs (fire & forget)
+      notifyCandidateOfMatchingJobs(session.user.id);
     } catch (error: any) {
       toast({
         title: "Error updating profile",
@@ -245,6 +255,102 @@ const CandidateDashboard = () => {
       });
     } finally {
       setSavingProfile(false);
+    }
+  };
+
+  /**
+   * After profile update, find matching jobs and send a digest email
+   * to the candidate with all jobs scoring >= 50% match.
+   */
+  const notifyCandidateOfMatchingJobs = async (userId: string) => {
+    try {
+      // Fetch the candidate's latest skills
+      const { data: candidateProfile } = await supabase
+        .from("candidate_profiles")
+        .select("*, profiles!inner(full_name, email)")
+        .eq("user_id", userId)
+        .single();
+
+      if (!candidateProfile?.profiles?.email) return;
+
+      const { data: candidateSkills } = await supabase
+        .from("candidate_skills")
+        .select("*")
+        .eq("candidate_id", candidateProfile.id);
+
+      if (!candidateSkills?.length) return;
+
+      // Fetch active jobs with their skills
+      let query = supabase
+        .from("jobs")
+        .select("*, employer:employer_profiles(company_name), job_skills(*)")
+        .eq("is_active", true);
+
+      // Filter by visa match if candidate has work auth set
+      if (candidateProfile.work_authorization) {
+        query = query.contains("work_authorization", [candidateProfile.work_authorization]);
+      }
+
+      const { data: jobs } = await query;
+      if (!jobs?.length) return;
+
+      // Calculate scores and filter >= 50%
+      const matchedJobs = jobs
+        .map(job => ({
+          ...job,
+          score: job.job_skills?.length ? calculateMatchScore(candidateSkills, job.job_skills) : 0
+        }))
+        .filter(job => job.score >= 50)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5); // Top 5 matches
+
+      if (matchedJobs.length === 0) return;
+
+      // Build digest email
+      const jobListHtml = matchedJobs.map(job => `
+        <div style="padding:16px;border:1px solid #e4e4e7;border-radius:12px;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <strong style="font-size:16px;">${job.title}</strong>
+            <span style="background:#f0fdf4;color:#16a34a;font-size:11px;font-weight:800;padding:4px 10px;border-radius:6px;">${job.score}% MATCH</span>
+          </div>
+          <p style="color:#52525b;margin:4px 0 0;font-size:13px;">${job.employer?.company_name || 'Company'} &bull; ${job.location || 'Remote'}</p>
+        </div>
+      `).join('');
+
+      await sendEmail({
+        to: candidateProfile.profiles.email,
+        subject: `${matchedJobs.length} New Job Match${matchedJobs.length > 1 ? 'es' : ''} for Your Profile!`,
+        html: `
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<style>
+  body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f4f4f5;color:#18181b;}
+  .container{max-width:560px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e4e4e7;}
+  .header{background:linear-gradient(135deg,#18181b 0%,#27272a 100%);padding:32px 40px;text-align:center;}
+  .header h1{margin:0;color:#fff;font-size:20px;font-weight:900;letter-spacing:2px;text-transform:uppercase;}
+  .body{padding:40px;}
+  .body h2{font-size:22px;font-weight:800;margin:0 0 8px;color:#18181b;}
+  .body p{font-size:14px;line-height:1.7;color:#52525b;margin:0 0 16px;}
+  .footer{padding:24px 40px;background:#fafafa;border-top:1px solid #e4e4e7;text-align:center;}
+  .footer p{font-size:10px;color:#a1a1aa;margin:0;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;}
+</style>
+</head><body>
+<div class="container">
+  <div class="header"><h1>OpenToWork</h1></div>
+  <div class="body">
+    <h2>🎯 Jobs Matching Your Profile</h2>
+    <p>Hi <strong>${candidateProfile.profiles.full_name || 'there'}</strong>, we found roles that match your updated skills:</p>
+    ${jobListHtml}
+    <p style="margin-top:24px;"><a href="https://opentoowork.tech/jobs" style="display:inline-block;background:#18181b;color:#fff;padding:12px 28px;border-radius:8px;font-size:12px;font-weight:800;text-decoration:none;text-transform:uppercase;letter-spacing:1px;">View All Matches</a></p>
+  </div>
+  <div class="footer"><p>Sent from verify@opentoowork.tech &bull; OpenToWork Platform</p></div>
+</div>
+</body></html>`
+      });
+
+      console.log(`Sent match digest with ${matchedJobs.length} jobs to ${candidateProfile.profiles.email}`);
+    } catch (err) {
+      console.warn("Match digest error (non-blocking):", err);
     }
   };
 

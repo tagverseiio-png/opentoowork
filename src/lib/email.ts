@@ -1,6 +1,14 @@
-// OpenToWork Email API Configuration
-const API_URL = 'https://opentoowork-email-api.vercel.app/api/send-email';
-const API_KEY = import.meta.env.VITE_EMAIL_API_KEY || 'test-api-key-123';
+// ═══════════════════════════════════════════════════════════════
+// Brevo (Sendinblue) Transactional Email API
+// Docs: https://developers.brevo.com/reference/sendtransacemail
+// ═══════════════════════════════════════════════════════════════
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
+const BREVO_API_KEY = import.meta.env.VITE_BREVO_API_KEY || '';
+
+const SENDER = {
+  name: 'OpenToWork',
+  email: 'verify@opentoowork.tech',
+};
 
 export interface EmailParams {
   to: string;
@@ -10,30 +18,36 @@ export interface EmailParams {
 }
 
 /**
- * Sends an email using the OpenToWork Email API.
- * From: verify@opentoowork.tech (handled by API server)
+ * Sends a transactional email using the Brevo SMTP API.
  */
 export async function sendEmail({ to, subject, html, text }: EmailParams) {
   try {
-    const response = await fetch(API_URL, {
+    const response = await fetch(BREVO_API_URL, {
       method: 'POST',
       headers: {
-        'x-api-key': API_KEY,
-        'Content-Type': 'application/json'
+        'api-key': BREVO_API_KEY,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
-      body: JSON.stringify({ to, subject, html, text: text || '' })
+      body: JSON.stringify({
+        sender: SENDER,
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+        textContent: text || '',
+      }),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || 'Email request failed');
+      throw new Error(data.message || data.error || 'Brevo email request failed');
     }
 
-    console.log('Email sent successfully:', data);
+    console.log('Brevo email sent successfully:', data);
     return { success: true, data };
   } catch (error: any) {
-    console.error('Error occurred while sending email:', error.message);
+    console.error('Error sending email via Brevo:', error.message);
     return { success: false, error: error.message };
   }
 }
@@ -157,8 +171,6 @@ export function sendJobAlertEmail(
 // Math-based Candidate Match Score Calculator (reusable)
 // Uses weighted scoring: Required skills 80%, Optional skills 20%
 // Experience ratio capped at 1.2× for over-qualified bonus
-// Formula: score = Σ(matched_req × min(cExpYrs/jExpYrs, 1.2)) / totalReq × 0.8 × 100
-//        + Σ(matched_opt) / totalOpt × 0.2 × 100
 // ═══════════════════════════════════════════════════════════════
 export interface SkillRecord {
   skill_name: string;
@@ -180,7 +192,7 @@ export function calculateMatchScore(
 
   const W_REQ = 0.8;
   const W_OPT = 0.2;
-  const EXP_CAP = 1.2; // max bonus multiplier for exceeding required experience
+  const EXP_CAP = 1.2;
 
   let score = 0;
 
@@ -201,7 +213,7 @@ export function calculateMatchScore(
     }
     score += (reqScore / reqSkills.length) * W_REQ * 100;
   } else {
-    score += W_REQ * 100; // no required skills → full weight awarded
+    score += W_REQ * 100;
   }
 
   // ── Optional Skills (weighted 20%) ──

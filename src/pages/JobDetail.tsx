@@ -108,6 +108,7 @@ const JobDetail = () => {
       .select(`
         *,
         employer:employer_profiles(
+          user_id,
           company_name,
           company_website,
           location,

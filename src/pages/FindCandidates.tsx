@@ -17,6 +17,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
+import { calculateMatchScore } from "@/lib/email";
 
 const FindCandidates = () => {
   const { toast } = useToast();
@@ -93,42 +94,9 @@ const FindCandidates = () => {
   const getMatchScore = (candidate: any) => {
     if (matchingJobId === "none") return 0;
     const job = employerJobs.find(j => j.id === matchingJobId);
-    if (!job || !candidate.candidate_skills) return 0;
-
-    const reqSkills = job.job_skills?.filter((s: any) => s.is_required) || [];
-    const optSkills = job.job_skills?.filter((s: any) => !s.is_required) || [];
-
-    if (reqSkills.length === 0 && optSkills.length === 0) return 100;
-
-    let score = 0;
-    const reqWeight = 0.8;
-    const optWeight = 0.2;
-
-    if (reqSkills.length > 0) {
-      let matched = 0;
-      reqSkills.forEach(js => {
-        const hasSkill = candidate.candidate_skills.find((cs: any) => cs.skill_name.toLowerCase() === js.skill_name.toLowerCase());
-        if (hasSkill) {
-          const expRatio = Math.min(hasSkill.years_experience / (js.years_experience || 1), 1.2);
-          matched += 1 * expRatio;
-        }
-      });
-      score += (matched / reqSkills.length) * reqWeight * 100;
-    } else {
-      score += reqWeight * 100;
-    }
-
-    if (optSkills.length > 0) {
-      let matched = 0;
-      optSkills.forEach(js => {
-        if (candidate.candidate_skills.some((cs: any) => cs.skill_name.toLowerCase() === js.skill_name.toLowerCase())) {
-          matched += 1;
-        }
-      });
-      score += (matched / optSkills.length) * optWeight * 100;
-    }
-
-    return Math.min(Math.round(score), 100);
+    if (!job || !candidate.candidate_skills?.length) return 0;
+    if (!job.job_skills?.length) return 100;
+    return calculateMatchScore(candidate.candidate_skills, job.job_skills);
   };
 
   const handleShortlist = async (candidateId: string) => {

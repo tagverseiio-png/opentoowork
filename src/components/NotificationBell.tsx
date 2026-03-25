@@ -27,16 +27,23 @@ export const NotificationBell = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from("notifications")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(20);
+    try {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
 
-    if (!error && data) {
-      setNotifications(data);
-      setUnreadCount(data.filter((n) => !n.is_read).length);
+      if (error) throw error;
+      if (data) {
+        setNotifications(data);
+        setUnreadCount(data.filter((n) => !n.is_read).length);
+      }
+    } catch (err: any) {
+      console.warn("notifications table may not exist:", err.message);
+      setNotifications([]);
+      setUnreadCount(0);
     }
   };
 
@@ -56,47 +63,53 @@ export const NotificationBell = () => {
   };
 
   const markAsRead = async (id: string) => {
-    const { error } = await supabase
-      .from("notifications")
-      .update({ is_read: true })
-      .eq("id", id);
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("id", id);
 
-    if (!error) {
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
-      );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-    }
+      if (!error) {
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
+        );
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+    } catch {}
   };
 
   const markAllAsRead = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { error } = await supabase
-      .from("notifications")
-      .update({ is_read: true })
-      .eq("user_id", user.id)
-      .eq("is_read", false);
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("user_id", user.id)
+        .eq("is_read", false);
 
-    if (!error) {
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-      setUnreadCount(0);
-    }
+      if (!error) {
+        setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+        setUnreadCount(0);
+      }
+    } catch {}
   };
 
   const deleteNotification = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const { error } = await supabase
-      .from("notifications")
-      .delete()
-      .eq("id", id);
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .delete()
+        .eq("id", id);
 
-    if (!error) {
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
-      const wasUnread = notifications.find((n) => n.id === id && !n.is_read);
-      if (wasUnread) setUnreadCount((prev) => Math.max(0, prev - 1));
-    }
+      if (!error) {
+        setNotifications((prev) => prev.filter((n) => n.id !== id));
+        const wasUnread = notifications.find((n) => n.id === id && !n.is_read);
+        if (wasUnread) setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+    } catch {}
   };
 
   const handleNotificationClick = (notification: any) => {
