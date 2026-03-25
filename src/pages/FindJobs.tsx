@@ -74,7 +74,6 @@ const FindJobs = () => {
         job_skills(*)
       `)
       .eq('is_active', true)
-      .eq('is_approved', true) // Added approval filter too
       .order('created_at', { ascending: false });
 
     if (!error) {

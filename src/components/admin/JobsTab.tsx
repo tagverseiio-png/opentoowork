@@ -136,16 +136,16 @@ const JobsTab = () => {
                     <TableCell className="py-5">
                       <div className="flex items-center gap-3">
                         <Switch 
-                          checked={job.is_approved} 
+                          checked={job.is_active} 
                           onCheckedChange={async () => {
-                            const { error } = await supabase.from("jobs").update({ is_approved: !job.is_approved }).eq("id", job.id);
+                            const { error } = await supabase.from("jobs").update({ is_active: !job.is_active }).eq("id", job.id);
                             if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-                            else { fetchJobs(); toast({ title: "Approval Status Updated" }); }
+                            else { fetchJobs(); toast({ title: "Listing Status Updated" }); }
                           }}
                           className="data-[state=checked]:bg-green-500"
                         />
-                        <Badge variant={job.is_approved ? "outline" : "destructive"} className="text-[9px] font-black uppercase tracking-widest">
-                          {job.is_approved ? "Verified" : "Pending"}
+                        <Badge variant={job.is_active ? "outline" : "destructive"} className="text-[9px] font-black uppercase tracking-widest">
+                          {job.is_active ? "Active" : "Inactive"}
                         </Badge>
                       </div>
                     </TableCell>

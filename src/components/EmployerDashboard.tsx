@@ -286,7 +286,6 @@ const EmployerDashboard = () => {
 
     const jobData: any = {
       employer_id: profile.id,
-      job_id: jobIdField,
       title,
       description,
       location,
@@ -297,7 +296,6 @@ const EmployerDashboard = () => {
       expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
       experience_required: experienceRequired ? parseInt(experienceRequired) : 0,
       work_authorization: selectedWorkAuth,
-      salary_period: salaryPeriod,
     };
 
     let result;
@@ -461,16 +459,20 @@ const EmployerDashboard = () => {
   };
 
   const updateRecruiterNotes = async (appId: string, notes: string) => {
-    const { error } = await supabase.from("applications").update({ recruiter_notes: notes }).eq("id", appId);
-    if (!error) toast({ title: "Recruiter notes saved" });
+    const { error } = await supabase.from("applications").update({ recruiter_notes: notes } as any).eq("id", appId);
+    if (error) {
+      console.warn("recruiter_notes column may not exist:", error.message);
+      toast({ title: "Could not save notes", description: "The recruiter_notes column may need to be added to the database.", variant: "destructive" });
+    } else {
+      toast({ title: "Recruiter notes saved" });
+    }
   };
 
   const fetchTalent = async () => {
     setTalentLoading(true);
     let query = supabase
       .from("candidate_profiles")
-      .select("*, profiles!inner(*), candidate_skills(*)")
-      .eq("is_public", true);
+      .select("*, profiles!inner(*), candidate_skills(*)");
 
     if (talentLocation) {
       query = query.ilike("location", `%${talentLocation}%`);
