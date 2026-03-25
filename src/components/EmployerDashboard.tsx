@@ -1437,7 +1437,13 @@ const EmployerDashboard = () => {
                                </Button>
                              </a>
                            )}
-                           <Button variant="ghost" className="flex-1 h-10 font-bold uppercase text-[10px] tracking-widest border border-transparent hover:border-primary/20">Profile</Button>
+                           <Button 
+                             variant="ghost" 
+                             onClick={() => handleDownloadProfile(talent)}
+                             className="flex-1 h-10 font-bold uppercase text-[10px] tracking-widest border border-transparent hover:border-primary/20"
+                           >
+                             Profile
+                           </Button>
                         </div>
                      </div>
                   </Card>
