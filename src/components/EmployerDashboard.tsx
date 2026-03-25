@@ -508,14 +508,39 @@ const EmployerDashboard = () => {
       });
       if (selectedJob) fetchApplications(selectedJob.id);
 
-      // Fire email notification to candidate (fire & forget)
-      if (app?.candidate?.profiles?.email && selectedJob) {
-        sendStatusChangeNotification(
-          app.candidate.profiles.email,
-          app.candidate.profiles.full_name || 'Candidate',
-          selectedJob.title,
-          newStatus
-        );
+      // ── Fire email notification to candidate ──
+      if (app?.candidate && selectedJob) {
+        // Handle profiles as either object or array (depends on Supabase join)
+        const candidateProfiles = Array.isArray(app.candidate.profiles)
+          ? app.candidate.profiles[0]
+          : app.candidate.profiles;
+
+        let candidateEmail = candidateProfiles?.email;
+        let candidateName = candidateProfiles?.full_name || 'Candidate';
+
+        // Fallback: look up profile email from candidate's user_id
+        if (!candidateEmail && app.candidate.user_id) {
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("email, full_name")
+            .eq("id", app.candidate.user_id)
+            .single();
+          candidateEmail = profileData?.email;
+          candidateName = profileData?.full_name || candidateName;
+        }
+
+        if (candidateEmail) {
+          console.log(`Sending status email to ${candidateEmail}: ${newStatus} for ${selectedJob.title}`);
+          sendStatusChangeNotification(
+            candidateEmail,
+            candidateName,
+            selectedJob.title,
+            newStatus
+          );
+          toast({ title: `Email sent to ${candidateName}` });
+        } else {
+          console.warn("Could not find candidate email for status notification");
+        }
       }
     }
   };
