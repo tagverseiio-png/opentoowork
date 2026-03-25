@@ -20,6 +20,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -39,7 +40,6 @@ const CandidateDashboard = () => {
   const [profile, setProfile] = useState<any>(null);
   const [applications, setApplications] = useState<any[]>([]);
   const [recommendations, setRecommendations] = useState<any[]>([]);
-  const [alerts, setAlerts] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("applications");
   
   // Edit State
@@ -72,25 +72,39 @@ const CandidateDashboard = () => {
     // Simulate real API delay
     await new Promise(r => setTimeout(r, 2000));
     
-    // Simulation
-    setEditExperience("5");
-    setEditLocation("San Francisco, CA");
-    setEditAvailability("Available");
-    setEditLinkedin(`https://linkedin.com/in/${profile?.profiles?.full_name?.toLowerCase().replace(' ', '-') || 'candidate'}`);
-    
-    toast({ 
-      title: "Import Successful!", 
-      description: "Professional profile and location synchronized. Review and Save Changes." 
-    });
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const importData = {
+        experience_years: 5,
+        location: "San Francisco, CA",
+        availability_status: "Available",
+        linkedin_url: `https://linkedin.com/in/${profile?.profiles?.full_name?.toLowerCase().replace(' ', '-') || 'candidate'}`
+      };
+
+      const { error } = await supabase
+        .from("candidate_profiles")
+        .update(importData)
+        .eq("user_id", session.user.id);
+
+      if (error) throw error;
+
+      toast({ 
+        title: "Import Successful!", 
+        description: "Professional profile and location synchronized directly." 
+      });
+      fetchProfile(); // refresh data
+    } catch (error: any) {
+      toast({ title: "Import Failed", description: error.message, variant: "destructive" });
+    }
     setImportingLinkedin(false);
-    setIsEditing(true);
   };
 
   useEffect(() => {
     fetchProfile();
     fetchApplications();
     fetchSkills();
-    fetchAlerts();
     fetchRecommendations();
   }, []);
 
@@ -136,22 +150,7 @@ const CandidateDashboard = () => {
     }
   };
 
-  const fetchAlerts = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-
-    try {
-      const { data, error } = await supabase
-        .from("job_alerts")
-        .select("*")
-        .eq("user_id", session.user.id);
-      if (error) throw error;
-      setAlerts(data || []);
-    } catch (err: any) {
-      console.warn("job_alerts table may not exist:", err.message);
-      setAlerts([]);
-    }
-  };
+  // Job alerts hidden -- feature currently not active
 
   const fetchRecommendations = async () => {
     if (!profile) return;
@@ -171,27 +170,7 @@ const CandidateDashboard = () => {
     setRecommendations(data || []);
   };
 
-  const handleAddAlert = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-
-    try {
-      const { error } = await supabase
-        .from("job_alerts")
-        .insert({
-          user_id: session.user.id,
-          keywords: "Software Engineer",
-          visa_status: profile?.work_authorization
-        });
-
-      if (error) throw error;
-      toast({ title: "Job alert created!" });
-      fetchAlerts();
-    } catch (err: any) {
-      console.warn("job_alerts table may not exist:", err.message);
-      toast({ title: "Could not create alert", description: "The job_alerts feature requires database setup.", variant: "destructive" });
-    }
-  };
+  // Add alert logic hidden
 
   const fetchApplications = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -435,6 +414,7 @@ const CandidateDashboard = () => {
                 <DialogContent className="sm:max-w-[550px] border-none shadow-2xl rounded-2xl overflow-hidden p-0">
                   <DialogHeader className="p-8 border-b bg-muted/10">
                     <DialogTitle className="text-2xl font-black uppercase tracking-tighter">Candidate Blueprint</DialogTitle>
+                    <DialogDescription className="sr-only">Edit your global identity and professional access matrix.</DialogDescription>
                   </DialogHeader>
                   <ScrollArea className="max-h-[60vh] p-8">
                     <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-border/50 my-6 shadow-inner group">
@@ -740,15 +720,12 @@ const CandidateDashboard = () => {
         {/* Main Content */}
         <div className="lg:col-span-8">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-4 w-full bg-muted/30 p-1.5 h-16 rounded-[2rem] gap-3">
+            <TabsList className="grid grid-cols-3 w-full bg-muted/30 p-1.5 h-16 rounded-[2rem] gap-3">
               <TabsTrigger value="applications" className="data-[state=active]:bg-background data-[state=active]:shadow-2xl rounded-[1.5rem] h-full font-black uppercase text-[10px] tracking-widest gap-2.5">
                 <Briefcase className="h-4 w-4" /> Journey
               </TabsTrigger>
               <TabsTrigger value="recommendations" className="data-[state=active]:bg-background data-[state=active]:shadow-2xl rounded-[1.5rem] h-full font-black uppercase text-[10px] tracking-widest gap-2.5">
                 <Target className="h-4 w-4" /> Best Fits
-              </TabsTrigger>
-              <TabsTrigger value="alerts" className="data-[state=active]:bg-background data-[state=active]:shadow-2xl rounded-[1.5rem] h-full font-black uppercase text-[10px] tracking-widest gap-2.5">
-                <Bell className="h-4 w-4" /> Beacon
               </TabsTrigger>
               <TabsTrigger value="settings" className="data-[state=active]:bg-background data-[state=active]:shadow-2xl rounded-[1.5rem] h-full font-black uppercase text-[10px] tracking-widest gap-2.5">
                 <Settings className="h-4 w-4" /> Core
@@ -850,27 +827,7 @@ const CandidateDashboard = () => {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="alerts" className="animate-in duration-500">
-                 <Card className="p-8 border shadow-sm min-h-[600px] bg-card rounded-[2.5rem]">
-                    <div className="flex items-center justify-between mb-12">
-                       <h2 className="text-3xl font-black uppercase tracking-tighter">Beacon Alerts</h2>
-                       <Button onClick={handleAddAlert} className="h-12 px-8 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-2xl">Initialize Alert</Button>
-                    </div>
-                    <div className="grid gap-4">
-                       {alerts.map(alert => (
-                          <div key={alert.id} className="p-6 rounded-3xl border bg-muted/5 flex items-center justify-between group hover:border-primary/20 transition-all border-dashed">
-                             <div className="space-y-1">
-                                <div className="font-black text-xl uppercase tracking-widest">{alert.keywords}</div>
-                                <div className="text-[10px] font-bold text-muted-foreground uppercase">{alert.visa_status} • Global Scope</div>
-                             </div>
-                             <Button variant="ghost" size="icon" className="text-destructive/40 hover:text-destructive hover:bg-destructive/10 rounded-xl opacity-0 group-hover:opacity-100">
-                                <Trash2 className="h-5 w-5" />
-                             </Button>
-                          </div>
-                       ))}
-                    </div>
-                 </Card>
-              </TabsContent>
+              {/* Alerts Tab Content Removed */}
 
               <TabsContent value="settings">
                  <Card className="p-12 border shadow-sm min-h-[600px] bg-card rounded-[2.5rem]">
