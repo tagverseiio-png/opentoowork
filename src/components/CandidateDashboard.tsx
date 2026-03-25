@@ -381,15 +381,7 @@ const CandidateDashboard = () => {
            <p className="text-muted-foreground mt-2 font-bold uppercase text-[10px] tracking-widest">Active session for {profile.profiles?.full_name}</p>
         </div>
         <div className="flex items-center gap-3">
-           <Button 
-            variant="outline" 
-            onClick={handleLinkedInImport} 
-            disabled={importingLinkedin}
-            className="h-12 px-6 border-[#0A66C2]/30 text-[#0A66C2] hover:bg-[#0A66C2]/5 font-black uppercase tracking-widest text-[10px] gap-2 shadow-sm"
-           >
-              <Linkedin className="h-4 w-4 fill-current" /> 
-              {importingLinkedin ? "Syncing..." : "Connect LinkedIn"}
-           </Button>
+           {/* LinkedIn Sync button removed as requested */}
            <Button onClick={() => setIsEditing(true)} className="h-12 px-6 font-black uppercase tracking-widest text-[10px] shadow-xl">
               <Settings className="h-4 w-4 mr-2" /> Global Prefs
            </Button>
