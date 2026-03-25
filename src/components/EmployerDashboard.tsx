@@ -266,23 +266,7 @@ const EmployerDashboard = () => {
     e.preventDefault();
     if (!profile) return;
 
-    if (!editingJobId) {
-      // Enforce subscription limits
-      const plan = subscription?.plan_type || "Free";
-      let limit = 1;
-      if (plan === "Basic") limit = 10;
-      else if (plan === "Professional") limit = 50;
-      else if (plan === "Enterprise") limit = 9999;
-      
-      if (jobs.length >= limit) {
-        toast({ 
-          title: "Limit Exceeded", 
-          description: `Your ${plan} plan only allows up to ${limit} active job postings. Please upgrade your subscription.`, 
-          variant: "destructive" 
-        });
-        return;
-      }
-    }
+    // Subscription limits disabled — not yet implemented
 
     const jobData: any = {
       employer_id: profile.id,
@@ -972,20 +956,7 @@ const EmployerDashboard = () => {
                   <Badge className="ml-2 bg-primary/10 text-primary border-transparent h-6 tabular-nums">{jobs.length}</Badge>
                 </h2>
                 
-                {subscription && (
-                  <div className="flex items-center gap-4 bg-muted/30 px-4 py-2 rounded-xl border">
-                    <div className="flex flex-col">
-                       <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest leading-none">Job Usage</span>
-                       <span className="text-sm font-black tabular-nums">{subscription.job_posts_count} / {subscription.job_posts_limit}</span>
-                    </div>
-                    <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
-                       <div 
-                         className="h-full bg-primary" 
-                         style={{ width: `${Math.min((subscription.job_posts_count / subscription.job_posts_limit) * 100, 100)}%` }}
-                       />
-                    </div>
-                  </div>
-                )}
+                {/* Subscription usage bar hidden — not yet implemented */}
             </div>
 
             {jobs.length === 0 ? (
@@ -998,12 +969,7 @@ const EmployerDashboard = () => {
                   <p className="text-muted-foreground mt-2 max-w-sm font-medium">Your portfolio of opportunities is currently empty. Start recruiting top-tier talent today.</p>
                   <Button 
                     onClick={() => {
-                      if (subscription && subscription.job_posts_count >= subscription.job_posts_limit) {
-                        toast({ title: "Limit Reached", description: "Please upgrade your plan to post more jobs.", variant: "destructive" });
-                        setActiveTab("subscription");
-                      } else {
-                        setIsDialogOpen(true);
-                      }
+                      setIsDialogOpen(true);
                     }} 
                     className="mt-8 gap-2 px-8 font-black uppercase tracking-widest text-[11px] h-12 shadow-xl"
                   >
@@ -1155,64 +1121,7 @@ const EmployerDashboard = () => {
             )}
           </div>
         </div>
-      ) : (
-        <div className="mt-12 space-y-8">
-           <div className="bg-primary/5 border border-primary/10 rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-8">
-              <div className="space-y-2">
-                 <h2 className="text-3xl font-black uppercase tracking-tighter">Your Subscription</h2>
-                 <p className="text-muted-foreground font-medium">Currently on the <Badge className="bg-primary text-white font-black">{subscription?.plan_type || 'Free'}</Badge> Tier</p>
-                 <div className="flex items-center gap-6 mt-4">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Postings Used</span>
-                      <span className="text-2xl font-black tabular-nums">{subscription?.job_posts_count || 0} / {subscription?.job_posts_limit || 1}</span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Resume Access</span>
-                      <span className="text-lg font-black">{subscription?.resume_access || 'No'}</span>
-                    </div>
-                 </div>
-              </div>
-              <Button size="lg" className="h-14 px-10 rounded-xl font-black uppercase tracking-[0.1em] shadow-2xl shadow-primary/20 bg-gradient-to-r from-primary to-accent">
-                 Current Plan Active
-              </Button>
-           </div>
-
-           <div className="grid md:grid-cols-4 gap-6">
-              {PLANS.map((plan) => (
-                <Card key={plan.name} className={`p-6 border flex flex-col justify-between hover:shadow-2xl transition-all ${plan.name === subscription?.plan_type ? 'ring-2 ring-primary border-transparent' : 'bg-card'}`}>
-                   <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{plan.price === 0 ? 'Free Entry' : 'Growth Plan'}</span>
-                        {plan.name === "Pro" && <Badge className="bg-primary hover:bg-primary shadow-lg scale-90">Popular</Badge>}
-                      </div>
-                      <h3 className="text-2xl font-black tracking-tight mb-4">{plan.name}</h3>
-                      <div className="flex items-baseline gap-1 mb-8">
-                         <span className="text-4xl font-black tabular-nums">${plan.price}</span>
-                         <span className="text-xs text-muted-foreground font-bold">/month</span>
-                      </div>
-                      
-                      <ul className="space-y-4 mb-8">
-                         {plan.features.map(f => (
-                           <li key={f} className="flex items-center gap-2 text-xs font-bold text-foreground">
-                              <Check className="h-4 w-4 text-green-500" /> {f}
-                           </li>
-                         ))}
-                      </ul>
-                   </div>
-                   
-                   <Button 
-                    variant={plan.name === subscription?.plan_type ? "outline" : "default"}
-                    disabled={plan.name === subscription?.plan_type}
-                    className="w-full h-11 font-black uppercase tracking-widest text-[10px]"
-                    onClick={() => toast({ title: "Coming Soon", description: "Payment gateway integration is currently on hold as requested." })}
-                   >
-                      {plan.name === subscription?.plan_type ? "Current Plan" : `Select ${plan.name}`}
-                   </Button>
-                </Card>
-              ))}
-           </div>
-        </div>
-      )}
+      ) : null}
 
       {/* Applications Dialog */}
       {selectedJob && (
