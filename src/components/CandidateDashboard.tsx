@@ -116,7 +116,7 @@ const CandidateDashboard = () => {
       .from("candidate_profiles")
       .select("*, profiles(*)")
       .eq("user_id", session.user.id)
-      .single();
+      .maybeSingle();
 
     if (data) {
       setProfile(data);
@@ -138,7 +138,7 @@ const CandidateDashboard = () => {
       .from("candidate_profiles")
       .select("id")
       .eq("user_id", session.user.id)
-      .single();
+      .maybeSingle();
 
     if (cp) {
       const { data } = await supabase
@@ -180,7 +180,7 @@ const CandidateDashboard = () => {
       .from("candidate_profiles")
       .select("id")
       .eq("user_id", session.user.id)
-      .single();
+      .maybeSingle();
 
     if (candidateProfile) {
       const { data } = await supabase

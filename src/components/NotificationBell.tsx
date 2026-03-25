@@ -115,7 +115,7 @@ export const NotificationBell = () => {
   const handleNotificationClick = (notification: any) => {
     if (!notification.is_read) markAsRead(notification.id);
     if (notification.link) {
-      if (notification.link === '/candidate/dashboard') {
+      if (notification.link === '/candidate/dashboard' || notification.link === '/employer/dashboard') {
         navigate('/dashboard');
       } else {
         navigate(notification.link);
