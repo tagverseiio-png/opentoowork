@@ -677,6 +677,7 @@ const EmployerDashboard = () => {
             >
               Management
             </Button>
+            {/* Talent pool tab hidden as requested
             <Button
               variant={activeTab === "talent" ? "default" : "ghost"}
               onClick={() => setActiveTab("talent")}
@@ -684,6 +685,7 @@ const EmployerDashboard = () => {
             >
               <Users className="h-3 w-3" /> Talent Pool
             </Button>
+            */}
             {/* Subscription tab hidden — not yet implemented
             <Button
               variant={activeTab === "subscription" ? "default" : "ghost"}
