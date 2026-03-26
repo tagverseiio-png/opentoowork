@@ -15,7 +15,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useToast } from "@/hooks/use-toast";
 import {
   Plus, Briefcase, Users, Check, X, FileText, MapPin, ChevronsUpDown,
-  DollarSign, Power, Mail, Trash2, Ban, Upload, Pencil, Target, AlignLeft, Building2, Calendar, LayoutDashboard, Search, ExternalLink, Globe, ShieldCheck, MessageSquare, Terminal, Fingerprint, BadgeCheck, RefreshCw, Layers, Printer
+  DollarSign, Power, Mail, Trash2, Ban, Upload, Pencil, Target, AlignLeft, Building2, Calendar, LayoutDashboard, Search, ExternalLink, Globe, ShieldCheck, MessageSquare, Terminal, Fingerprint, BadgeCheck, RefreshCw, Layers, Printer, Lock
 } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
@@ -87,6 +87,7 @@ const EmployerDashboard = () => {
   const [talentVisa, setTalentVisa] = useState("All");
   const [talentExp, setTalentExp] = useState("All");
   const [pipelineView, setPipelineView] = useState("active");
+  const [noteChanges, setNoteChanges] = useState<Record<string, string>>({});
 
   // Profile Form States
   const [editCompanyName, setEditCompanyName] = useState("");
@@ -561,12 +562,26 @@ const EmployerDashboard = () => {
     fetchApplications(job.id);
   };
 
-  const updateRecruiterNotes = async (appId: string, notes: string) => {
+  const handleNoteChange = (appId: string, value: string) => {
+    setNoteChanges(prev => ({ ...prev, [appId]: value }));
+  };
+
+  const updateRecruiterNotes = async (appId: string) => {
+    const notes = noteChanges[appId];
+    if (notes === undefined) return;
+
     const { error } = await supabase.from("applications").update({ recruiter_notes: notes } as any).eq("id", appId);
     if (error) {
       console.warn("recruiter_notes column may not exist:", error.message);
       toast({ title: "Could not save notes", description: "The recruiter_notes column may need to be added to the database.", variant: "destructive" });
     } else {
+      // Update local applications state to sync
+      setApplications(prev => prev.map(app => app.id === appId ? { ...app, recruiter_notes: notes } : app));
+      // Clear local change tracking for this app
+      const nextChanges = { ...noteChanges };
+      delete nextChanges[appId];
+      setNoteChanges(nextChanges);
+      
       toast({ title: "Recruiter notes saved" });
     }
   };
@@ -1480,11 +1495,28 @@ const EmployerDashboard = () => {
                                 </a>
                               )}
                             </div>
+                            <div className="flex items-center justify-between mb-4">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[9px] font-black uppercase tracking-widest">
+                                  <Lock className="h-2.5 w-2.5 mr-1" /> Private Notes
+                                </Badge>
+                                <span className="text-[10px] text-muted-foreground font-medium italic">These are only visible to your organization</span>
+                              </div>
+                              {noteChanges[app.id] !== undefined && (
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => updateRecruiterNotes(app.id)}
+                                  className="h-8 px-4 text-[10px] font-black uppercase tracking-widest bg-success hover:bg-success/90 text-white animate-in fade-in"
+                                >
+                                  <Check className="h-3 w-3 mr-2" /> Save Notes
+                                </Button>
+                              )}
+                            </div>
                             <Textarea
                               placeholder="Add internal notes about this candidate..."
-                              value={app.recruiter_notes || ''}
-                              onChange={(e) => updateRecruiterNotes(app.id, e.target.value)}
-                              className="min-h-[80px] text-sm"
+                              value={noteChanges[app.id] !== undefined ? noteChanges[app.id] : (app.recruiter_notes || '')}
+                              onChange={(e) => handleNoteChange(app.id, e.target.value)}
+                              className="min-h-[120px] text-sm bg-background border-primary/10 focus:border-primary/50 transition-all font-inter leading-relaxed"
                             />
                           </div>
                         ))}
