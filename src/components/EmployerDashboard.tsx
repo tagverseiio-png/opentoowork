@@ -86,6 +86,7 @@ const EmployerDashboard = () => {
   const [talentLocation, setTalentLocation] = useState("");
   const [talentVisa, setTalentVisa] = useState("All");
   const [talentExp, setTalentExp] = useState("All");
+  const [pipelineView, setPipelineView] = useState("active");
 
   // Profile Form States
   const [editCompanyName, setEditCompanyName] = useState("");
@@ -1206,6 +1207,12 @@ const EmployerDashboard = () => {
       {selectedJob && (
         <Dialog open={!!selectedJob} onOpenChange={() => setSelectedJob(null)}>
           <DialogContent className="max-w-7xl max-h-[90vh] flex flex-col p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
+            <DialogHeader className="sr-only">
+              <DialogTitle>Job Applications Pipeline</DialogTitle>
+              <DialogDescription>
+                View and manage candidates who applied for this role.
+              </DialogDescription>
+            </DialogHeader>
             <DialogHeader className="p-8 border-b bg-muted/10 shrink-0 relative overflow-hidden">
               <div className="absolute top-0 right-0 p-8 opacity-5">
                 <Users className="h-32 w-32" />
@@ -1234,30 +1241,62 @@ const EmployerDashboard = () => {
                 </div>
 
                 <TabsContent value="list" className="flex-1 overflow-hidden mt-0">
-                  {applications.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center p-24 text-center">
-                      <div className="w-24 h-24 bg-muted/30 rounded-full flex items-center justify-center mb-6">
-                        <Users className="h-10 w-10 text-muted-foreground/30" />
-                      </div>
-                      <h3 className="text-2xl font-bold">No candidates found</h3>
-                      <p className="text-muted-foreground max-w-xs mt-2 font-medium">As soon as candidates apply to this role, they will appear in this consolidated pipeline view.</p>
+                  <div className="px-8 py-4 border-b flex items-center justify-between bg-muted/5">
+                    <div className="flex gap-2">
+                      <Button 
+                        variant={pipelineView === "active" ? "secondary" : "ghost"} 
+                        size="sm"
+                        onClick={() => setPipelineView("active")}
+                        className={`text-[9px] font-black uppercase tracking-widest h-8 px-4 ${pipelineView === 'active' ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
+                      >
+                        Active Pipeline
+                      </Button>
+                      <Button 
+                        variant={pipelineView === "archive" ? "secondary" : "ghost"} 
+                        size="sm"
+                        onClick={() => setPipelineView("archive")}
+                        className={`text-[9px] font-black uppercase tracking-widest h-8 px-4 ${pipelineView === 'archive' ? 'bg-muted-foreground text-white' : ''}`}
+                      >
+                        Archive ({applications.filter(a => a.status === 'rejected').length})
+                      </Button>
                     </div>
-                  ) : (
-                    <ScrollArea className="h-full w-full">
-                      <div className="p-8">
-                        <Table>
-                          <TableHeader className="bg-muted/5 border-none">
-                            <TableRow className="hover:bg-transparent border-b-2">
-                              <TableHead className="w-[300px] text-[10px] font-black uppercase tracking-widest py-6">Candidate Information</TableHead>
-                              <TableHead className="text-[10px] font-black uppercase tracking-widest py-6">Skill Alignment</TableHead>
-                              <TableHead className="text-[10px] font-black uppercase tracking-widest py-6">Supporting Material</TableHead>
-                              <TableHead className="text-[10px] font-black uppercase tracking-widest py-6">Resume</TableHead>
-                              <TableHead className="text-[10px] font-black uppercase tracking-widest py-6">ATS Status</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {applications.map((app) => (
-                              <TableRow key={app.id} className="hover:bg-muted/10 transition-colors border-b">
+                  </div>
+                  {(() => {
+                    const filteredApps = applications.filter(app => {
+                      if (pipelineView === "active") return app.status !== "rejected";
+                      return app.status === "rejected";
+                    });
+
+                    if (filteredApps.length === 0) {
+                      return (
+                        <div className="h-full flex flex-col items-center justify-center p-24 text-center">
+                          <div className="w-24 h-24 bg-muted/30 rounded-full flex items-center justify-center mb-6">
+                            <Users className="h-10 w-10 text-muted-foreground/30" />
+                          </div>
+                          <h3 className="text-2xl font-bold">No {pipelineView === 'archive' ? 'rejected' : 'active'} candidates</h3>
+                          <p className="text-muted-foreground max-w-xs mt-2 font-medium">
+                            {pipelineView === 'archive' ? 'Successfully rejected candidates will appear here for historical reference.' : 'As soon as candidates apply to this role, they will appear in this pipeline.'}
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <ScrollArea className="h-[calc(100%-64px)] w-full">
+                        <div className="p-8">
+                          <Table>
+                            <TableHeader className="bg-muted/5 border-none">
+                              <TableRow className="hover:bg-transparent border-b-2">
+                                <TableHead className="w-[300px] text-[10px] font-black uppercase tracking-widest py-6">Candidate Information</TableHead>
+                                <TableHead className="text-[10px] font-black uppercase tracking-widest py-6">Skill Alignment</TableHead>
+                                <TableHead className="text-[10px] font-black uppercase tracking-widest py-6">Supporting Material</TableHead>
+                                <TableHead className="text-[10px] font-black uppercase tracking-widest py-6">Resume</TableHead>
+                                <TableHead className="text-[10px] font-black uppercase tracking-widest py-6">ATS Status</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {filteredApps.map((app) => (
+                                <TableRow key={app.id} className={`hover:bg-muted/10 transition-colors border-b ${app.status === 'rejected' ? 'bg-muted/5 opacity-70' : ''}`}>
                                 <TableCell className="py-6">
                                   <div className="space-y-4">
                                     <div className="flex items-center gap-3">
@@ -1324,6 +1363,10 @@ const EmployerDashboard = () => {
                                         </Button>
                                       </DialogTrigger>
                                       <DialogContent className="max-w-2xl border-none shadow-2xl rounded-2xl p-0 overflow-hidden">
+                                        <DialogHeader className="sr-only">
+                                          <DialogTitle>Cover Letter</DialogTitle>
+                                          <DialogDescription>Candidate's personal statement and cover letter.</DialogDescription>
+                                        </DialogHeader>
                                         <div className="bg-primary/5 p-8 border-b">
                                           <div className="flex items-center gap-3 mb-4">
                                             <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
@@ -1364,6 +1407,10 @@ const EmployerDashboard = () => {
                                           </Button>
                                         </DialogTrigger>
                                         <DialogContent className="max-w-4xl border-none shadow-2xl rounded-2xl p-0 overflow-hidden">
+                                          <DialogHeader className="sr-only">
+                                            <DialogTitle>Parsed Resume Text</DialogTitle>
+                                            <DialogDescription>Full text content extracted from the candidate resume.</DialogDescription>
+                                          </DialogHeader>
                                           <div className="p-6 border-b bg-muted/5 flex items-center justify-between">
                                             <div>
                                               <h4 className="font-black text-xl uppercase tracking-tighter">Raw Resume Content</h4>
@@ -1409,7 +1456,8 @@ const EmployerDashboard = () => {
                         </Table>
                       </div>
                     </ScrollArea>
-                  )}
+                    );
+                  })()}
                 </TabsContent>
                 <TabsContent value="notes" className="flex-1 overflow-hidden bg-background mt-0 p-8">
                   <div className="h-full flex flex-col">
