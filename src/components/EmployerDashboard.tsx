@@ -290,7 +290,6 @@ const EmployerDashboard = () => {
       salary_min: salaryMin ? parseInt(salaryMin) : null,
       salary_max: salaryMax ? parseInt(salaryMax) : null,
       salary_period: salaryPeriod,
-      job_id: jobIdField,
       job_type: taxTerm ? `${jobType} - ${taxTerm}` : jobType,
       job_mode: jobMode,
       expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
@@ -298,29 +297,21 @@ const EmployerDashboard = () => {
       work_authorization: selectedWorkAuth,
     };
 
+    // Only include job_id if the user explicitly provided one.
+    // For inserts: null lets the DB trigger auto-generate "OTW-YYYY-XXXX".
+    // For updates: omitting it preserves the existing job_id.
+    if (jobIdField.trim()) {
+      jobData.job_id = jobIdField.trim();
+    } else if (!editingJobId) {
+      // New job with no custom ID — let DB trigger auto-generate
+      jobData.job_id = null;
+    }
+
     let result;
     if (editingJobId) {
       result = await supabase.from("jobs").update(jobData).eq("id", editingJobId).select().single();
-      
-      // Fallback for missing columns on update
-      if (result.error && (result.error.code === '42703' || result.error.message?.includes('salary_period') || result.error.message?.includes('job_id'))) {
-        console.warn("Retrying update without new columns (migration pending)...");
-        const fallbackData = { ...jobData };
-        delete fallbackData.salary_period;
-        delete fallbackData.job_id;
-        result = await supabase.from("jobs").update(fallbackData).eq("id", editingJobId).select().single();
-      }
     } else {
       result = await supabase.from("jobs").insert(jobData).select().single();
-
-      // Fallback for missing columns on insert
-      if (result.error && (result.error.code === '42703' || result.error.message?.includes('salary_period') || result.error.message?.includes('job_id'))) {
-        console.warn("Retrying insert without new columns (migration pending)...");
-        const fallbackData = { ...jobData };
-        delete fallbackData.salary_period;
-        delete fallbackData.job_id;
-        result = await supabase.from("jobs").insert(fallbackData).select().single();
-      }
     }
 
     const { data: jobResult, error } = result;
@@ -970,7 +961,7 @@ const EmployerDashboard = () => {
 
                       <div className="space-y-4">
                         <div className="space-y-2">
-                          <Label className="text-xs font-bold text-foreground">Budgeted Salary Range (Annual USD)</Label>
+                          <Label className="text-xs font-bold text-foreground">Budgeted Salary Range ({salaryPeriod} USD)</Label>
                           <div className="flex items-center gap-3">
                             <div className="relative flex-1">
                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">$</span>

@@ -314,6 +314,7 @@ const FindJobs = () => {
                      location={job.location}
                      salaryMin={job.salary_min}
                      salaryMax={job.salary_max}
+                     salaryPeriod={job.salary_period}
                      jobType={job.job_type}
                      jobMode={job.job_mode}
                      workAuthorization={job.work_authorization}

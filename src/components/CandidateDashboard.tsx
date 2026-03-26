@@ -32,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { calculateMatchScore, sendEmail } from "@/lib/email";
+import { calculateMatchScore, normalizeSkillName, sendEmail } from "@/lib/email";
 
 const WORK_AUTH_OPTIONS = [
   "H1B", "CPT-EAD", "OPT-EAD", "GC", "GC-EAD", "USC", "TN"
@@ -61,6 +61,7 @@ const CandidateDashboard = () => {
   const [editResumeText, setEditResumeText] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
+  const [extractingSkills, setExtractingSkills] = useState(false);
 
   // Skills State
   const [skills, setSkills] = useState<any[]>([]);
@@ -198,17 +199,16 @@ const CandidateDashboard = () => {
       return;
     }
 
-    let matchedJobs = jobs;
-    if (candidateSkills?.length) {
-      matchedJobs = jobs.map(job => ({
-        ...job,
-        score: job.job_skills?.length ? calculateMatchScore(candidateSkills, job.job_skills) : 0
-      }))
-      .filter(job => (job as any).score > 0)
-      .sort((a: any, b: any) => b.score - a.score);
-    }
+    // Score all jobs and show them sorted by match. Don't hide zero-score
+    // jobs — they still match the visa filter, just don't overlap on skills.
+    const scoredJobs = jobs.map(job => ({
+      ...job,
+      score: (candidateSkills?.length && job.job_skills?.length)
+        ? calculateMatchScore(candidateSkills, job.job_skills)
+        : 0
+    })).sort((a: any, b: any) => b.score - a.score);
     
-    setRecommendations(matchedJobs.slice(0, 10));
+    setRecommendations(scoredJobs.slice(0, 10));
   };
 
   // Add alert logic hidden
@@ -375,13 +375,26 @@ const CandidateDashboard = () => {
   };
 
   const handleAddSkill = async () => {
-    if (!newSkillName || !profile) return;
+    if (!newSkillName.trim() || !profile) return;
     try {
+      // Normalize skill name: trim whitespace and title-case for display
+      const cleaned = newSkillName.trim().replace(/\s+/g, ' ');
+      const displayName = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+
+      // Check for duplicate (case-insensitive)
+      const exists = skills.some(
+        (s: any) => normalizeSkillName(s.skill_name) === normalizeSkillName(displayName)
+      );
+      if (exists) {
+        toast({ title: "Skill already exists", description: `"${displayName}" is already in your graph.`, variant: "destructive" });
+        return;
+      }
+
       const { error } = await supabase
         .from("candidate_skills")
         .insert({
           candidate_id: profile.id,
-          skill_name: newSkillName,
+          skill_name: displayName,
           years_experience: parseInt(newSkillExp) || 0,
           skill_level: newSkillLevel
         });
@@ -617,14 +630,174 @@ const CandidateDashboard = () => {
                              variant="outline" 
                              size="sm" 
                              className="h-7 text-[9px] font-black uppercase tracking-widest gap-2 bg-primary/5 hover:bg-primary/10 border-primary/20"
+                             disabled={extractingSkills}
                              onClick={async () => {
-                                toast({ title: "Decrypting Resume...", description: "AI is extracting core competencies." });
-                                await new Promise(r => setTimeout(r, 1500));
-                                setEditResumeText("Simulated extraction successful: Proficient in React, Node.js, and Cloud Infrastructure.");
-                                toast({ title: "Analysis Complete", description: "Skills mapped for synchronization." });
+                                if (!editResumeText.trim()) {
+                                  toast({ title: "No resume text", description: "Paste your resume content first, then click Auto-Extract.", variant: "destructive" });
+                                  return;
+                                }
+                                setExtractingSkills(true);
+                                toast({ title: "Scanning Resume...", description: "Extracting skills from your resume text." });
+                                await new Promise(r => setTimeout(r, 800));
+
+                                // ── Real skill extractor ──
+                                // Comprehensive skill dictionary categorized by domain
+                                const KNOWN_SKILLS: Record<string, string[]> = {
+                                  // Languages
+                                  languages: [
+                                    'JavaScript', 'TypeScript', 'Python', 'Java', 'C', 'C++', 'C#',
+                                    'Go', 'Golang', 'Rust', 'Ruby', 'PHP', 'Swift', 'Kotlin', 'Scala',
+                                    'R', 'MATLAB', 'Perl', 'Haskell', 'Elixir', 'Dart', 'Lua',
+                                    'Objective-C', 'Shell', 'Bash', 'PowerShell', 'SQL', 'PL/SQL',
+                                    'Assembly', 'COBOL', 'Fortran', 'Visual Basic', 'VB.NET',
+                                    'F#', 'Clojure', 'Groovy', 'Julia', 'Solidity',
+                                  ],
+                                  // Frontend
+                                  frontend: [
+                                    'React', 'React.js', 'ReactJS', 'Angular', 'AngularJS', 'Vue',
+                                    'Vue.js', 'VueJS', 'Svelte', 'SvelteKit', 'Next.js', 'NextJS',
+                                    'Nuxt.js', 'Gatsby', 'HTML', 'HTML5', 'CSS', 'CSS3', 'SASS',
+                                    'SCSS', 'LESS', 'Tailwind', 'TailwindCSS', 'Bootstrap',
+                                    'Material UI', 'MUI', 'Chakra UI', 'Ant Design', 'Styled Components',
+                                    'jQuery', 'Redux', 'MobX', 'Zustand', 'Recoil', 'Webpack',
+                                    'Vite', 'Rollup', 'Parcel', 'Babel', 'ESLint', 'Prettier',
+                                    'Storybook', 'Three.js', 'D3.js', 'Chart.js', 'Figma',
+                                  ],
+                                  // Backend
+                                  backend: [
+                                    'Node.js', 'NodeJS', 'Express', 'Express.js', 'NestJS',
+                                    'Fastify', 'Koa', 'Django', 'Flask', 'FastAPI', 'Spring',
+                                    'Spring Boot', 'Rails', 'Ruby on Rails', 'Laravel', 'Symfony',
+                                    'ASP.NET', '.NET', '.NET Core', 'Gin', 'Echo', 'Fiber',
+                                    'Phoenix', 'GraphQL', 'REST', 'RESTful', 'gRPC', 'WebSocket',
+                                    'Microservices', 'Serverless', 'API Gateway',
+                                  ],
+                                  // Databases
+                                  databases: [
+                                    'PostgreSQL', 'Postgres', 'MySQL', 'MariaDB', 'MongoDB',
+                                    'Redis', 'Elasticsearch', 'Cassandra', 'DynamoDB', 'Firebase',
+                                    'Firestore', 'Supabase', 'SQLite', 'Oracle', 'SQL Server',
+                                    'MSSQL', 'CouchDB', 'Neo4j', 'InfluxDB', 'TimescaleDB',
+                                    'Prisma', 'Sequelize', 'TypeORM', 'Mongoose', 'Drizzle',
+                                  ],
+                                  // Cloud & DevOps
+                                  cloud: [
+                                    'AWS', 'Amazon Web Services', 'Azure', 'GCP',
+                                    'Google Cloud', 'Google Cloud Platform', 'Heroku', 'Vercel',
+                                    'Netlify', 'DigitalOcean', 'Cloudflare', 'Docker',
+                                    'Kubernetes', 'K8s', 'Terraform', 'Ansible', 'Puppet',
+                                    'Chef', 'Jenkins', 'GitHub Actions', 'GitLab CI',
+                                    'CircleCI', 'Travis CI', 'ArgoCD', 'Helm', 'Nginx',
+                                    'Apache', 'Caddy', 'Linux', 'Ubuntu', 'CentOS', 'RHEL',
+                                    'CI/CD', 'DevOps', 'SRE', 'Prometheus', 'Grafana',
+                                    'Datadog', 'New Relic', 'ELK Stack', 'Splunk',
+                                    'CloudFormation', 'Pulumi', 'Vagrant', 'Packer',
+                                  ],
+                                  // Data & ML
+                                  data: [
+                                    'Machine Learning', 'Deep Learning', 'NLP',
+                                    'Natural Language Processing', 'Computer Vision',
+                                    'TensorFlow', 'PyTorch', 'Keras', 'Scikit-learn',
+                                    'Pandas', 'NumPy', 'Spark', 'Apache Spark', 'Hadoop',
+                                    'Kafka', 'Apache Kafka', 'Airflow', 'dbt', 'Snowflake',
+                                    'BigQuery', 'Redshift', 'Databricks', 'Data Engineering',
+                                    'ETL', 'Data Pipeline', 'Tableau', 'Power BI', 'Looker',
+                                    'OpenAI', 'LLM', 'GPT', 'Hugging Face', 'MLflow',
+                                    'SageMaker', 'Vertex AI',
+                                  ],
+                                  // Mobile
+                                  mobile: [
+                                    'React Native', 'Flutter', 'iOS', 'Android',
+                                    'SwiftUI', 'Jetpack Compose', 'Xamarin', 'Ionic',
+                                    'Capacitor', 'Cordova', 'Expo',
+                                  ],
+                                  // Testing
+                                  testing: [
+                                    'Jest', 'Mocha', 'Chai', 'Cypress', 'Playwright',
+                                    'Selenium', 'Puppeteer', 'Testing Library',
+                                    'React Testing Library', 'JUnit', 'PyTest', 'RSpec',
+                                    'Vitest', 'Supertest', 'TDD', 'BDD', 'QA',
+                                  ],
+                                  // Tools & Practices
+                                  tools: [
+                                    'Git', 'GitHub', 'GitLab', 'Bitbucket', 'Jira',
+                                    'Confluence', 'Notion', 'Slack', 'Agile', 'Scrum',
+                                    'Kanban', 'SAFe', 'Figma', 'Sketch', 'Adobe XD',
+                                    'Postman', 'Swagger', 'OpenAPI', 'OAuth', 'JWT',
+                                    'SAML', 'SSO', 'LDAP', 'Active Directory',
+                                  ],
+                                  // Networking & Security
+                                  networking: [
+                                    'TCP/IP', 'DNS', 'HTTP', 'HTTPS', 'SSL/TLS',
+                                    'VPN', 'Firewall', 'Load Balancer', 'CDN',
+                                    'CCNA', 'CCNP', 'CompTIA', 'Cybersecurity',
+                                    'Penetration Testing', 'OWASP', 'SOC',
+                                    'Wireshark', 'Nmap', 'Snort', 'SIEM',
+                                  ],
+                                };
+
+                                const allSkills = Object.values(KNOWN_SKILLS).flat();
+                                const resumeText = editResumeText;
+                                const foundSkills: string[] = [];
+
+                                for (const skill of allSkills) {
+                                  // Build a regex that matches the skill as a whole word,
+                                  // case-insensitive, handling special chars like C++, .NET, etc.
+                                  const escaped = skill.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                  const pattern = new RegExp(`(?:^|[\\s,;|/()\\[\\]])${escaped}(?=$|[\\s,;|/()\\[\\].])`, 'i');
+                                  if (pattern.test(resumeText)) {
+                                    // Use the canonical name from our dictionary
+                                    const normalized = normalizeSkillName(skill);
+                                    // Avoid duplicates (e.g., "React" and "ReactJS" both found)
+                                    if (!foundSkills.some(f => normalizeSkillName(f) === normalized)) {
+                                      foundSkills.push(skill);
+                                    }
+                                  }
+                                }
+
+                                if (foundSkills.length === 0) {
+                                  toast({ title: "No skills detected", description: "Couldn't find recognized skills in the text. Try pasting more of your resume.", variant: "destructive" });
+                                  setExtractingSkills(false);
+                                  return;
+                                }
+
+                                // Add found skills to candidate's skill graph
+                                const { data: { session } } = await supabase.auth.getSession();
+                                if (!session || !profile) {
+                                  setExtractingSkills(false);
+                                  return;
+                                }
+                                let addedCount = 0;
+                                const existingNormalized = skills.map((s: any) => normalizeSkillName(s.skill_name));
+
+                                for (const skillName of foundSkills) {
+                                  const norm = normalizeSkillName(skillName);
+                                  if (existingNormalized.includes(norm)) continue; // skip existing
+                                  const { error } = await supabase
+                                    .from("candidate_skills")
+                                    .insert({
+                                      candidate_id: profile.id,
+                                      skill_name: skillName,
+                                      years_experience: 1,
+                                      skill_level: 'Intermediate'
+                                    });
+                                  if (!error) {
+                                    addedCount++;
+                                    existingNormalized.push(norm);
+                                  }
+                                }
+
+                                await fetchSkills();
+                                toast({ 
+                                  title: `Extracted ${foundSkills.length} Skills`, 
+                                  description: addedCount > 0 
+                                    ? `Added ${addedCount} new skill${addedCount > 1 ? 's' : ''} to your graph. ${foundSkills.length - addedCount > 0 ? `${foundSkills.length - addedCount} already existed.` : ''}` 
+                                    : `All ${foundSkills.length} skills were already in your graph.`
+                                });
+                                setExtractingSkills(false);
                              }}
                            >
-                              <Target className="h-3 w-3 text-primary" /> Auto-Extract
+                              <Target className="h-3 w-3 text-primary" /> {extractingSkills ? 'Scanning...' : 'Auto-Extract'}
                            </Button>
                         </div>
                         <Textarea 
@@ -897,7 +1070,7 @@ const CandidateDashboard = () => {
                                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-primary/10 text-primary border-transparent">{job.job_type}</Badge>
                                  {job.salary_min && (
                                     <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-green-500/10 text-green-600 border-transparent">
-                                      ${job.salary_min.toLocaleString()} - {job.salary_max?.toLocaleString()} <span className="ml-1 opacity-60">{job.salary_period}</span>
+                                      ${job.salary_min.toLocaleString()} - {job.salary_max?.toLocaleString()} <span className="ml-1 opacity-60">{job.salary_period || 'Annually'}</span>
                                     </Badge>
                                   )}
                                  {(job as any).score > 0 && (

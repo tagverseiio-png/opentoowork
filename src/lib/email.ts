@@ -168,6 +168,18 @@ export function sendJobAlertEmail(
 }
 
 // ═══════════════════════════════════════════════════════════════
+// Skill Name Normalizer — trims whitespace, lowercases,
+// collapses multiple spaces, strips special chars at edges
+// ═══════════════════════════════════════════════════════════════
+export function normalizeSkillName(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ')           // collapse multiple spaces
+    .replace(/[^a-z0-9.#+\- /]/g, ''); // keep alphanumeric + common skill chars
+}
+
+// ═══════════════════════════════════════════════════════════════
 // Math-based Candidate Match Score Calculator (reusable)
 // Uses weighted scoring: Required skills 80%, Optional skills 20%
 // Experience ratio capped at 1.2× for over-qualified bonus
@@ -200,8 +212,9 @@ export function calculateMatchScore(
   if (reqSkills.length > 0) {
     let reqScore = 0;
     for (const js of reqSkills) {
+      const normalizedJobSkill = normalizeSkillName(js.skill_name);
       const match = candidateSkills.find(
-        cs => cs.skill_name.toLowerCase() === js.skill_name.toLowerCase()
+        cs => normalizeSkillName(cs.skill_name) === normalizedJobSkill
       );
       if (match) {
         const expRatio = Math.min(
@@ -220,8 +233,9 @@ export function calculateMatchScore(
   if (optSkills.length > 0) {
     let optScore = 0;
     for (const js of optSkills) {
+      const normalizedJobSkill = normalizeSkillName(js.skill_name);
       const match = candidateSkills.find(
-        cs => cs.skill_name.toLowerCase() === js.skill_name.toLowerCase()
+        cs => normalizeSkillName(cs.skill_name) === normalizedJobSkill
       );
       if (match) optScore += 1;
     }

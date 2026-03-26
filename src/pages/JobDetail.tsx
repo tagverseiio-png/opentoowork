@@ -387,7 +387,7 @@ const JobDetail = () => {
               {(job.salary_min || job.salary_max) && (
                 <div className="flex items-center gap-3 text-lg font-semibold text-success bg-success/10 rounded-xl p-4">
                   <DollarSign className="h-6 w-6" />
-                  ${job.salary_min?.toLocaleString()} - ${job.salary_max?.toLocaleString()} / year
+                  ${job.salary_min?.toLocaleString()} - ${job.salary_max?.toLocaleString()} <span className="text-sm opacity-70 ml-1">/ {job.salary_period?.toLowerCase() || 'year'}</span>
                 </div>
               )}
 
