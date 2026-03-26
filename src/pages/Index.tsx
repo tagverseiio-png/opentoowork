@@ -198,6 +198,7 @@ const Index = () => {
                   location={job.location}
                   salaryMin={job.salary_min}
                   salaryMax={job.salary_max}
+                  salaryPeriod={job.salary_period}
                   jobType={job.job_type}
                   workAuthorization={job.work_authorization}
                   skills={job.skills_required}

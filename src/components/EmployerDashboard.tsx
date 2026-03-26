@@ -1265,7 +1265,14 @@ const EmployerDashboard = () => {
                                         {app.candidate?.profiles?.full_name?.charAt(0)}
                                       </div>
                                       <div>
-                                        <div className="font-black text-base text-foreground tracking-tight leading-none uppercase">{app.candidate?.profiles?.full_name}</div>
+                                        <div className="font-black text-base text-foreground tracking-tight leading-none uppercase flex items-center gap-2">
+                                          {app.candidate?.profiles?.full_name}
+                                          {app.candidate?.resume_url && (
+                                            <a href={app.candidate.resume_url} target="_blank" rel="noopener noreferrer">
+                                              <FileText className="h-3 w-3 text-primary/50 hover:text-primary transition-colors cursor-pointer" />
+                                            </a>
+                                          )}
+                                        </div>
                                         <div className="text-xs text-muted-foreground font-medium mt-1">{app.candidate?.profiles?.email}</div>
                                       </div>
                                     </div>
@@ -1345,7 +1352,7 @@ const EmployerDashboard = () => {
                                     {app.candidate?.resume_url && (
                                       <a href={app.candidate.resume_url} target="_blank" rel="noopener noreferrer">
                                         <Button variant="outline" className="w-full h-8 px-4 gap-2 text-[10px] font-black uppercase tracking-[0.2em] border-primary/20 hover:bg-primary/5 hover:border-primary/50 text-foreground transition-all">
-                                          <FileText className="w-3.5 h-3.5 text-primary" /> View
+                                          <FileText className="w-3.5 h-3.5 text-primary" /> Dossier
                                         </Button>
                                       </a>
                                     )}
@@ -1417,6 +1424,13 @@ const EmployerDashboard = () => {
                                 {app.candidate?.profiles?.full_name?.charAt(0)}
                               </div>
                               <div className="font-black text-sm uppercase tracking-tight">{app.candidate?.profiles?.full_name}</div>
+                              {app.candidate?.resume_url && (
+                                <a href={app.candidate.resume_url} target="_blank" rel="noopener noreferrer" className="ml-auto">
+                                  <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-[9px] font-black uppercase tracking-widest text-primary bg-primary/5 hover:bg-primary/10">
+                                    <FileText className="h-3 w-3" /> Dossier
+                                  </Button>
+                                </a>
+                              )}
                             </div>
                             <Textarea
                               placeholder="Add internal notes about this candidate..."

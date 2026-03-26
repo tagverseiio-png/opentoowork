@@ -25,6 +25,11 @@ const HeroSection = ({
   onSearch,
   heroImage
 }: HeroSectionProps) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      onSearch();
+    }
+  };
   const backgroundImage = heroImage || heroImage;
   return (
     <section className="relative min-h-[75vh] flex items-center bg-background text-foreground overflow-hidden">
@@ -57,6 +62,7 @@ const HeroSection = ({
                   className="pl-12 h-14 border-border/50 focus:border-primary transition-colors text-base"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={handleKeyDown}
                 />
               </div>
               <div className="relative">
@@ -67,6 +73,7 @@ const HeroSection = ({
                   className="pl-12 h-14 border-border/50 focus:border-primary transition-colors text-base"
                   value={locationFilter}
                   onChange={(e) => setLocationFilter(e.target.value)}
+                  onKeyDown={handleKeyDown}
                 />
               </div>
               <Button 

@@ -199,14 +199,23 @@ const CandidateDashboard = () => {
       return;
     }
 
-    // Score all jobs and show them sorted by match. Don't hide zero-score
-    // jobs — they still match the visa filter, just don't overlap on skills.
-    const scoredJobs = jobs.map(job => ({
-      ...job,
-      score: (candidateSkills?.length && job.job_skills?.length)
-        ? calculateMatchScore(candidateSkills, job.job_skills)
-        : 0
-    })).sort((a: any, b: any) => b.score - a.score);
+    // Score jobs by skill match. Only recommend jobs where there is
+    // actual skill overlap — a Java dev should not see PM roles just
+    // because they share the same visa status.
+    if (!candidateSkills?.length) {
+      // Candidate has no skills added — can't compute matches
+      setRecommendations([]);
+      return;
+    }
+
+    const scoredJobs = jobs
+      .filter(job => job.job_skills?.length > 0) // only jobs with defined skills
+      .map(job => ({
+        ...job,
+        score: calculateMatchScore(candidateSkills, job.job_skills)
+      }))
+      .filter(job => (job as any).score > 0) // must have at least some skill overlap
+      .sort((a: any, b: any) => b.score - a.score);
     
     setRecommendations(scoredJobs.slice(0, 10));
   };
@@ -590,13 +599,28 @@ const CandidateDashboard = () => {
                                     try {
                                       const { data: { session } } = await supabase.auth.getSession();
                                       if (!session) throw new Error("Not authenticated");
-                                      const fileExt = file.name.split('.').pop();
-                                      const filePath = `${session.user.id}/resume.${fileExt}`;
-                                      const { error: uploadError } = await supabase.storage.from("resumes").upload(filePath, file, { upsert: true });
-                                      if (uploadError) throw uploadError;
-                                      const { data: { publicUrl } } = supabase.storage.from("resumes").getPublicUrl(filePath);
-                                      setEditResumeUrl(`${publicUrl}?t=${new Date().getTime()}`);
-                                      toast({ title: "Resume Uploaded" });
+
+                                      // Upload via FTP edge function
+                                      const formData = new FormData();
+                                      formData.append("file", file);
+
+                                      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+                                      const response = await fetch(
+                                        `${supabaseUrl}/functions/v1/upload-resume`,
+                                        {
+                                          method: "POST",
+                                          headers: {
+                                            Authorization: `Bearer ${session.access_token}`,
+                                          },
+                                          body: formData,
+                                        }
+                                      );
+
+                                      const result = await response.json();
+                                      if (!response.ok) throw new Error(result.error || "Upload failed");
+
+                                      setEditResumeUrl(result.url);
+                                      toast({ title: "Resume Uploaded!", description: `File: ${result.filename}` });
                                     } catch (err: any) {
                                       toast({ title: "Upload Failed", description: err.message, variant: "destructive" });
                                     } finally {
@@ -718,21 +742,30 @@ const CandidateDashboard = () => {
                                     'React Testing Library', 'JUnit', 'PyTest', 'RSpec',
                                     'Vitest', 'Supertest', 'TDD', 'BDD', 'QA',
                                   ],
+                                  // Management & Leadership
+                                  management: [
+                                    'Project Management', 'Product Management', 'Program Management',
+                                    'Agile', 'Scrum', 'Kanban', 'Lean', 'Six Sigma', 'PMP', 'Prince2',
+                                    'Stakeholder Management', 'Risk Management', 'Resource Management',
+                                    'Strategic Planning', 'Business Analysis', 'Budgets', 'Financial Modeling',
+                                    'Change Management', 'Operations Management', 'Supply Chain',
+                                    'People Management', 'Leadership', 'Mentoring', 'Team Building',
+                                  ],
                                   // Tools & Practices
                                   tools: [
-                                    'Git', 'GitHub', 'GitLab', 'Bitbucket', 'Jira',
-                                    'Confluence', 'Notion', 'Slack', 'Agile', 'Scrum',
-                                    'Kanban', 'SAFe', 'Figma', 'Sketch', 'Adobe XD',
+                                    'Git', 'GitHub', 'GitLab', 'Bitbucket', 'Jira', 'Trello', 'Asana',
+                                    'Monday.com', 'Confluence', 'Notion', 'Slack', 'Microsoft Teams',
+                                    'Agile', 'Scrum', 'Kanban', 'SAFe', 'Figma', 'Sketch', 'Adobe XD',
                                     'Postman', 'Swagger', 'OpenAPI', 'OAuth', 'JWT',
-                                    'SAML', 'SSO', 'LDAP', 'Active Directory',
+                                    'SAML', 'SSO', 'LDAP', 'Active Directory', 'Wordpress',
                                   ],
                                   // Networking & Security
                                   networking: [
                                     'TCP/IP', 'DNS', 'HTTP', 'HTTPS', 'SSL/TLS',
                                     'VPN', 'Firewall', 'Load Balancer', 'CDN',
                                     'CCNA', 'CCNP', 'CompTIA', 'Cybersecurity',
-                                    'Penetration Testing', 'OWASP', 'SOC',
-                                    'Wireshark', 'Nmap', 'Snort', 'SIEM',
+                                    'Penetration Testing', 'OWASP', 'SOC', 'SIEM',
+                                    'Wireshark', 'Nmap', 'Snort', 'Security+', 'CISSP',
                                   ],
                                 };
 

@@ -73,7 +73,11 @@ const JobCard = ({
           <div className="flex items-center gap-2 text-sm bg-success/10 rounded-lg p-2.5 w-fit">
             <DollarSign className="h-4 w-4 text-success" />
             <span className="font-semibold text-success">
-              ${salaryMin?.toLocaleString() || 0} - ${salaryMax?.toLocaleString() || 'Max'} / {salaryPeriod?.toLowerCase() || 'year'}
+              ${salaryMin?.toLocaleString() || 0} - ${salaryMax?.toLocaleString() || 'Max'} / {
+                salaryPeriod === 'Hourly' ? 'hour' : 
+                salaryPeriod === 'Monthly' ? 'month' : 
+                'year'
+              }
             </span>
           </div>
         )}
