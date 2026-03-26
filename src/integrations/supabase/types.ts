@@ -356,6 +356,8 @@ export type Database = {
             | null
           expires_at: string | null
           job_mode: string | null
+          job_id: string | null
+          salary_period: string | null
         }
         Insert: {
           created_at?: string | null
@@ -376,6 +378,8 @@ export type Database = {
             | null
           expires_at: string | null
           job_mode: string | null
+          job_id?: string | null
+          salary_period?: string | null
         }
         Update: {
           created_at?: string | null
@@ -396,6 +400,8 @@ export type Database = {
             | null
           expires_at: string | null
           job_mode: string | null
+          job_id?: string | null
+          salary_period?: string | null
         }
         Relationships: [
           {

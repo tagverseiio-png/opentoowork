@@ -1,16 +1,19 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import usaCities from "@/lib/usa_cities_cleaned.json";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, CheckCircle, Clock, XCircle, MapPin, Building2, Calendar, Briefcase, Pencil, Plus, Trash2, ExternalLink, Linkedin, Globe, Bell, Target, Settings, LayoutDashboard, Share2, UserCircle, Mail } from "lucide-react";
+import { FileText, CheckCircle, Clock, XCircle, MapPin, Building2, Calendar, Briefcase, Pencil, Plus, Trash2, ExternalLink, Linkedin, Globe, Bell, Target, Settings, LayoutDashboard, Share2, UserCircle, Mail, ChevronsUpDown, Check } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Textarea } from "./ui/textarea";
 import { Separator } from "./ui/separator";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -33,6 +36,11 @@ import { calculateMatchScore, sendEmail } from "@/lib/email";
 
 const WORK_AUTH_OPTIONS = [
   "H1B", "CPT-EAD", "OPT-EAD", "GC", "GC-EAD", "USC", "TN"
+];
+
+const ALL_LOCATIONS = [
+  "Remote (US)",
+  ...usaCities.map(c => c.state_code ? `${c.city}, ${c.state_code}` : c.city)
 ];
 
 const CandidateDashboard = () => {
@@ -61,6 +69,8 @@ const CandidateDashboard = () => {
   const [newSkillLevel, setNewSkillLevel] = useState("Intermediate");
   const [addingSkill, setAddingSkill] = useState(false);
   const [importingLinkedin, setImportingLinkedin] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [locationSearch, setLocationSearch] = useState("");
 
   const handleLinkedInImport = async () => {
     setImportingLinkedin(true);
@@ -153,21 +163,52 @@ const CandidateDashboard = () => {
   // Job alerts hidden -- feature currently not active
 
   const fetchRecommendations = async () => {
-    if (!profile) return;
-    
-    // Fetch jobs that match Candidate's Visa status
-    const { data } = await supabase
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data: candidateProfile } = await supabase
+      .from("candidate_profiles")
+      .select("*")
+      .eq("user_id", session.user.id)
+      .single();
+
+    if (!candidateProfile) return;
+
+    const { data: candidateSkills } = await supabase
+      .from("candidate_skills")
+      .select("*")
+      .eq("candidate_id", candidateProfile.id);
+
+    let query = supabase
       .from("jobs")
       .select(`
         *,
         employer:employer_profiles(company_name, logo_url),
         job_skills(*)
       `)
-      .eq("is_active", true)
-      .contains('work_authorization', [profile.work_authorization])
-      .limit(10);
+      .eq("is_active", true);
+
+    if (candidateProfile.work_authorization) {
+      query = query.contains('work_authorization', [candidateProfile.work_authorization]);
+    }
+
+    const { data: jobs } = await query;
+    if (!jobs?.length) {
+      setRecommendations([]);
+      return;
+    }
+
+    let matchedJobs = jobs;
+    if (candidateSkills?.length) {
+      matchedJobs = jobs.map(job => ({
+        ...job,
+        score: job.job_skills?.length ? calculateMatchScore(candidateSkills, job.job_skills) : 0
+      }))
+      .filter(job => (job as any).score > 0)
+      .sort((a: any, b: any) => b.score - a.score);
+    }
     
-    setRecommendations(data || []);
+    setRecommendations(matchedJobs.slice(0, 10));
   };
 
   // Add alert logic hidden
@@ -446,12 +487,61 @@ const CandidateDashboard = () => {
 
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest">Global Location</Label>
-                        <Input 
-                          placeholder="City, State / Remote" 
-                          className="h-11 rounded-xl"
-                          value={editLocation} 
-                          onChange={(e) => setEditLocation(e.target.value)}
-                        />
+                        <Popover open={locationOpen} onOpenChange={setLocationOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={locationOpen}
+                              className="w-full justify-between h-11 rounded-xl font-normal text-foreground bg-background hover:bg-background"
+                            >
+                              <div className="flex items-center gap-2 overflow-hidden">
+                                <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                                <span className={`truncate ${!editLocation && "text-muted-foreground"}`}>
+                                  {editLocation || "Search U.S. cities / Remote..."}
+                                </span>
+                              </div>
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="p-0 shadow-2xl rounded-xl custom-scrollbar" style={{ width: 'var(--radix-popover-trigger-width)' }} align="start">
+                            <Command shouldFilter={false}>
+                              <CommandInput 
+                                placeholder="Search U.S. cities..." 
+                                className="h-9" 
+                                value={locationSearch}
+                                onValueChange={setLocationSearch}
+                              />
+                              <CommandList className="max-h-60 custom-scrollbar">
+                                <CommandEmpty>No location found.</CommandEmpty>
+                                <CommandGroup>
+                                  {ALL_LOCATIONS
+                                    .filter(loc => 
+                                      loc.toLowerCase().includes(locationSearch.toLowerCase())
+                                    )
+                                    .slice(0, 100)
+                                    .map((loc) => (
+                                    <CommandItem
+                                      key={loc}
+                                      value={loc}
+                                      onSelect={(currentValue) => {
+                                        setEditLocation(loc);
+                                        setLocationOpen(false);
+                                      }}
+                                    >
+                                      <Check
+                                        className={`mr-2 h-4 w-4 ${
+                                          editLocation === loc ? "opacity-100" : "opacity-0"
+                                        }`}
+                                      />
+                                      {loc}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -712,16 +802,14 @@ const CandidateDashboard = () => {
         {/* Main Content */}
         <div className="lg:col-span-8">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-3 w-full bg-muted/30 p-1.5 h-16 rounded-[2rem] gap-3">
+            <TabsList className="grid grid-cols-2 w-full bg-muted/30 p-1.5 h-16 rounded-[2rem] gap-3">
               <TabsTrigger value="applications" className="data-[state=active]:bg-background data-[state=active]:shadow-2xl rounded-[1.5rem] h-full font-black uppercase text-[10px] tracking-widest gap-2.5">
                 <Briefcase className="h-4 w-4" /> Journey
               </TabsTrigger>
               <TabsTrigger value="recommendations" className="data-[state=active]:bg-background data-[state=active]:shadow-2xl rounded-[1.5rem] h-full font-black uppercase text-[10px] tracking-widest gap-2.5">
                 <Target className="h-4 w-4" /> Best Fits
               </TabsTrigger>
-              <TabsTrigger value="settings" className="data-[state=active]:bg-background data-[state=active]:shadow-2xl rounded-[1.5rem] h-full font-black uppercase text-[10px] tracking-widest gap-2.5">
-                <Settings className="h-4 w-4" /> Core
-              </TabsTrigger>
+
             </TabsList>
 
             <div className="mt-8">
@@ -807,6 +895,16 @@ const CandidateDashboard = () => {
                               <div className="flex flex-wrap gap-2">
                                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-background border-primary/20">{job.location}</Badge>
                                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-primary/10 text-primary border-transparent">{job.job_type}</Badge>
+                                 {job.salary_min && (
+                                    <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-green-500/10 text-green-600 border-transparent">
+                                      ${job.salary_min.toLocaleString()} - {job.salary_max?.toLocaleString()} <span className="ml-1 opacity-60">{job.salary_period}</span>
+                                    </Badge>
+                                  )}
+                                 {(job as any).score > 0 && (
+                                   <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-green-500/10 text-green-600 border-transparent">
+                                     {(job as any).score}% Match
+                                   </Badge>
+                                 )}
                               </div>
                               <Button className="w-full h-11 font-black uppercase text-[10px] shadow-lg rounded-2xl" asChild>
                                  <Link to={`/jobs/${job.id}`}>Engagement Review</Link>
@@ -821,22 +919,7 @@ const CandidateDashboard = () => {
 
               {/* Alerts Tab Content Removed */}
 
-              <TabsContent value="settings">
-                 <Card className="p-12 border shadow-sm min-h-[600px] bg-card rounded-[2.5rem]">
-                    <h2 className="text-4xl font-black uppercase tracking-tighter mb-12">Core Preferences</h2>
-                    <div className="space-y-8">
-                       <div className="p-8 bg-muted/10 rounded-[2rem] border border-dashed flex items-center justify-between">
-                          <div className="space-y-1">
-                             <div className="font-black uppercase tracking-widest text-lg">Stealth Mode Profile</div>
-                             <p className="text-xs font-medium text-muted-foreground italic">Your profile is currently PUBLIC to verified premium recruiters.</p>
-                          </div>
-                          <div className="w-16 h-8 bg-primary rounded-full flex items-center px-1 shadow-inner ring-4 ring-primary/20">
-                             <div className="w-6 h-6 bg-white rounded-full ml-auto shadow-xl" />
-                          </div>
-                       </div>
-                    </div>
-                 </Card>
-              </TabsContent>
+
             </div>
           </Tabs>
         </div>
