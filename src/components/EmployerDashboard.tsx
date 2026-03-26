@@ -1322,7 +1322,7 @@ const EmployerDashboard = () => {
                                         <div className="font-black text-base text-foreground tracking-tight leading-none uppercase flex items-center gap-2">
                                           {app.candidate?.profiles?.full_name}
                                           {app.candidate?.resume_url && (
-                                            <a href={app.candidate.resume_url} target="_blank" rel="noopener noreferrer">
+                                            <a href={app.candidate.resume_url} target="_blank" rel="noopener noreferrer" download>
                                               <FileText className="h-3 w-3 text-primary/50 hover:text-primary transition-colors cursor-pointer" />
                                             </a>
                                           )}
@@ -1408,7 +1408,7 @@ const EmployerDashboard = () => {
                                 <TableCell className="py-6">
                                   <div className="flex flex-col gap-2">
                                     {app.candidate?.resume_url && (
-                                      <a href={app.candidate.resume_url} target="_blank" rel="noopener noreferrer">
+                                      <a href={app.candidate.resume_url} target="_blank" rel="noopener noreferrer" download>
                                         <Button variant="outline" className="w-full h-8 px-4 gap-2 text-[10px] font-black uppercase tracking-[0.2em] border-primary/20 hover:bg-primary/5 hover:border-primary/50 text-foreground transition-all">
                                           <FileText className="w-3.5 h-3.5 text-primary" /> Dossier
                                         </Button>
@@ -1488,7 +1488,7 @@ const EmployerDashboard = () => {
                               </div>
                               <div className="font-black text-sm uppercase tracking-tight">{app.candidate?.profiles?.full_name}</div>
                               {app.candidate?.resume_url && (
-                                <a href={app.candidate.resume_url} target="_blank" rel="noopener noreferrer" className="ml-auto">
+                                <a href={app.candidate.resume_url} target="_blank" rel="noopener noreferrer" download className="ml-auto">
                                   <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-[9px] font-black uppercase tracking-widest text-primary bg-primary/5 hover:bg-primary/10">
                                     <FileText className="h-3 w-3" /> Dossier
                                   </Button>
@@ -1604,7 +1604,7 @@ const EmployerDashboard = () => {
 
                     <div className="flex gap-2 pt-4 border-t border-dashed">
                       {talent.resume_url && (
-                        <a href={talent.resume_url} target="_blank" rel="noopener noreferrer" className="flex-1">
+                        <a href={talent.resume_url} target="_blank" rel="noopener noreferrer" download className="flex-1">
                           <Button variant="outline" className="w-full h-10 font-black uppercase text-[10px] tracking-widest gap-2">
                             <FileText className="h-3.5 w-3.5" /> Dossier
                           </Button>
