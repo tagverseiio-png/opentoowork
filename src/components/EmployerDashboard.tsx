@@ -13,9 +13,9 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useToast } from "@/hooks/use-toast";
-import {
+import { 
   Plus, Briefcase, Users, Check, X, FileText, MapPin, ChevronsUpDown,
-  DollarSign, Power, Mail, Trash2, Ban, Upload, Pencil, Target, AlignLeft, Building2, Calendar, LayoutDashboard, Search, ExternalLink, Globe, ShieldCheck, MessageSquare, Terminal, Fingerprint, BadgeCheck, RefreshCw, Layers, Printer, Lock
+  DollarSign, Power, Mail, Trash2, Ban, Upload, Pencil, Target, AlignLeft, Building2, Calendar, LayoutDashboard, Search, ExternalLink, Globe, ShieldCheck, MessageSquare, Terminal, Fingerprint, BadgeCheck, RefreshCw, Layers, Printer, Lock, Download 
 } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
@@ -1408,11 +1408,18 @@ const EmployerDashboard = () => {
                                 <TableCell className="py-6">
                                   <div className="flex flex-col gap-2">
                                     {app.candidate?.resume_url && (
-                                      <a href={app.candidate.resume_url} target="_blank" rel="noopener noreferrer" download>
-                                        <Button variant="outline" className="w-full h-8 px-4 gap-2 text-[10px] font-black uppercase tracking-[0.2em] border-primary/20 hover:bg-primary/5 hover:border-primary/50 text-foreground transition-all">
-                                          <FileText className="w-3.5 h-3.5 text-primary" /> Dossier
-                                        </Button>
-                                      </a>
+                                      <div className="flex flex-col gap-2">
+                                        <a href={app.candidate.resume_url} target="_blank" rel="noopener noreferrer">
+                                          <Button variant="outline" className="w-full h-8 px-4 gap-2 text-[10px] font-black uppercase tracking-[0.2em] border-primary/20 hover:bg-primary/5 hover:border-primary/50 text-foreground transition-all">
+                                            <FileText className="w-3.5 h-3.5 text-primary" /> View Dossier
+                                          </Button>
+                                        </a>
+                                        <a href={app.candidate.resume_url} download={`${app.candidate.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.pdf`}>
+                                          <Button variant="ghost" className="w-full h-8 px-4 gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 hover:text-primary transition-all">
+                                            <Download className="w-3.5 h-3.5" /> Download
+                                          </Button>
+                                        </a>
+                                      </div>
                                     )}
                                     {app.candidate?.resume_text && (
                                       <Dialog>
@@ -1488,7 +1495,7 @@ const EmployerDashboard = () => {
                               </div>
                               <div className="font-black text-sm uppercase tracking-tight">{app.candidate?.profiles?.full_name}</div>
                               {app.candidate?.resume_url && (
-                                <a href={app.candidate.resume_url} target="_blank" rel="noopener noreferrer" download className="ml-auto">
+                                <a href={app.candidate.resume_url} target="_blank" rel="noopener noreferrer" download={`${app.candidate.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.pdf`} className="ml-auto">
                                   <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-[9px] font-black uppercase tracking-widest text-primary bg-primary/5 hover:bg-primary/10">
                                     <FileText className="h-3 w-3" /> Dossier
                                   </Button>
@@ -1604,11 +1611,18 @@ const EmployerDashboard = () => {
 
                     <div className="flex gap-2 pt-4 border-t border-dashed">
                       {talent.resume_url && (
-                        <a href={talent.resume_url} target="_blank" rel="noopener noreferrer" download className="flex-1">
-                          <Button variant="outline" className="w-full h-10 font-black uppercase text-[10px] tracking-widest gap-2">
-                            <FileText className="h-3.5 w-3.5" /> Dossier
-                          </Button>
-                        </a>
+                        <div className="flex gap-2 flex-1">
+                          <a href={talent.resume_url} target="_blank" rel="noopener noreferrer" className="flex-1">
+                            <Button variant="outline" className="w-full h-10 font-black uppercase text-[10px] tracking-widest gap-2">
+                              <FileText className="h-3.5 w-3.5" /> View
+                            </Button>
+                          </a>
+                          <a href={talent.resume_url} download={`${talent.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.pdf`} className="flex-none">
+                            <Button variant="outline" size="icon" className="h-10 w-10">
+                              <Download className="h-3.5 w-3.5" />
+                            </Button>
+                          </a>
+                        </div>
                       )}
                       <Button
                         variant="ghost"

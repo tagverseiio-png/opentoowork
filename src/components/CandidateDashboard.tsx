@@ -8,7 +8,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, CheckCircle, Clock, XCircle, MapPin, Building2, Calendar, Briefcase, Pencil, Plus, Trash2, ExternalLink, Linkedin, Globe, Bell, Target, Settings, LayoutDashboard, Share2, UserCircle, Mail, ChevronsUpDown, Check } from "lucide-react";
+import { FileText, CheckCircle, Clock, XCircle, MapPin, Building2, Calendar, Briefcase, Pencil, Plus, Trash2, ExternalLink, Linkedin, Globe, Bell, Target, Settings, LayoutDashboard, Share2, UserCircle, Mail, ChevronsUpDown, Check, Download } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Textarea } from "./ui/textarea";
 import { Separator } from "./ui/separator";
@@ -879,31 +879,38 @@ const CandidateDashboard = () => {
 
               <div className="space-y-3">
                 <Label className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Connective Services</Label>
-                <div className="grid gap-2">
+                <div className="grid grid-cols-[1fr,auto] gap-2">
                   {profile.resume_url ? (
-                    <a href={profile.resume_url} target="_blank" rel="noopener noreferrer">
-                      <Button variant="outline" className="w-full h-11 gap-3 text-[10px] font-black uppercase tracking-widest border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm">
-                        <FileText className="h-4 w-4 text-primary" /> View Dossier
-                      </Button>
-                    </a>
+                    <>
+                      <a href={profile.resume_url} target="_blank" rel="noopener noreferrer" className="flex-1">
+                        <Button variant="outline" className="w-full h-11 gap-3 text-[10px] font-black uppercase tracking-widest border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm">
+                          <FileText className="h-4 w-4 text-primary" /> View Dossier
+                        </Button>
+                      </a>
+                      <a href={profile.resume_url} download={`${profile.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.pdf`} className="flex-none">
+                        <Button variant="outline" size="icon" className="h-11 w-11 border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm">
+                          <Download className="h-4 w-4 text-primary" />
+                        </Button>
+                      </a>
+                    </>
                   ) : (
-                    <div className="text-[9px] text-orange-600 bg-orange-50/50 p-3 rounded-xl border border-orange-100 font-bold flex items-center gap-2 italic">
+                    <div className="col-span-2 text-[9px] text-orange-600 bg-orange-50/50 p-3 rounded-xl border border-orange-100 font-bold flex items-center gap-2 italic">
                        Missing Resume Link
                     </div>
                   )}
-
-                  {profile.linkedin_url ? (
-                    <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer">
-                      <Button variant="outline" className="w-full h-11 gap-3 text-[10px] font-black uppercase tracking-widest border-[#0A66C2]/20 text-[#0A66C2] hover:bg-[#0A66C2]/5 shadow-sm">
-                        <Linkedin className="h-4 w-4" /> LinkedIn Bridge
-                      </Button>
-                    </a>
-                  ) : (
-                    <Button variant="ghost" onClick={() => setIsEditing(true)} className="h-11 text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100">
-                       Link Profile
-                    </Button>
-                  )}
                 </div>
+
+                {profile.linkedin_url ? (
+                  <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" className="w-full h-11 gap-3 text-[10px] font-black uppercase tracking-widest border-[#0A66C2]/20 text-[#0A66C2] hover:bg-[#0A66C2]/5 shadow-sm">
+                      <Linkedin className="h-4 w-4" /> LinkedIn Bridge
+                    </Button>
+                  </a>
+                ) : (
+                  <Button variant="ghost" onClick={() => setIsEditing(true)} className="h-11 text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100">
+                     Link Profile
+                  </Button>
+                )}
               </div>
             </div>
           </Card>
