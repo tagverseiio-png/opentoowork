@@ -105,22 +105,43 @@ class SimpleFTP {
     await this.sendCommand("TYPE I");
   }
 
-  async pasv(): Promise<{ host: string; port: number }> {
+
+  async pasv(controlHost: string): Promise<{ host: string; port: number }> {
+    // Try EPSV first (Extended Passive) — more NAT-friendly, only returns port
+    const epsvResp = await this.sendCommand("EPSV");
+    if (epsvResp.startsWith("229")) {
+      const epsvMatch = epsvResp.match(/\|\|\|(\d+)\|/);
+      if (epsvMatch) {
+        const port = parseInt(epsvMatch[1]);
+        this.log(`EPSV mode: ${controlHost}:${port}`);
+        return { host: controlHost, port };
+      }
+    }
+
+    // Fall back to PASV
     const resp = await this.sendCommand("PASV");
     if (!resp.startsWith("227")) throw new Error(`PASV failed: ${resp}`);
     
     const match = resp.match(/\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)/);
     if (!match) throw new Error(`Cannot parse PASV response: ${resp}`);
     
-    const host = `${match[1]}.${match[2]}.${match[3]}.${match[4]}`;
+    let host = `${match[1]}.${match[2]}.${match[3]}.${match[4]}`;
     const port = parseInt(match[5]) * 256 + parseInt(match[6]);
+    
+    // If PASV returns a private/internal IP, use the original FTP host instead
+    if (host.startsWith("10.") || host.startsWith("192.168.") || 
+        host.startsWith("172.") || host === "127.0.0.1" || host === "0.0.0.0") {
+      this.log(`PASV returned private IP ${host}, overriding with ${controlHost}`);
+      host = controlHost;
+    }
+    
     this.log(`Passive mode: ${host}:${port}`);
     return { host, port };
   }
 
-  async stor(filename: string, data: Uint8Array): Promise<void> {
+  async stor(filename: string, data: Uint8Array, controlHost: string): Promise<void> {
     await this.binary();
-    const { host, port } = await this.pasv();
+    const { host, port } = await this.pasv(controlHost);
     
     this.log(`Opening data connection for STOR ${filename} (${data.length} bytes)...`);
     const dataConn = await Deno.connect({ hostname: host, port });
@@ -157,8 +178,8 @@ class SimpleFTP {
     }
   }
 
-  async list(): Promise<string> {
-    const { host, port } = await this.pasv();
+  async list(controlHost: string): Promise<string> {
+    const { host, port } = await this.pasv(controlHost);
     const dataConn = await Deno.connect({ hostname: host, port });
     
     const resp = await this.sendCommand("LIST");
@@ -348,10 +369,10 @@ serve(async (req) => {
       uploadPath = await ensureResumesDirectory(ftp, webRoot);
       finalDir = uploadPath;
       
-      await ftp.stor(filename, fileBuffer);
+      await ftp.stor(filename, fileBuffer, FTP_HOST);
       
       log("Listing uploaded directory:");
-      const listing = await ftp.list();
+      const listing = await ftp.list(FTP_HOST);
       log(listing.split('\n').slice(0, 10).join('\n'));
       
       await ftp.quit();
