@@ -119,6 +119,8 @@ const EmployerDashboard = () => {
   // Profile Form States
   const [editCompanyName, setEditCompanyName] = useState("");
   const [editEmployerLocation, setEditEmployerLocation] = useState("");
+  const [employerLocationOpen, setEmployerLocationOpen] = useState(false);
+  const [employerLocationSearch, setEmployerLocationSearch] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editWebsite, setEditWebsite] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -821,9 +823,62 @@ const EmployerDashboard = () => {
                     <Label>Company Name</Label>
                     <Input value={editCompanyName} onChange={(e) => setEditCompanyName(e.target.value)} />
                   </div>
-                  <div className="space-y-2 flex-1">
+                  <div className="space-y-2 flex-1 relative flex flex-col">
                     <Label>Location</Label>
-                    <Input value={editEmployerLocation} onChange={(e) => setEditEmployerLocation(e.target.value)} placeholder="e.g. San Francisco, CA" />
+                    <Popover open={employerLocationOpen} onOpenChange={setEmployerLocationOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={employerLocationOpen}
+                          className="w-full justify-between font-normal text-foreground bg-background hover:bg-background"
+                        >
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <span className={`truncate ${!editEmployerLocation && "text-muted-foreground"}`}>
+                              {editEmployerLocation || "Select location..."}
+                            </span>
+                          </div>
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0 shadow-2xl rounded-xl custom-scrollbar" style={{ width: 'var(--radix-popover-trigger-width)' }} align="start">
+                        <Command shouldFilter={false}>
+                          <CommandInput 
+                            placeholder="Search U.S. cities..." 
+                            className="h-9" 
+                            value={employerLocationSearch}
+                            onValueChange={setEmployerLocationSearch}
+                          />
+                          <CommandList className="max-h-60 custom-scrollbar">
+                            <CommandEmpty>No location found.</CommandEmpty>
+                            <CommandGroup>
+                              {ALL_LOCATIONS
+                                .filter(loc => 
+                                  loc.toLowerCase().includes(employerLocationSearch.toLowerCase())
+                                )
+                                .slice(0, 100)
+                                .map((loc) => (
+                                <CommandItem
+                                  key={loc}
+                                  value={loc}
+                                  onSelect={() => {
+                                    setEditEmployerLocation(loc);
+                                    setEmployerLocationOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={`mr-2 h-4 w-4 ${
+                                      editEmployerLocation === loc ? "opacity-100" : "opacity-0"
+                                    }`}
+                                  />
+                                  {loc}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
                 <div className="space-y-2">
