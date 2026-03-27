@@ -12,7 +12,7 @@ const Footer = () => {
         .from("site_content")
         .select("content")
         .eq("section_key", "about_page")
-        .single();
+        .maybeSingle();
       
       if (data?.content) {
         setContent(data.content);

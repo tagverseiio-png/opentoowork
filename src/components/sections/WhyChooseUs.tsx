@@ -36,7 +36,7 @@ const WhyChooseUs = ({ sectionKey = "homepage_why_choose_us" }: { sectionKey?: s
         .from("site_content")
         .select("content")
         .eq("section_key", sectionKey)
-        .single();
+        .maybeSingle();
 
       if (data?.content) {
         setContent(data.content);

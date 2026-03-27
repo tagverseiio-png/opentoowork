@@ -39,7 +39,7 @@ const HowItWorks = ({ sectionKey = "homepage_how_it_works" }: { sectionKey?: str
         .from("site_content")
         .select("content")
         .eq("section_key", sectionKey)
-        .single();
+        .maybeSingle();
 
       if (data?.content) {
         setContent(data.content);

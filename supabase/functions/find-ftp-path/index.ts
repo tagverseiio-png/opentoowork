@@ -1,3 +1,4 @@
+// @ts-nocheck — This is a Supabase Edge Function (Deno runtime), not compiled by local TS
 // ═══════════════════════════════════════════════════════════════
 // FTP Path Diagnostic Edge Function
 // Finds the correct web-accessible directory for file uploads

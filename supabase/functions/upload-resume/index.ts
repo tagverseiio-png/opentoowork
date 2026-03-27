@@ -1,3 +1,4 @@
+// @ts-nocheck — This is a Supabase Edge Function (Deno runtime), not compiled by local TS
 // ═══════════════════════════════════════════════════════════════
 // Resume Upload Edge Function — FTP Upload to Hostinger
 // Receives a file via multipart POST, uploads to FTP, returns URL
@@ -353,10 +354,20 @@ serve(async (req) => {
       log(`FTP ERROR: ${ftpError.message}`);
       logs.push(...ftp.logs);
       await ftp.quit();
-      return new Response(JSON.stringify({ error: `FTP upload failed: ${ftpError.message}`, logs }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({
+          error: `FTP upload failed: ${ftpError.message}`,
+          ftpHost: FTP_HOST,
+          ftpPort: FTP_PORT,
+          ftpUser: FTP_USER ? `${FTP_USER.substring(0, 4)}...` : "(empty)",
+          ftpBaseDir: FTP_BASE_DIR,
+          logs,
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
     logs.push(...ftp.logs);
 

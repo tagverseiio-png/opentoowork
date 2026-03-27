@@ -41,7 +41,7 @@ const WORK_AUTH_OPTIONS = [
 // Helper to get full public URL for resume
 const getResumePublicUrl = (resumePath: string | null | undefined): string => {
   if (!resumePath) return "";
-  // If already a full URL, return as-is (files are uploaded via FTP to Hostinger)
+  // If already a full URL, return as-is (files are uploaded via FTP to Hostinger or Supabase Storage)
   if (resumePath.startsWith("http://") || resumePath.startsWith("https://")) {
     return resumePath;
   }
@@ -49,6 +49,31 @@ const getResumePublicUrl = (resumePath: string | null | undefined): string => {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const cleanPath = resumePath.startsWith("/") ? resumePath.slice(1) : resumePath;
   return `${supabaseUrl}/storage/v1/object/public/${cleanPath}`;
+};
+
+// Safe resume open — checks availability before navigating
+const handleViewResume = async (url: string, download?: boolean, downloadName?: string) => {
+  if (!url) return;
+  try {
+    // Quick HEAD check to see if the file exists
+    const response = await fetch(url, { method: "HEAD", mode: "no-cors" });
+    // If we get here, the URL is reachable (no-cors always returns opaque, so open it)
+    if (download && downloadName) {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = downloadName;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  } catch {
+    // If HEAD fails, still try to open — the browser may handle it
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
 };
 
 const ALL_LOCATIONS = [
@@ -895,16 +920,25 @@ const CandidateDashboard = () => {
                 <div className="grid grid-cols-[1fr,auto] gap-2">
                   {profile.resume_url ? (
                     <>
-                      <a href={getResumePublicUrl(profile.resume_url)} target="_blank" rel="noopener noreferrer" className="flex-1">
-                        <Button variant="outline" className="w-full h-11 gap-3 text-[10px] font-black uppercase tracking-widest border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm">
-                          <FileText className="h-4 w-4 text-primary" /> View Dossier
-                        </Button>
-                      </a>
-                      <a href={getResumePublicUrl(profile.resume_url)} download={`${profile.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.pdf`} className="flex-none">
-                        <Button variant="outline" size="icon" className="h-11 w-11 border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm">
-                          <Download className="h-4 w-4 text-primary" />
-                        </Button>
-                      </a>
+                      <Button 
+                        variant="outline" 
+                        className="w-full h-11 gap-3 text-[10px] font-black uppercase tracking-widest border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm"
+                        onClick={() => handleViewResume(getResumePublicUrl(profile.resume_url))}
+                      >
+                        <FileText className="h-4 w-4 text-primary" /> View Dossier
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-11 w-11 border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm"
+                        onClick={() => handleViewResume(
+                          getResumePublicUrl(profile.resume_url), 
+                          true, 
+                          `${profile.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.pdf`
+                        )}
+                      >
+                        <Download className="h-4 w-4 text-primary" />
+                      </Button>
                     </>
                   ) : (
                     <div className="col-span-2 text-[9px] text-orange-600 bg-orange-50/50 p-3 rounded-xl border border-orange-100 font-bold flex items-center gap-2 italic">
