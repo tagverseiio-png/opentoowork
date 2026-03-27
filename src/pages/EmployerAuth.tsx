@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,10 +7,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Briefcase, Mail, CheckCircle, MapPin, ChevronsUpDown, Check } from "lucide-react";
+import { Briefcase, Mail, MapPin, ChevronsUpDown, Check, Eye, EyeOff, CheckCircle } from "lucide-react";
 import usaCities from "@/lib/usa_cities_cleaned.json";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import ReCAPTCHA from "react-google-recaptcha";
 
 const ALL_LOCATIONS = [
   "Remote (US)",
@@ -24,6 +25,7 @@ const EmployerAuth = () => {
   const [loading, setLoading] = useState(false);
   const [showOtpInput, setShowOtpInput] = useState(false); // New state for OTP view
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
   
   const [companyName, setCompanyName] = useState("");
@@ -36,6 +38,8 @@ const EmployerAuth = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [locationOpen, setLocationOpen] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -281,13 +285,18 @@ const EmployerAuth = () => {
                   onChange={(e) => setEmail(e.target.value)}
                 />
                 <Label>Password</Label>
-                <Input
-                  type="password"
-                  required
-                  value={password}
-                  minLength={6}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    minLength={6}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
 
                 <label htmlFor="captcha-in-emp" className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-border/50 my-6 shadow-inner group cursor-pointer">
                   <div className="w-6 h-6 border-2 border-primary/40 rounded-md flex items-center justify-center bg-background group-hover:border-primary transition-colors">
@@ -384,13 +393,18 @@ const EmployerAuth = () => {
                 <Input type="email" value={email} required onChange={(e) => setEmail(e.target.value)} />
 
                 <Label>Password</Label>
-                <Input
-                  type="password"
-                  minLength={6}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    minLength={6}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
 
                 <label htmlFor="captcha-up-emp" className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-border/50 my-6 shadow-inner group cursor-pointer">
                   <div className="w-6 h-6 border-2 border-primary/40 rounded-md flex items-center justify-center bg-background group-hover:border-primary transition-colors">

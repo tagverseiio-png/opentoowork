@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,10 +7,11 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { UserCircle, Mail, CheckCircle, Eye, EyeOff, MapPin, ChevronsUpDown, Check } from "lucide-react";
+import { UserCircle, Mail, Eye, EyeOff, MapPin, ChevronsUpDown, Check, CheckCircle } from "lucide-react";
 import usaCities from "@/lib/usa_cities_cleaned.json";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import ReCAPTCHA from "react-google-recaptcha";
 
 const ALL_LOCATIONS = [
   "Remote (US)",
@@ -39,6 +40,8 @@ const CandidateAuth = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [locationOpen, setLocationOpen] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   useEffect(() => {
     const checkRole = async () => {
@@ -306,6 +309,14 @@ const CandidateAuth = () => {
                   </button>
                 </div>
                 
+                <label htmlFor="captcha-in-cand" className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-border/50 my-6 shadow-inner group cursor-pointer">
+                  <div className="w-6 h-6 border-2 border-primary/40 rounded-md flex items-center justify-center bg-background group-hover:border-primary transition-colors">
+                    <input type="checkbox" id="captcha-in-cand" required className="w-4 h-4 opacity-0 absolute cursor-pointer" />
+                    <CheckCircle className="h-4 w-4 text-primary opacity-0 group-has-[:checked]:opacity-100 transition-opacity" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] flex-1 text-muted-foreground group-hover:text-foreground">Candidate Security protocol</span>
+                  <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" alt="reCAPTCHA" className="h-6 w-6 opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
+                </label>
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? "Signing in..." : "Sign In"}
                 </Button>
@@ -426,10 +437,9 @@ const CandidateAuth = () => {
                     <input type="checkbox" id="captcha-up-cand" required className="w-4 h-4 opacity-0 absolute cursor-pointer" />
                     <CheckCircle className="h-4 w-4 text-primary opacity-0 group-has-[:checked]:opacity-100 transition-opacity" />
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] flex-1 text-muted-foreground group-hover:text-foreground">Secure Onboarding Verified</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] flex-1 text-muted-foreground group-hover:text-foreground">Candidate Security protocol</span>
                   <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" alt="reCAPTCHA" className="h-6 w-6 opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
                 </label>
-
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? "Sending Code..." : "Sign Up"}
                 </Button>

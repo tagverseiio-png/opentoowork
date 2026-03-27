@@ -588,33 +588,66 @@ const EmployerDashboard = () => {
 
   const fetchTalent = async () => {
     setTalentLoading(true);
-    let query = supabase
-      .from("candidate_profiles")
-      .select("*, profiles!inner(*), candidate_skills(*)");
+    
+    try {
+      let candidateIdsFilter: string[] | null = null;
+      
+      if (talentSearch) {
+        const term = `%${talentSearch}%`;
+        
+        // 1. Search in profiles for full_name
+        const { data: matchedProfiles } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("role", "candidate")
+          .ilike("full_name", term);
+          
+        // 2. Search in candidate_skills for skill_name
+        const { data: matchedSkills } = await supabase
+          .from("candidate_skills")
+          .select("candidate_id")
+          .ilike("skill_name", term);
 
-    if (talentLocation) {
-      query = query.ilike("location", `%${talentLocation}%`);
-    }
-    if (talentVisa !== "All") {
-      query = query.eq("work_authorization", talentVisa);
-    }
-    if (talentExp !== "All") {
-      const expValue = parseInt(talentExp);
-      if (!isNaN(expValue)) query = query.gte("experience_years", expValue);
+        const ids = new Set([
+          ...(matchedProfiles?.map(p => p.id) || []),
+          ...(matchedSkills?.map(s => s.candidate_id) || [])
+        ]);
+        
+        // If search returned nothing, exit early with empty pool
+        if (ids.size === 0) {
+           setTalentPool([]);
+           setTalentLoading(false);
+           return;
+        }
+        candidateIdsFilter = Array.from(ids);
+      }
+
+      let query = supabase
+        .from("candidate_profiles")
+        .select("*, profiles!inner(*), candidate_skills(*)");
+
+      if (candidateIdsFilter) {
+        query = query.in("id", candidateIdsFilter);
+      }
+
+      if (talentLocation) {
+        query = query.ilike("location", `%${talentLocation}%`);
+      }
+      if (talentVisa !== "All") {
+        query = query.eq("work_authorization", talentVisa);
+      }
+      if (talentExp !== "All") {
+        const expValue = parseInt(talentExp);
+        if (!isNaN(expValue)) query = query.gte("experience_years", expValue);
+      }
+
+      const { data } = await query.limit(50);
+      setTalentPool(data || []);
+    } catch (e) {
+      console.error(e);
+      setTalentPool([]);
     }
 
-    const { data } = await query.limit(50);
-
-    let filteredData = data || [];
-    if (talentSearch) {
-      const term = talentSearch.toLowerCase();
-      filteredData = filteredData.filter(d =>
-        (d.profiles?.full_name?.toLowerCase() || "").includes(term) ||
-        (d.candidate_skills || []).some((s: any) => s.skill_name?.toLowerCase().includes(term))
-      );
-    }
-
-    setTalentPool(filteredData);
     setTalentLoading(false);
   };
 
