@@ -24,32 +24,38 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// ─── Minimal FTP Client using Deno TCP ───────────────────────
+// ─── Enhanced FTP Client with Diagnostics ───────────────────────
 class SimpleFTP {
   private conn!: Deno.TcpConn;
   private reader!: ReadableStreamDefaultReader<Uint8Array>;
   private textDecoder = new TextDecoder();
   private textEncoder = new TextEncoder();
   private buffer = "";
+  public logs: string[] = [];
+
+  private log(msg: string) {
+    console.log(msg);
+    this.logs.push(msg);
+  }
 
   async connect(host: string, port: number): Promise<string> {
+    this.log(`Connecting to FTP ${host}:${port}...`);
     this.conn = await Deno.connect({ hostname: host, port });
     this.reader = this.conn.readable.getReader();
-    return await this.readResponse();
+    const resp = await this.readResponse();
+    this.log(`FTP connect: ${resp.split('\n')[0]}`);
+    return resp;
   }
 
   private async readResponse(): Promise<string> {
-    // Read until we get a complete FTP response (line ending with \r\n and 3-digit code + space)
     while (true) {
       const { value, done } = await this.reader.read();
       if (done) break;
       this.buffer += this.textDecoder.decode(value);
       
-      // Check if we have a complete response
       const lines = this.buffer.split("\r\n");
       for (let i = 0; i < lines.length - 1; i++) {
         const line = lines[i];
-        // A final response line has format: "XXX " (3 digits + space)
         if (/^\d{3} /.test(line)) {
           const response = lines.slice(0, i + 1).join("\r\n");
           this.buffer = lines.slice(i + 1).join("\r\n");
@@ -66,24 +72,32 @@ class SimpleFTP {
     const writer = this.conn.writable.getWriter();
     await writer.write(this.textEncoder.encode(cmd + "\r\n"));
     writer.releaseLock();
-    return await this.readResponse();
+    const resp = await this.readResponse();
+    this.log(`> ${cmd}`);
+    this.log(`< ${resp.split('\n')[0]}`);
+    return resp;
   }
 
   async login(user: string, pass: string): Promise<void> {
+    this.log(`Logging in as ${user}...`);
     const userResp = await this.sendCommand(`USER ${user}`);
     if (!userResp.startsWith("331")) throw new Error(`USER failed: ${userResp}`);
     const passResp = await this.sendCommand(`PASS ${pass}`);
     if (!passResp.startsWith("230")) throw new Error(`PASS failed: ${passResp}`);
+    this.log("FTP login successful");
   }
 
-  async cwd(dir: string): Promise<void> {
+  async pwd(): Promise<string> {
+    const resp = await this.sendCommand("PWD");
+    const match = resp.match(/"([^"]+)"/);
+    const currentDir = match ? match[1] : "unknown";
+    this.log(`Current directory: ${currentDir}`);
+    return currentDir;
+  }
+
+  async cwd(dir: string): Promise<boolean> {
     const resp = await this.sendCommand(`CWD ${dir}`);
-    if (!resp.startsWith("250")) {
-      // Try to create directory
-      await this.sendCommand(`MKD ${dir}`);
-      const retryResp = await this.sendCommand(`CWD ${dir}`);
-      if (!retryResp.startsWith("250")) throw new Error(`CWD failed: ${retryResp}`);
-    }
+    return resp.startsWith("250");
   }
 
   async binary(): Promise<void> {
@@ -99,6 +113,7 @@ class SimpleFTP {
     
     const host = `${match[1]}.${match[2]}.${match[3]}.${match[4]}`;
     const port = parseInt(match[5]) * 256 + parseInt(match[6]);
+    this.log(`Passive mode: ${host}:${port}`);
     return { host, port };
   }
 
@@ -106,68 +121,151 @@ class SimpleFTP {
     await this.binary();
     const { host, port } = await this.pasv();
     
-    // Open data connection
+    this.log(`Opening data connection for STOR ${filename} (${data.length} bytes)...`);
     const dataConn = await Deno.connect({ hostname: host, port });
     
-    // Send STOR command
     const resp = await this.sendCommand(`STOR ${filename}`);
     if (!resp.startsWith("150") && !resp.startsWith("125")) {
       dataConn.close();
       throw new Error(`STOR failed: ${resp}`);
     }
     
-    // Write file data
     const writer = dataConn.writable.getWriter();
     await writer.write(data);
     await writer.close();
+    this.log(`File data sent (${data.length} bytes)`);
     
-    // Wait for transfer complete
     const doneResp = await this.readResponse();
+    this.log(`STOR complete: ${doneResp.split('\n')[0]}`);
     if (!doneResp.startsWith("226")) {
-      console.warn(`Transfer response: ${doneResp}`);
+      this.log(`Warning: Transfer may have failed: ${doneResp}`);
     }
   }
 
-  async mkdirRecursive(path: string): Promise<void> {
-    const parts = path.split("/").filter(Boolean);
-    let current = "";
-    for (const part of parts) {
-      current += `/${part}`;
-      try {
-        await this.sendCommand(`MKD ${current}`);
-      } catch {
-        // Directory might already exist, ignore
-      }
+  async mkdir(path: string): Promise<boolean> {
+    const resp = await this.sendCommand(`MKD ${path}`);
+    if (resp.startsWith("257")) {
+      this.log(`Created directory: ${path}`);
+      return true;
+    } else if (resp.includes("exists") || resp.includes("File exists")) {
+      this.log(`Directory exists: ${path}`);
+      return true;
+    } else {
+      this.log(`MKD ${path}: ${resp.split('\n')[0]}`);
+      return false;
     }
-    await this.cwd(path);
+  }
+
+  async list(): Promise<string> {
+    const { host, port } = await this.pasv();
+    const dataConn = await Deno.connect({ hostname: host, port });
+    
+    const resp = await this.sendCommand("LIST");
+    if (!resp.startsWith("150") && !resp.startsWith("125")) {
+      dataConn.close();
+      return "LIST failed";
+    }
+    
+    let listing = "";
+    const reader = dataConn.readable.getReader();
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      listing += this.textDecoder.decode(value);
+    }
+    
+    await this.readResponse();
+    return listing;
   }
 
   async quit(): Promise<void> {
     try {
       await this.sendCommand("QUIT");
     } catch {
-      // Ignore quit errors
+      // Ignore
     }
     try {
       this.conn.close();
     } catch {
-      // Ignore close errors
+      // Ignore
     }
   }
 }
 
+// ─── Find web-accessible directory ──────────────────────────────
+async function findWebRoot(ftp: SimpleFTP): Promise<string | null> {
+  const pathsToTry = [
+    "/public_html",
+    "/htdocs",
+    "/www",
+    "/html",
+    "/domains/opentoowork/public_html",
+    "/domains/opentoowork.tech/public_html",
+  ];
+  
+  for (const path of pathsToTry) {
+    ftp.logs.push(`Trying web root: ${path}`);
+    const success = await ftp.cwd(path);
+    if (success) {
+      ftp.logs.push(`Found web root: ${path}`);
+      return path;
+    }
+  }
+  
+  return null;
+}
+
+// ─── Ensure resumes directory exists in web root ────────────────
+async function ensureResumesDirectory(ftp: SimpleFTP, webRoot: string): Promise<string> {
+  const resumesPath = `${webRoot}/resumes`;
+  
+  // Try to change to resumes directory
+  const success = await ftp.cwd(resumesPath);
+  if (success) {
+    ftp.logs.push(`Using existing resumes directory: ${resumesPath}`);
+    return resumesPath;
+  }
+  
+  // Need to create it - go back to web root first
+  await ftp.cwd(webRoot);
+  
+  // Try creating the directory
+  const created = await ftp.mkdir(resumesPath);
+  if (created) {
+    // Try to change into it
+    const canCwd = await ftp.cwd(resumesPath);
+    if (canCwd) {
+      ftp.logs.push(`Created and using resumes directory: ${resumesPath}`);
+      return resumesPath;
+    }
+  }
+  
+  // Fall back to web root
+  ftp.logs.push(`Warning: Could not create/access ${resumesPath}, falling back to ${webRoot}`);
+  return webRoot;
+}
+
 // ─── Main handler ────────────────────────────────────────────
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  const logs: string[] = [];
+  const log = (msg: string) => {
+    console.log(msg);
+    logs.push(msg);
+  };
+
   try {
-    // 1. Verify authentication
+    log("=== Upload Resume Request ===");
+    log(`FTP_HOST: ${FTP_HOST}`);
+    log(`FTP_BASE_DIR (env): ${FTP_BASE_DIR}`);
+    log(`PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}`);
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Missing authorization" }), {
+      return new Response(JSON.stringify({ error: "Missing authorization", logs }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -179,87 +277,108 @@ serve(async (req) => {
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      return new Response(JSON.stringify({ error: "Unauthorized", logs }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    log(`User: ${user.id.substring(0, 8)}...`);
 
-    // 2. Parse the multipart form data
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
 
     if (!file) {
-      return new Response(JSON.stringify({ error: "No file provided" }), {
+      return new Response(JSON.stringify({ error: "No file provided", logs }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    log(`File: ${file.name}, type: ${file.type}, size: ${file.size}`);
 
-    // Validate file type
     const allowedTypes = [
       "application/pdf",
       "application/msword",
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ];
     if (!allowedTypes.includes(file.type)) {
-      return new Response(JSON.stringify({ error: "Only PDF, DOC, and DOCX files are allowed" }), {
+      return new Response(JSON.stringify({ error: "Only PDF, DOC, and DOCX files are allowed", logs }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
-      return new Response(JSON.stringify({ error: "File size must be under 10MB" }), {
+      return new Response(JSON.stringify({ error: "File size must be under 10MB", logs }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // 3. Generate unique filename
     const fileExt = file.name.split(".").pop()?.toLowerCase() || "pdf";
     const sanitizedName = user.id.substring(0, 8);
     const timestamp = Date.now();
     const filename = `resume_${sanitizedName}_${timestamp}.${fileExt}`;
+    log(`Generated filename: ${filename}`);
 
-    // 4. Read file into buffer
     const fileBuffer = new Uint8Array(await file.arrayBuffer());
+    log(`File buffer ready: ${fileBuffer.length} bytes`);
 
-    // 5. Upload via FTP
     const ftp = new SimpleFTP();
+    let finalDir = "";
+    let uploadPath = "";
+    
     try {
       await ftp.connect(FTP_HOST, FTP_PORT);
       await ftp.login(FTP_USER, FTP_PASS);
-      await ftp.mkdirRecursive(FTP_BASE_DIR);
+      
+      // Find web root and ensure resumes directory
+      const webRoot = await findWebRoot(ftp);
+      if (!webRoot) {
+        throw new Error("Could not find web-accessible directory (tried public_html, htdocs, www, html)");
+      }
+      
+      uploadPath = await ensureResumesDirectory(ftp, webRoot);
+      finalDir = uploadPath;
+      
       await ftp.stor(filename, fileBuffer);
+      
+      log("Listing uploaded directory:");
+      const listing = await ftp.list();
+      log(listing.split('\n').slice(0, 10).join('\n'));
+      
       await ftp.quit();
+      log("FTP session closed successfully");
     } catch (ftpError: any) {
-      console.error("FTP upload error:", ftpError);
+      log(`FTP ERROR: ${ftpError.message}`);
+      logs.push(...ftp.logs);
       await ftp.quit();
-      return new Response(JSON.stringify({ error: `FTP upload failed: ${ftpError.message}` }), {
+      return new Response(JSON.stringify({ error: `FTP upload failed: ${ftpError.message}`, logs }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    logs.push(...ftp.logs);
 
-    // 6. Build the public URL
     const publicUrl = `${PUBLIC_BASE_URL}/${filename}`;
+    log(`Public URL: ${publicUrl}`);
+    log(`Upload directory: ${finalDir}`);
 
-    // 7. Update candidate profile with the resume URL
     const adminSupabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     await adminSupabase
       .from("candidate_profiles")
       .update({ resume_url: publicUrl })
       .eq("user_id", user.id);
+    log("Database updated");
 
-    // 8. Return success
     return new Response(
       JSON.stringify({
         success: true,
         url: publicUrl,
         filename,
         size: file.size,
+        ftpDirectory: finalDir,
+        uploadPath: `${finalDir}/${filename}`,
+        logs,
       }),
       {
         status: 200,
@@ -267,9 +386,10 @@ serve(async (req) => {
       }
     );
   } catch (error: any) {
+    log(`CRITICAL ERROR: ${error.message}`);
     console.error("Upload error:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Internal server error" }),
+      JSON.stringify({ error: error.message || "Internal server error", logs }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
