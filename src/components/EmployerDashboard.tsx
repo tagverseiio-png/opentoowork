@@ -118,6 +118,7 @@ const EmployerDashboard = () => {
 
   // Profile Form States
   const [editCompanyName, setEditCompanyName] = useState("");
+  const [editEmployerLocation, setEditEmployerLocation] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editWebsite, setEditWebsite] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -167,6 +168,7 @@ const EmployerDashboard = () => {
     if (data) {
       setProfile(data);
       setEditCompanyName(data.company_name || "");
+      setEditEmployerLocation(data.location || "");
       setEditDescription(data.description || "");
       setEditWebsite(data.company_website || "");
       setEditLogoUrl(data.logo_url || "");
@@ -270,6 +272,7 @@ const EmployerDashboard = () => {
         .from("employer_profiles")
         .update({
           company_name: editCompanyName,
+          location: editEmployerLocation,
           description: editDescription,
           company_website: editWebsite,
           logo_url: finalLogoUrl || editLogoUrl
@@ -813,9 +816,15 @@ const EmployerDashboard = () => {
                   <Label>Company Logo URL</Label>
                   <Input value={editLogoUrl} onChange={(e) => setEditLogoUrl(e.target.value)} placeholder="https://example.com/logo.png" />
                 </div>
-                <div className="space-y-2">
-                  <Label>Company Name</Label>
-                  <Input value={editCompanyName} onChange={(e) => setEditCompanyName(e.target.value)} />
+                <div className="flex gap-4">
+                  <div className="space-y-2 flex-1">
+                    <Label>Company Name</Label>
+                    <Input value={editCompanyName} onChange={(e) => setEditCompanyName(e.target.value)} />
+                  </div>
+                  <div className="space-y-2 flex-1">
+                    <Label>Location</Label>
+                    <Input value={editEmployerLocation} onChange={(e) => setEditEmployerLocation(e.target.value)} placeholder="e.g. San Francisco, CA" />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Website</Label>
