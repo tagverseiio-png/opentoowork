@@ -1322,7 +1322,7 @@ const EmployerDashboard = () => {
                                         <div className="font-black text-base text-foreground tracking-tight leading-none uppercase flex items-center gap-2">
                                           {app.candidate?.profiles?.full_name}
                                           {app.candidate?.resume_url && (
-                                            <button onClick={() => window.open(app.candidate.resume_url, '_blank', 'noopener,noreferrer')} className="inline-flex">
+                                            <button onClick={() => { const u = app.candidate.resume_url; window.open(u.includes('?') ? `${u}&view=true` : `${u}?view=true`, '_blank', 'noopener,noreferrer'); }} className="inline-flex">
                                               <FileText className="h-3 w-3 text-primary/50 hover:text-primary transition-colors cursor-pointer" />
                                             </button>
                                           )}
@@ -1409,7 +1409,7 @@ const EmployerDashboard = () => {
                                   <div className="flex flex-col gap-2">
                                     {app.candidate?.resume_url && (
                                       <div className="flex flex-col gap-2">
-                                        <Button variant="outline" className="w-full h-8 px-4 gap-2 text-[10px] font-black uppercase tracking-[0.2em] border-primary/20 hover:bg-primary/5 hover:border-primary/50 text-foreground transition-all" onClick={() => window.open(app.candidate.resume_url, '_blank', 'noopener,noreferrer')}>
+                                        <Button variant="outline" className="w-full h-8 px-4 gap-2 text-[10px] font-black uppercase tracking-[0.2em] border-primary/20 hover:bg-primary/5 hover:border-primary/50 text-foreground transition-all" onClick={() => { const u = app.candidate.resume_url; window.open(u.includes('?') ? `${u}&view=true` : `${u}?view=true`, '_blank', 'noopener,noreferrer'); }}>
                                           <FileText className="w-3.5 h-3.5 text-primary" /> View Dossier
                                         </Button>
                                         <Button variant="ghost" className="w-full h-8 px-4 gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 hover:text-primary transition-all" onClick={() => { const a = document.createElement('a'); a.href = app.candidate.resume_url; a.download = `${app.candidate.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.pdf`; a.click(); }}>
@@ -1491,7 +1491,7 @@ const EmployerDashboard = () => {
                               </div>
                               <div className="font-black text-sm uppercase tracking-tight">{app.candidate?.profiles?.full_name}</div>
                               {app.candidate?.resume_url && (
-                                <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-[9px] font-black uppercase tracking-widest text-primary bg-primary/5 hover:bg-primary/10 ml-auto" onClick={() => window.open(app.candidate.resume_url, '_blank', 'noopener,noreferrer')}>
+                                <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-[9px] font-black uppercase tracking-widest text-primary bg-primary/5 hover:bg-primary/10 ml-auto" onClick={() => { const u = app.candidate.resume_url; window.open(u.includes('?') ? `${u}&view=true` : `${u}?view=true`, '_blank', 'noopener,noreferrer'); }}>
                                   <FileText className="h-3 w-3" /> Dossier
                                 </Button>
                               )}
@@ -1606,7 +1606,7 @@ const EmployerDashboard = () => {
                     <div className="flex gap-2 pt-4 border-t border-dashed">
                       {talent.resume_url && (
                         <div className="flex gap-2 flex-1">
-                          <Button variant="outline" className="flex-1 h-10 font-black uppercase text-[10px] tracking-widest gap-2" onClick={() => window.open(talent.resume_url, '_blank', 'noopener,noreferrer')}>
+                          <Button variant="outline" className="flex-1 h-10 font-black uppercase text-[10px] tracking-widest gap-2" onClick={() => { const u = talent.resume_url; window.open(u.includes('?') ? `${u}&view=true` : `${u}?view=true`, '_blank', 'noopener,noreferrer'); }}>
                             <FileText className="h-3.5 w-3.5" /> View
                           </Button>
                           <Button variant="outline" size="icon" className="h-10 w-10 flex-none" onClick={() => { const a = document.createElement('a'); a.href = talent.resume_url; a.download = `${talent.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.pdf`; a.click(); }}>

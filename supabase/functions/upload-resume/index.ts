@@ -398,7 +398,7 @@ serve(async (req) => {
     }
     logs.push(...ftp.logs);
 
-    const publicUrl = `${PUBLIC_BASE_URL}/${filename}`;
+    const publicUrl = `${SUPABASE_URL}/functions/v1/serve-resume?file=${filename}`;
     log(`Public URL: ${publicUrl}`);
     log(`Upload directory: ${finalDir}`);
 

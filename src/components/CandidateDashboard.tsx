@@ -51,28 +51,23 @@ const getResumePublicUrl = (resumePath: string | null | undefined): string => {
   return `${supabaseUrl}/storage/v1/object/public/${cleanPath}`;
 };
 
-// Safe resume open — checks availability before navigating
+// Safe resume open — view or download
 const handleViewResume = async (url: string, download?: boolean, downloadName?: string) => {
   if (!url) return;
-  try {
-    // Quick HEAD check to see if the file exists
-    const response = await fetch(url, { method: "HEAD", mode: "no-cors" });
-    // If we get here, the URL is reachable (no-cors always returns opaque, so open it)
-    if (download && downloadName) {
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = downloadName;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      window.open(url, "_blank", "noopener,noreferrer");
-    }
-  } catch {
-    // If HEAD fails, still try to open — the browser may handle it
-    window.open(url, "_blank", "noopener,noreferrer");
+  if (download && downloadName) {
+    // Download mode — trigger file download
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = downloadName;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } else {
+    // View mode — append &view=true for inline PDF / Google Docs Viewer for DOCX
+    const viewUrl = url.includes("?") ? `${url}&view=true` : `${url}?view=true`;
+    window.open(viewUrl, "_blank", "noopener,noreferrer");
   }
 };
 
