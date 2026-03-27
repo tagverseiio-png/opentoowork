@@ -228,11 +228,12 @@ async function ensureResumesDirectory(ftp: SimpleFTP, webRoot: string): Promise<
   
   // Need to create it - go back to web root first
   await ftp.cwd(webRoot);
+  ftp.logs.push(`In web root, attempting to create 'resumes' directory`);
   
-  // Try creating the directory
-  const created = await ftp.mkdir(resumesPath);
+  // Try creating the directory using relative path
+  const created = await ftp.mkdir("resumes");
   if (created) {
-    // Try to change into it
+    // Try to change into it using full path
     const canCwd = await ftp.cwd(resumesPath);
     if (canCwd) {
       ftp.logs.push(`Created and using resumes directory: ${resumesPath}`);
