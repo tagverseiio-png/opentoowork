@@ -25,6 +25,7 @@ const CandidateAuth = () => {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [userLocation, setUserLocation] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [resetEmail, setResetEmail] = useState("");
@@ -72,6 +73,7 @@ const CandidateAuth = () => {
           data: {
             full_name: fullName,
             phone: phone,
+            location: userLocation,
             role: "candidate",
           },
         },
@@ -328,6 +330,16 @@ const CandidateAuth = () => {
                     placeholder="+1 (555) 000-0000" 
                     value={phone} 
                     onChange={(e) => setPhone(e.target.value)} 
+                    required 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-location">Location</Label>
+                  <Input 
+                    id="signup-location" 
+                    placeholder="City, Country" 
+                    value={userLocation} 
+                    onChange={(e) => setUserLocation(e.target.value)} 
                     required 
                   />
                 </div>

@@ -33,7 +33,7 @@ const Footer = () => {
           {/* 1. Brand Section */}
           <div className="space-y-6 max-w-xs w-full md:w-auto">
             <Link to="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md group-hover:shadow-primary/20 transition-all">
+              <div className="w-12 h-12 rounded-xl overflow-hidden shadow-md group-hover:shadow-primary/20 transition-all">
                 <img src="/favicon.ico" alt="Logo" className="w-full h-full object-cover p-1.5" />
               </div>
               <span className="font-bold text-xl tracking-tight">
@@ -67,11 +67,6 @@ const Footer = () => {
               <li>
                 <Link to="/candidate/auth" className="text-muted-foreground hover:text-primary transition-colors">
                   For Candidates
-                </Link>
-              </li>
-              <li>
-                <Link to="/admin/auth" className="text-muted-foreground hover:text-primary transition-colors">
-                  Admin Portal
                 </Link>
               </li>
             </ul>

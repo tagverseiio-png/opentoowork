@@ -19,6 +19,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,6 +30,7 @@ const Navbar = () => {
       // If session is lost (e.g. token expired or storage cleared), update state immediately
       if (!session) {
         setUserRole(null);
+        setUserEmail(null);
       }
       checkUser();
     });
@@ -40,6 +42,7 @@ const Navbar = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       setUserRole(null);
+      setUserEmail(null);
       setLoading(false);
       return;
     }
@@ -51,6 +54,7 @@ const Navbar = () => {
       .single();
     
     setUserRole(data?.role as UserRole);
+    setUserEmail(session.user.email || null);
     setLoading(false);
   };
 
@@ -65,6 +69,7 @@ const Navbar = () => {
       });
     } else {
       setUserRole(null);
+      setUserEmail(null);
       toast({
         title: "Signed out successfully",
         description: "You have been logged out of your account."
@@ -160,12 +165,10 @@ const Navbar = () => {
         <div className="flex h-16 items-center justify-between">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <img
-              src="/favicon.ico"
-              alt="Open Too Work Logo"
-              className="h-10 w-10 object-contain transition-transform group-hover:scale-110"
-            />
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-12 h-12 rounded-xl overflow-hidden shadow-md group-hover:shadow-primary/20 transition-all">
+              <img src="/favicon.ico" alt="Logo" className="w-full h-full object-cover p-1.5" />
+            </div>
             <span className="text-xl font-bold text-primary tracking-wide hidden sm:block">
               Open Too Work
             </span>
@@ -177,9 +180,23 @@ const Navbar = () => {
             {userRole && (
               <div className="flex items-center gap-2 border-l border-border/40 pl-4 ml-2">
                 <NotificationBell />
-                <Button onClick={handleSignOut} variant="outline" size="icon" className="h-10 w-10 border-border/40 hover:bg-destructive/10 hover:text-destructive rounded-xl transition-all duration-300" title="Sign Out">
-                  <LogOut className="h-4 w-4" />
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon" className="h-10 w-10 border-border/40 hover:bg-destructive/10 hover:text-destructive rounded-xl transition-all duration-300" title="Sign Out">
+                      <LogOut className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <div className="px-3 py-2 border-b border-border">
+                      <p className="text-xs text-muted-foreground">Signed in as</p>
+                      <p className="text-sm font-medium truncate">{userEmail}</p>
+                    </div>
+                    <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive cursor-pointer">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             )}
           </div>

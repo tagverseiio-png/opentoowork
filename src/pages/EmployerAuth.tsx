@@ -21,6 +21,7 @@ const EmployerAuth = () => {
   const [companyName, setCompanyName] = useState("");
   const [companyWebsite, setCompanyWebsite] = useState("");
   const [location, setLocation] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState(""); // New state for OTP
@@ -35,6 +36,17 @@ const EmployerAuth = () => {
   // STEP 1: Sign Up (Triggers Email)
   const handleSignUp = async (e: any) => {
     e.preventDefault();
+
+    // Validate Phone Number for Country Code
+    if (!phone.startsWith("+")) {
+      toast({
+        title: "Invalid Phone Number",
+        description: "Please include your country code (e.g., +1 for USA).",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -49,6 +61,7 @@ const EmployerAuth = () => {
             company_name: companyName,
             company_website: companyWebsite,
             location: location,
+            phone: phone,
           },
         },
       });
@@ -299,6 +312,9 @@ const EmployerAuth = () => {
 
                 <Label>Company Location</Label>
                 <Input value={location} onChange={(e) => setLocation(e.target.value)} required />
+
+                <Label>Contact Phone</Label>
+                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 (555) 000-0000" required />
 
                 <Label>Email</Label>
                 <Input type="email" value={email} required onChange={(e) => setEmail(e.target.value)} />
