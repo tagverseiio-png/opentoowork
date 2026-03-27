@@ -443,7 +443,7 @@ const CandidateDashboard = () => {
            <h1 className="text-4xl font-black tracking-tighter text-foreground uppercase leading-none">Your Command Center</h1>
            <p className="text-muted-foreground mt-2 font-bold uppercase text-[10px] tracking-widest">Active session for {profile.profiles?.full_name}</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
            {/* LinkedIn Sync button removed as requested */}
            <Button onClick={() => setIsEditing(true)} className="h-12 px-6 font-black uppercase tracking-widest text-[10px] shadow-xl">
               <Settings className="h-4 w-4 mr-2" /> Global Prefs
@@ -578,7 +578,7 @@ const CandidateDashboard = () => {
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase tracking-widest">Dossier / Resume (Upload or URL)</Label>
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 flex-wrap">
                             <Input 
                               placeholder="https://drive.google.com/..." 
                               className="h-11 rounded-xl flex-1"

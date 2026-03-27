@@ -61,7 +61,7 @@ const AdminDashboard = () => {
              <p className="text-muted-foreground font-medium">Enterprise Management & Platform Governance</p>
            </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
            <Button variant="outline" className="h-11 px-6 font-bold uppercase tracking-widest text-[11px] border-muted-foreground/20 group" onClick={fetchStats} disabled={loading}>
               <RefreshCw className={`h-3 w-3 mr-2 ${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform'}`} />
               Sync Data
