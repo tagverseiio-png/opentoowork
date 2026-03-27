@@ -7,7 +7,15 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { UserCircle, Mail, CheckCircle, Eye, EyeOff } from "lucide-react";
+import { UserCircle, Mail, CheckCircle, Eye, EyeOff, MapPin, ChevronsUpDown, Check } from "lucide-react";
+import usaCities from "@/lib/usa_cities_cleaned.json";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+
+const ALL_LOCATIONS = [
+  "Remote (US)",
+  ...usaCities.map(c => c.state_code ? `${c.city}, ${c.state_code}` : c.city)
+];
 
 const CandidateAuth = () => {
   const navigate = useNavigate();
@@ -29,6 +37,8 @@ const CandidateAuth = () => {
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [resetEmail, setResetEmail] = useState("");
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [locationSearch, setLocationSearch] = useState("");
 
   useEffect(() => {
     const checkRole = async () => {
@@ -335,13 +345,61 @@ const CandidateAuth = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-location">Location</Label>
-                  <Input 
-                    id="signup-location" 
-                    placeholder="City, Country" 
-                    value={userLocation} 
-                    onChange={(e) => setUserLocation(e.target.value)} 
-                    required 
-                  />
+                  <Popover open={locationOpen} onOpenChange={setLocationOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={locationOpen}
+                        className="w-full justify-between h-10 font-normal text-foreground bg-background hover:bg-background"
+                      >
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <span className={`truncate ${!userLocation && "text-muted-foreground"}`}>
+                            {userLocation || "Search U.S. cities / Remote..."}
+                          </span>
+                        </div>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 shadow-2xl rounded-xl" align="start">
+                      <Command shouldFilter={false}>
+                        <CommandInput 
+                          placeholder="Search U.S. cities..." 
+                          className="h-9"
+                          value={locationSearch}
+                          onValueChange={setLocationSearch}
+                        />
+                        <CommandList className="max-h-60">
+                          <CommandEmpty>No location found.</CommandEmpty>
+                          <CommandGroup>
+                            {ALL_LOCATIONS
+                              .filter(loc => 
+                                loc.toLowerCase().includes(locationSearch.toLowerCase())
+                              )
+                              .slice(0, 100)
+                              .map((loc) => (
+                              <CommandItem
+                                key={loc}
+                                value={loc}
+                                onSelect={(currentValue) => {
+                                  setUserLocation(loc);
+                                  setLocationOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={`mr-2 h-4 w-4 ${
+                                    userLocation === loc ? "opacity-100" : "opacity-0"
+                                  }`}
+                                />
+                                {loc}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
