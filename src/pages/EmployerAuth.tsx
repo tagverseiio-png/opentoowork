@@ -7,7 +7,15 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Briefcase, Mail, CheckCircle } from "lucide-react";
+import { Briefcase, Mail, CheckCircle, MapPin, ChevronsUpDown, Check } from "lucide-react";
+import usaCities from "@/lib/usa_cities_cleaned.json";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+
+const ALL_LOCATIONS = [
+  "Remote (US)",
+  ...usaCities.map(c => c.state_code ? `${c.city}, ${c.state_code}` : c.city)
+];
 
 const EmployerAuth = () => {
   const { toast } = useToast();
@@ -26,6 +34,8 @@ const EmployerAuth = () => {
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState(""); // New state for OTP
   const [resetEmail, setResetEmail] = useState("");
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [locationSearch, setLocationSearch] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -311,7 +321,61 @@ const EmployerAuth = () => {
                 <Input value={companyWebsite} onChange={(e) => setCompanyWebsite(e.target.value)} placeholder="https://..." required />
 
                 <Label>Company Location</Label>
-                <Input value={location} onChange={(e) => setLocation(e.target.value)} required />
+                <Popover open={locationOpen} onOpenChange={setLocationOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={locationOpen}
+                      className="w-full justify-between h-10 font-normal text-foreground bg-background hover:bg-background"
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <span className={`truncate ${!location && "text-muted-foreground"}`}>
+                          {location || "Search U.S. cities / Remote..."}
+                        </span>
+                      </div>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="p-0 shadow-2xl rounded-xl" align="start">
+                    <Command shouldFilter={false}>
+                      <CommandInput 
+                        placeholder="Search U.S. cities..." 
+                        className="h-9"
+                        value={locationSearch}
+                        onValueChange={setLocationSearch}
+                      />
+                      <CommandList className="max-h-60">
+                        <CommandEmpty>No location found.</CommandEmpty>
+                        <CommandGroup>
+                          {ALL_LOCATIONS
+                            .filter(loc => 
+                              loc.toLowerCase().includes(locationSearch.toLowerCase())
+                            )
+                            .slice(0, 100)
+                            .map((loc) => (
+                            <CommandItem
+                              key={loc}
+                              value={loc}
+                              onSelect={(currentValue) => {
+                                setLocation(loc);
+                                setLocationOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={`mr-2 h-4 w-4 ${
+                                  location === loc ? "opacity-100" : "opacity-0"
+                                }`}
+                              />
+                              {loc}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
 
                 <Label>Contact Phone</Label>
                 <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 (555) 000-0000" required />
