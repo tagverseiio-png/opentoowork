@@ -1662,7 +1662,7 @@ const EmployerDashboard = () => {
                     </div>
 
                     <div className="flex gap-2 pt-4 border-t border-dashed">
-                      {talent.resume_url && (
+                      {talent.resume_url ? (
                         <div className="flex gap-2 flex-1">
                           <Button variant="outline" className="flex-1 h-10 font-black uppercase text-[10px] tracking-widest gap-2" onClick={() => handleViewResume(talent.resume_url)}>
                             <FileText className="h-3.5 w-3.5" /> View
@@ -1671,14 +1671,9 @@ const EmployerDashboard = () => {
                             <Download className="h-3.5 w-3.5" />
                           </Button>
                         </div>
+                      ) : (
+                        <div className="text-[10px] text-muted-foreground uppercase font-black tracking-widest text-center w-full py-2">No Resume Attached</div>
                       )}
-                      <Button
-                        variant="ghost"
-                        onClick={() => handleDownloadProfile(talent)}
-                        className="flex-1 h-10 font-bold uppercase text-[10px] tracking-widest border border-transparent hover:border-primary/20"
-                      >
-                        Profile
-                      </Button>
                     </div>
                   </div>
                 </Card>
