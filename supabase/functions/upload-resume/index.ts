@@ -194,7 +194,12 @@ class SimpleFTP {
 }
 
 // ─── Find web-accessible directory ──────────────────────────────
-async function findWebRoot(ftp: SimpleFTP): Promise<string | null> {
+async function findWebRoot(ftp: SimpleFTP): Promise<string> {
+  // First, check the initial directory — on Hostinger chrooted FTP,
+  // the user lands directly in the web root (there is no /public_html)
+  const initialDir = await ftp.pwd();
+  ftp.logs.push(`Initial FTP directory: ${initialDir}`);
+
   const pathsToTry = [
     "/public_html",
     "/htdocs",
@@ -213,7 +218,11 @@ async function findWebRoot(ftp: SimpleFTP): Promise<string | null> {
     }
   }
   
-  return null;
+  // None of the standard paths worked — Hostinger chroots FTP users
+  // directly into their web root, so the initial directory IS the web root
+  ftp.logs.push(`No standard web root found. Using initial directory as web root: ${initialDir}`);
+  await ftp.cwd(initialDir);
+  return initialDir;
 }
 
 // ─── Ensure resumes directory exists in web root ────────────────
@@ -335,9 +344,6 @@ serve(async (req) => {
       
       // Find web root and ensure resumes directory
       const webRoot = await findWebRoot(ftp);
-      if (!webRoot) {
-        throw new Error("Could not find web-accessible directory (tried public_html, htdocs, www, html)");
-      }
       
       uploadPath = await ensureResumesDirectory(ftp, webRoot);
       finalDir = uploadPath;
