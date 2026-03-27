@@ -8,7 +8,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, CheckCircle, Clock, XCircle, MapPin, Building2, Calendar, Briefcase, Pencil, Plus, Trash2, ExternalLink, Linkedin, Globe, Bell, Target, Settings, LayoutDashboard, Share2, UserCircle, Mail, ChevronsUpDown, Check, Download } from "lucide-react";
+import { FileText, CheckCircle, Clock, XCircle, MapPin, Building2, Calendar, Briefcase, Pencil, Plus, Trash2, ExternalLink, Linkedin, Globe, Bell, Target, Settings, LayoutDashboard, Share2, UserCircle, Mail, ChevronsUpDown, Check, Download, Edit } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Textarea } from "./ui/textarea";
 import { Separator } from "./ui/separator";
@@ -54,19 +54,30 @@ const getResumePublicUrl = (resumePath: string | null | undefined): string => {
 // Safe resume open — view or download
 const handleViewResume = async (url: string, download?: boolean, downloadName?: string) => {
   if (!url) return;
-  if (download && downloadName) {
-    // Download mode — trigger file download
+
+  // Backwards compatibility for old resumes stored directly pointing to opentoowork.tech domain
+  let targetUrl = url;
+  if (url.includes("/resumes/resume_")) {
+    const fileName = url.split("/resumes/")[1].split("?")[0];
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    targetUrl = `${supabaseUrl}/functions/v1/serve-resume?file=${fileName}`;
+  }
+
+  const isDocx = targetUrl.toLowerCase().includes(".doc");
+  
+  if (download || isDocx) {
+    // Download mode or DOCX file — trigger file download (browser view for docx via proxy can be problematic)
     const link = document.createElement("a");
-    link.href = url;
-    link.download = downloadName;
+    link.href = targetUrl.replace("&view=true", "").replace("?view=true", "");
+    link.download = downloadName || "Resume";
     link.target = "_blank";
     link.rel = "noopener noreferrer";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   } else {
-    // View mode — append &view=true for inline PDF / Google Docs Viewer for DOCX
-    const viewUrl = url.includes("?") ? `${url}&view=true` : `${url}?view=true`;
+    // View mode — append &view=true for inline PDF
+    const viewUrl = targetUrl.includes("?") ? `${targetUrl}&view=true` : `${targetUrl}?view=true`;
     window.open(viewUrl, "_blank", "noopener,noreferrer");
   }
 };
@@ -102,6 +113,7 @@ const CandidateDashboard = () => {
   const [newSkillExp, setNewSkillExp] = useState("");
   const [newSkillLevel, setNewSkillLevel] = useState("Intermediate");
   const [addingSkill, setAddingSkill] = useState(false);
+  const [editingSkillId, setEditingSkillId] = useState<string | null>(null);
   const [importingLinkedin, setImportingLinkedin] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
@@ -425,25 +437,38 @@ const CandidateDashboard = () => {
 
       // Check for duplicate (case-insensitive)
       const exists = skills.some(
-        (s: any) => normalizeSkillName(s.skill_name) === normalizeSkillName(displayName)
+        (s: any) => normalizeSkillName(s.skill_name) === normalizeSkillName(displayName) && s.id !== editingSkillId
       );
       if (exists) {
         toast({ title: "Skill already exists", description: `"${displayName}" is already in your graph.`, variant: "destructive" });
         return;
       }
 
-      const { error } = await supabase
-        .from("candidate_skills")
-        .insert({
-          candidate_id: profile.id,
-          skill_name: displayName,
-          years_experience: parseInt(newSkillExp) || 0,
-          skill_level: newSkillLevel
-        });
+      if (editingSkillId) {
+        const { error } = await supabase
+          .from("candidate_skills")
+          .update({
+            skill_name: displayName,
+            years_experience: parseInt(newSkillExp) || 0,
+            skill_level: newSkillLevel
+          })
+          .eq("id", editingSkillId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("candidate_skills")
+          .insert({
+            candidate_id: profile.id,
+            skill_name: displayName,
+            years_experience: parseInt(newSkillExp) || 0,
+            skill_level: newSkillLevel
+          });
+        if (error) throw error;
+      }
 
-      if (error) throw error;
-      toast({ title: "Skill added!" });
+      toast({ title: editingSkillId ? "Skill updated!" : "Skill added!" });
       setAddingSkill(false);
+      setEditingSkillId(null);
       setNewSkillName("");
       setNewSkillExp("");
       fetchSkills();
@@ -964,15 +989,22 @@ const CandidateDashboard = () => {
                   <Globe className="h-5 w-5 text-primary" /> Skill Graph
                 </h2>
                 
-                <Dialog open={addingSkill} onOpenChange={setAddingSkill}>
+                <Dialog open={addingSkill} onOpenChange={(open) => {
+                  setAddingSkill(open);
+                  if (!open) {
+                    setEditingSkillId(null);
+                    setNewSkillName("");
+                    setNewSkillExp("");
+                  }
+                }}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8 gap-1.5 font-bold text-[10px] uppercase border-primary/30 hover:bg-primary/5">
+                    <Button variant="outline" size="sm" className="h-8 gap-1.5 font-bold text-[10px] uppercase border-primary/30 hover:bg-primary/5" onClick={() => { setEditingSkillId(null); setNewSkillName(""); setNewSkillExp(""); }}>
                       <Plus className="h-3.5 w-3.5" /> Append
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[400px] border-none shadow-2xl rounded-2xl">
                     <DialogHeader>
-                      <DialogTitle className="font-black uppercase tracking-tighter">Add Competency</DialogTitle>
+                      <DialogTitle className="font-black uppercase tracking-tighter">{editingSkillId ? "Edit Competency" : "Add Competency"}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
@@ -1036,14 +1068,30 @@ const CandidateDashboard = () => {
                             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{skill.skill_level}</span>
                           </TableCell>
                           <TableCell className="py-3 text-right">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-6 w-6 text-destructive/40 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all rounded"
-                              onClick={() => handleDeleteSkill(skill.id)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
+                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-6 w-6 text-primary hover:text-primary hover:bg-primary/10 rounded"
+                                onClick={() => {
+                                  setEditingSkillId(skill.id);
+                                  setNewSkillName(skill.skill_name);
+                                  setNewSkillExp(skill.years_experience.toString());
+                                  setNewSkillLevel(skill.skill_level || 'Intermediate');
+                                  setAddingSkill(true);
+                                }}
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-6 w-6 text-destructive/40 hover:text-destructive hover:bg-destructive/10 rounded"
+                                onClick={() => handleDeleteSkill(skill.id)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}

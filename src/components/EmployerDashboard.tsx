@@ -70,6 +70,33 @@ const PLANS = [
   { name: "Enterprise", price: 299, jobs: 999, resumes: "Full", features: ["Unlimited Posts", "Dedicated Support", "Full Analytics"] },
 ];
 
+const handleViewResume = (url: string, downloadName?: string) => {
+  if (!url) return;
+  // Backwards compatibility for old resumes stored pointing to opentoowork.tech domain
+  let targetUrl = url;
+  if (url.includes("/resumes/resume_")) {
+    const fileName = url.split("/resumes/")[1].split("?")[0];
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    targetUrl = `${supabaseUrl}/functions/v1/serve-resume?file=${fileName}`;
+  }
+
+  const isDocx = targetUrl.toLowerCase().includes(".doc");
+
+  if (isDocx || downloadName) {
+    const link = document.createElement("a");
+    link.href = targetUrl.replace("&view=true", "").replace("?view=true", "");
+    link.download = downloadName || "Resume";
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } else {
+    const viewUrl = targetUrl.includes("?") ? `${targetUrl}&view=true` : `${targetUrl}?view=true`;
+    window.open(viewUrl, "_blank", "noopener,noreferrer");
+  }
+};
+
 const EmployerDashboard = () => {
   const { toast } = useToast();
   const [profile, setProfile] = useState<any>(null);
@@ -592,8 +619,8 @@ const EmployerDashboard = () => {
     try {
       let candidateIdsFilter: string[] | null = null;
       
-      if (talentSearch) {
-        const term = `%${talentSearch}%`;
+      if (talentSearch.trim()) {
+        const term = `%${talentSearch.trim()}%`;
         
         // 1. Search in profiles for full_name
         const { data: matchedProfiles } = await supabase
@@ -1353,7 +1380,7 @@ const EmployerDashboard = () => {
                                         <div className="font-black text-base text-foreground tracking-tight leading-none uppercase flex items-center gap-2">
                                           {app.candidate?.profiles?.full_name}
                                           {app.candidate?.resume_url && (
-                                            <button onClick={() => { const u = app.candidate.resume_url; window.open(u.includes('?') ? `${u}&view=true` : `${u}?view=true`, '_blank', 'noopener,noreferrer'); }} className="inline-flex">
+                                            <button onClick={() => handleViewResume(app.candidate.resume_url)} className="inline-flex">
                                               <FileText className="h-3 w-3 text-primary/50 hover:text-primary transition-colors cursor-pointer" />
                                             </button>
                                           )}
@@ -1440,10 +1467,10 @@ const EmployerDashboard = () => {
                                   <div className="flex flex-col gap-2">
                                     {app.candidate?.resume_url && (
                                       <div className="flex flex-col gap-2">
-                                        <Button variant="outline" className="w-full h-8 px-4 gap-2 text-[10px] font-black uppercase tracking-[0.2em] border-primary/20 hover:bg-primary/5 hover:border-primary/50 text-foreground transition-all" onClick={() => { const u = app.candidate.resume_url; window.open(u.includes('?') ? `${u}&view=true` : `${u}?view=true`, '_blank', 'noopener,noreferrer'); }}>
+                                        <Button variant="outline" className="w-full h-8 px-4 gap-2 text-[10px] font-black uppercase tracking-[0.2em] border-primary/20 hover:bg-primary/5 hover:border-primary/50 text-foreground transition-all" onClick={() => handleViewResume(app.candidate.resume_url)}>
                                           <FileText className="w-3.5 h-3.5 text-primary" /> View Dossier
                                         </Button>
-                                        <Button variant="ghost" className="w-full h-8 px-4 gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 hover:text-primary transition-all" onClick={() => { const a = document.createElement('a'); a.href = app.candidate.resume_url; a.download = `${app.candidate.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.pdf`; a.click(); }}>
+                                        <Button variant="ghost" className="w-full h-8 px-4 gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 hover:text-primary transition-all" onClick={() => handleViewResume(app.candidate.resume_url, `${app.candidate.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.doc`)}>
                                           <Download className="w-3.5 h-3.5" /> Download
                                         </Button>
                                       </div>
@@ -1522,7 +1549,7 @@ const EmployerDashboard = () => {
                               </div>
                               <div className="font-black text-sm uppercase tracking-tight">{app.candidate?.profiles?.full_name}</div>
                               {app.candidate?.resume_url && (
-                                <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-[9px] font-black uppercase tracking-widest text-primary bg-primary/5 hover:bg-primary/10 ml-auto" onClick={() => { const u = app.candidate.resume_url; window.open(u.includes('?') ? `${u}&view=true` : `${u}?view=true`, '_blank', 'noopener,noreferrer'); }}>
+                                <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-[9px] font-black uppercase tracking-widest text-primary bg-primary/5 hover:bg-primary/10 ml-auto" onClick={() => handleViewResume(app.candidate.resume_url)}>
                                   <FileText className="h-3 w-3" /> Dossier
                                 </Button>
                               )}
@@ -1626,7 +1653,7 @@ const EmployerDashboard = () => {
                       </Badge>
                     </div>
 
-                    <div className="flex flex-wrap gap-1.5 h-20 content-start">
+                    <div className="flex flex-wrap gap-1.5 max-h-[5rem] overflow-y-auto custom-scrollbar content-start">
                       {talent.candidate_skills?.map((s: any) => (
                         <span key={s.id} className="text-[9px] font-black bg-muted px-2 py-1 rounded-sm uppercase tracking-tighter">
                           {s.skill_name}
@@ -1637,10 +1664,10 @@ const EmployerDashboard = () => {
                     <div className="flex gap-2 pt-4 border-t border-dashed">
                       {talent.resume_url && (
                         <div className="flex gap-2 flex-1">
-                          <Button variant="outline" className="flex-1 h-10 font-black uppercase text-[10px] tracking-widest gap-2" onClick={() => { const u = talent.resume_url; window.open(u.includes('?') ? `${u}&view=true` : `${u}?view=true`, '_blank', 'noopener,noreferrer'); }}>
+                          <Button variant="outline" className="flex-1 h-10 font-black uppercase text-[10px] tracking-widest gap-2" onClick={() => handleViewResume(talent.resume_url)}>
                             <FileText className="h-3.5 w-3.5" /> View
                           </Button>
-                          <Button variant="outline" size="icon" className="h-10 w-10 flex-none" onClick={() => { const a = document.createElement('a'); a.href = talent.resume_url; a.download = `${talent.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.pdf`; a.click(); }}>
+                          <Button variant="outline" size="icon" className="h-10 w-10 flex-none" onClick={() => handleViewResume(talent.resume_url, `${talent.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.doc`)}>
                             <Download className="h-3.5 w-3.5" />
                           </Button>
                         </div>
