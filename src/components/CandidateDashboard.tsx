@@ -94,8 +94,8 @@ const CandidateDashboard = () => {
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("applications");
   
-  // Edit State
   const [isEditing, setIsEditing] = useState(false);
+  const [editFullName, setEditFullName] = useState("");
   const [editExperience, setEditExperience] = useState("");
   const [editWorkAuth, setEditWorkAuth] = useState("");
   const [editLocation, setEditLocation] = useState("");
@@ -176,6 +176,7 @@ const CandidateDashboard = () => {
 
     if (data) {
       setProfile(data);
+      setEditFullName(data.profiles?.full_name || "");
       setEditExperience(data.experience_years?.toString() || "");
       setEditWorkAuth(data.work_authorization || "");
       setEditLocation(data.location || "");
@@ -299,6 +300,16 @@ const CandidateDashboard = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
+
+      // Update full name in profiles table first
+      if (editFullName && editFullName !== profile?.profiles?.full_name) {
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({ full_name: editFullName })
+          .eq("id", session.user.id);
+        
+        if (profileError) throw profileError;
+      }
 
       const { error } = await supabase
         .from("candidate_profiles")
@@ -539,6 +550,14 @@ const CandidateDashboard = () => {
                       <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" alt="reCAPTCHA" className="h-6 w-6 opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
                     </div>
                     <div className="space-y-6">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest">Full Name</Label>
+                        <Input 
+                          className="h-11 rounded-xl"
+                          value={editFullName} 
+                          onChange={(e) => setEditFullName(e.target.value)}
+                        />
+                      </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase tracking-widest">Visa Authorization</Label>
