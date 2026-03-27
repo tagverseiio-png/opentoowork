@@ -38,6 +38,20 @@ const WORK_AUTH_OPTIONS = [
   "H1B", "CPT-EAD", "OPT-EAD", "GC", "GC-EAD", "USC", "TN"
 ];
 
+// Helper to get full public URL for resume
+const getResumePublicUrl = (resumePath: string | null | undefined): string => {
+  if (!resumePath) return "";
+  // If already a full URL, return as-is
+  if (resumePath.startsWith("http://") || resumePath.startsWith("https://")) {
+    return resumePath;
+  }
+  // If it's a relative Supabase storage path, construct the public URL
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  // Remove leading slash if present
+  const cleanPath = resumePath.startsWith("/") ? resumePath.slice(1) : resumePath;
+  return `${supabaseUrl}/storage/v1/object/public/${cleanPath}`;
+};
+
 const ALL_LOCATIONS = [
   "Remote (US)",
   ...usaCities.map(c => c.state_code ? `${c.city}, ${c.state_code}` : c.city)
@@ -882,12 +896,12 @@ const CandidateDashboard = () => {
                 <div className="grid grid-cols-[1fr,auto] gap-2">
                   {profile.resume_url ? (
                     <>
-                      <a href={profile.resume_url} target="_blank" rel="noopener noreferrer" className="flex-1">
+                      <a href={getResumePublicUrl(profile.resume_url)} target="_blank" rel="noopener noreferrer" className="flex-1">
                         <Button variant="outline" className="w-full h-11 gap-3 text-[10px] font-black uppercase tracking-widest border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm">
                           <FileText className="h-4 w-4 text-primary" /> View Dossier
                         </Button>
                       </a>
-                      <a href={profile.resume_url} download={`${profile.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.pdf`} className="flex-none">
+                      <a href={getResumePublicUrl(profile.resume_url)} download={`${profile.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.pdf`} className="flex-none">
                         <Button variant="outline" size="icon" className="h-11 w-11 border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm">
                           <Download className="h-4 w-4 text-primary" />
                         </Button>

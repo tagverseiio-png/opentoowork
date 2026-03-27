@@ -214,6 +214,10 @@ const Navbar = () => {
                   <NavLinks mobile />
                   {userRole && (
                     <>
+                      <div className="px-2 py-2 border-b border-border mb-2">
+                        <p className="text-xs text-muted-foreground">Signed in as</p>
+                        <p className="text-sm font-medium truncate">{userEmail}</p>
+                      </div>
                       <div className="h-px bg-border my-1" />
                       <div className="px-2 py-4 flex items-center justify-between bg-primary/5 rounded-xl mb-2">
                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Alert Protocols</span>
