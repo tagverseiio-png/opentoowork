@@ -41,22 +41,11 @@ const WORK_AUTH_OPTIONS = [
 // Helper to get full public URL for resume
 const getResumePublicUrl = (resumePath: string | null | undefined): string => {
   if (!resumePath) return "";
-  // If already a full URL with storage path, return as-is
-  if (resumePath.includes("/storage/v1/object/public/")) {
+  // If already a full URL, return as-is (files are uploaded via FTP to Hostinger)
+  if (resumePath.startsWith("http://") || resumePath.startsWith("https://")) {
     return resumePath;
   }
-  // If it's a full URL but missing storage path (wrong format), fix it
-  if (resumePath.startsWith("http://") || resumePath.startsWith("https://")) {
-    // Extract the path part after the domain
-    try {
-      const url = new URL(resumePath);
-      const path = url.pathname.startsWith("/") ? url.pathname.slice(1) : url.pathname;
-      return `${url.origin}/storage/v1/object/public/${path}`;
-    } catch {
-      return resumePath;
-    }
-  }
-  // If it's a relative path like "resumes/filename.pdf", construct the full URL
+  // If it's a relative Supabase storage path, construct the public URL
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const cleanPath = resumePath.startsWith("/") ? resumePath.slice(1) : resumePath;
   return `${supabaseUrl}/storage/v1/object/public/${cleanPath}`;
