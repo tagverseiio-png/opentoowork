@@ -692,7 +692,7 @@ const EmployerDashboard = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 bg-card p-6 rounded-xl border shadow-sm">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 gap-4 bg-card p-4 md:p-6 rounded-xl border shadow-sm">
         <div className="flex items-center gap-4">
           {profile.logo_url ? (
             <img src={profile.logo_url} alt="Company Logo" className="h-16 w-16 object-cover rounded-md border shadow-sm" />
@@ -710,12 +710,12 @@ const EmployerDashboard = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex bg-muted p-1 rounded-lg mr-4">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex bg-muted p-1 rounded-lg">
             <Button
               variant={activeTab === "dashboard" ? "default" : "ghost"}
               onClick={() => setActiveTab("dashboard")}
-              className="h-8 text-[10px] font-black uppercase tracking-widest px-4"
+              className="h-8 text-[10px] font-black uppercase tracking-widest px-3 md:px-4"
             >
               Management
             </Button>
