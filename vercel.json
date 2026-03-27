@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/resumes/:path*",
+      "destination": "http://82.25.87.221/resumes/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
