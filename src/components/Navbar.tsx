@@ -47,14 +47,27 @@ const Navbar = () => {
       return;
     }
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", session.user.id)
-      .single();
+      .maybeSingle();
     
-    setUserRole(data?.role as UserRole);
-    setUserEmail(session.user.email || null);
+    if (!data || error) {
+      if (session) {
+        toast({
+          title: "Session Expired",
+          description: "Your account profile could not be verified. Please log in again.",
+          variant: "destructive",
+        });
+        await supabase.auth.signOut();
+      }
+      setUserRole(null);
+      setUserEmail(null);
+    } else {
+      setUserRole(data.role as UserRole);
+      setUserEmail(session.user.email || null);
+    }
     setLoading(false);
   };
 

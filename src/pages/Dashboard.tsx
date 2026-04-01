@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import CandidateDashboard from "@/components/CandidateDashboard";
 import EmployerDashboard from "@/components/EmployerDashboard";
@@ -9,6 +10,7 @@ import { Loader2 } from "lucide-react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<"candidate" | "employer" | "admin" | null>(null);
 
@@ -40,12 +42,19 @@ const Dashboard = () => {
       .from("profiles")
       .select("role")
       .eq("id", session.user.id)
-      .single();
+      .maybeSingle();
 
     if (error || !profile) {
       console.error("Error fetching profile:", error);
-      // If we have a session but no profile, something is wrong.
-      // Optionally sign out or show error.
+      // If we have a session but no profile, the user was likely deleted.
+      toast({
+        title: "Account Restricted",
+        description: "Your account profile could not be found. Please contact support or sign up again.",
+        variant: "destructive",
+      });
+      await supabase.auth.signOut();
+      navigate("/");
+      return;
     } else {
       setUserRole(profile.role);
     }
