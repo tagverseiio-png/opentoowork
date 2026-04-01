@@ -112,35 +112,6 @@ const About = () => {
 
       <main className="flex-grow">
         {/* About Header - Separate Edit Button */}
-        <div className="relative group">
-          <EditableSection
-            sectionKey="about_hero_section"
-            content={aboutPage}
-            userRole={userRole}
-            onSave={(newContent) => setContent({ ...content, about_hero_section: newContent })}
-          >
-            <header className="relative py-24 bg-gradient-to-b from-primary/5 to-background overflow-hidden">
-              <div className="container mx-auto px-4 relative z-10">
-                <div className="max-w-4xl mx-auto text-center space-y-6">
-                  <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                    {heroTitle}
-                  </h1>
-                  <div className={`text-lg md:text-xl text-foreground/80 leading-relaxed space-y-4 ${heroDesc?.length > 100 ? 'text-justify' : 'text-center'
-                    }`}>
-                    {heroDesc?.split('\n').map((line: string, idx: number) => (
-                      line.trim() === '' ? (
-                        <div key={idx} className="h-4" />
-                      ) : (
-                        <p key={idx} className="whitespace-pre-wrap">{line}</p>
-                      )
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </header>
-          </EditableSection>
-        </div>
-
         <section className="py-20 bg-primary/5 border-t border-primary/10">
           <div className="container mx-auto px-4 text-center">
             <h3 className="text-3xl font-bold mb-4">Ready to start your journey?</h3>
