@@ -144,7 +144,7 @@ const JobDetail = () => {
 
   const handleApply = async () => {
     if (!user) {
-      navigate("/candidate/auth", { state: { returnTo: `/jobs/${job.id}` } });
+      navigate("/onboard", { state: { returnTo: `/jobs/${job.id}` } });
       return;
     }
 

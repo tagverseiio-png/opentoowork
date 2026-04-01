@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,8 @@ import { Briefcase, Users } from "lucide-react";
 
 const Onboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = location.state?.returnTo;
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -32,7 +34,7 @@ const Onboard = () => {
               {/* Candidate Card */}
               <Card className="p-8 md:p-12 border-border/50 hover:border-primary/50 transition-all hover:shadow-lg bg-card/50 backdrop-blur-sm cursor-pointer group flex flex-col h-full">
                 <div 
-                  onClick={() => navigate("/candidate/auth")}
+                  onClick={() => navigate("/candidate/auth", { state: { returnTo } })}
                   className="flex flex-col items-center text-center space-y-6 flex-1 justify-between"
                 >
                   <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -50,7 +52,10 @@ const Onboard = () => {
                     <Button 
                       size="lg" 
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
-                      onClick={() => navigate("/candidate/auth")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate("/candidate/auth", { state: { returnTo } });
+                      }}
                     >
                       Continue as Candidate
                     </Button>
@@ -64,7 +69,7 @@ const Onboard = () => {
               {/* Employer Card */}
               <Card className="p-8 md:p-12 border-border/50 hover:border-primary/50 transition-all hover:shadow-lg bg-card/50 backdrop-blur-sm cursor-pointer group flex flex-col h-full">
                 <div 
-                  onClick={() => navigate("/employer/auth")}
+                  onClick={() => navigate("/employer/auth", { state: { returnTo } })}
                   className="flex flex-col items-center text-center space-y-6 flex-1 justify-between"
                 >
                   <div className="w-20 h-20 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -82,7 +87,10 @@ const Onboard = () => {
                     <Button 
                       size="lg" 
                       className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
-                      onClick={() => navigate("/employer/auth")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate("/employer/auth", { state: { returnTo } });
+                      }}
                     >
                       Continue as Employer
                     </Button>
