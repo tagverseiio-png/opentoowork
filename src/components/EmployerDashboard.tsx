@@ -1720,6 +1720,7 @@ const EmployerDashboard = () => {
                                                     <DialogContent className="max-w-4xl border-none shadow-2xl rounded-2xl p-0 overflow-hidden">
                                                         <DialogHeader className="sr-only">
                                                             <DialogTitle>Parsed Resume Text</DialogTitle>
+                                                            <DialogDescription>Full text extraction from the candidate's uploaded resume for review.</DialogDescription>
                                                         </DialogHeader>
                                                         <div className="p-6 border-b bg-muted/5 flex items-center justify-between">
                                                             <h4 className="font-black text-xl uppercase tracking-tighter">Raw Data Stream</h4>
