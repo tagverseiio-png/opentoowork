@@ -1042,6 +1042,7 @@ const CandidateDashboard = () => {
                   <DialogContent className="sm:max-w-[400px] border-none shadow-2xl rounded-2xl">
                     <DialogHeader>
                       <DialogTitle className="font-black uppercase tracking-tighter">{editingSkillId ? "Edit Competency" : "Add Competency"}</DialogTitle>
+                      <DialogDescription className="sr-only">Input your skill details including name, years of experience, and proficiency level.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">

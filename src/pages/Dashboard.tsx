@@ -45,15 +45,20 @@ const Dashboard = () => {
       .maybeSingle();
 
     if (error || !profile) {
-      console.error("Error fetching profile:", error);
-      // If we have a session but no profile, the user was likely deleted.
-      toast({
-        title: "Account Restricted",
-        description: "Your account profile could not be found. Please contact support or sign up again.",
-        variant: "destructive",
-      });
-      await supabase.auth.signOut();
+      console.error("Critical: Session active but profile missing.", error);
+      // Ensure we don't end up in an infinite loop if signOut or toast fails
+      try {
+        toast({
+          title: "Account Restricted",
+          description: "Your account profile could not be found. If you recently deleted your account, please use a different email to register.",
+          variant: "destructive",
+        });
+        await supabase.auth.signOut();
+      } catch (err) {
+        console.error("SignOut failed:", err);
+      }
       navigate("/");
+      setLoading(false);
       return;
     } else {
       setUserRole(profile.role);

@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 
@@ -180,6 +180,9 @@ const UsersTab = () => {
                                   <User className="h-6 w-6 text-primary outline outline-4 outline-primary/10 rounded-full" />
                                   Profile Insight
                                </DialogTitle>
+                               <DialogDescription className="sr-only">
+                                 View detailed information about this user including their role, contact details, and professional profile.
+                               </DialogDescription>
                             </DialogHeader>
                             {detailsLoading ? (
                                <div className="p-20 text-center flex flex-col items-center gap-4">

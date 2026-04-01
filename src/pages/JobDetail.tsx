@@ -393,6 +393,7 @@ const JobDetail = () => {
                     <DialogContent className="sm:max-w-md">
                       <DialogHeader>
                         <DialogTitle className="uppercase font-black italic tracking-tighter">Share Opportunity</DialogTitle>
+                        <DialogDescription className="sr-only">Copy the job link to share this opportunity with your professional network.</DialogDescription>
                       </DialogHeader>
                       <div className="flex items-center space-x-2 py-4">
                         <div className="grid flex-1 gap-2">
