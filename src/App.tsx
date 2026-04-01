@@ -16,9 +16,52 @@ import JobDetail from "./pages/JobDetail";
 import NotFound from "./pages/NotFound";
 import FindJobs from "./pages/FindJobs";
 
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
 const queryClient = new QueryClient();
 
 const App = () => {
+  useEffect(() => {
+    // Global Auth state monitoring and cleanup for broken sessions
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log(`Auth event: ${event}`);
+      
+      // Handle the "Invalid Refresh Token" case which leads to session being null
+      if (session === null && (event === 'SIGNED_OUT' || event === 'INITIAL_SESSION')) {
+         // This is a normal state if user is logged out, but if internal refresh failed, 
+         // it keeps session null. Supabase's library should handle clearing 
+         // open_to_work_auth on signOut.
+      }
+      
+      // Proactively catch the case where session persists in storage but is invalid on server
+      if ((event as any) === 'TOKEN_REFRESH_FAILED' || (event === 'SIGNED_OUT' && session)) {
+        console.warn("Auth state sync issue detected, cleaning up session.");
+        await supabase.auth.signOut();
+      }
+    });
+
+    // One-time health check for the session on mount
+    const checkSession = async () => {
+      try {
+        const { error } = await supabase.auth.getSession();
+        if (error && error.message.includes("Refresh Token Not Found")) {
+           console.error("Critical Auth Error: Refresh Token Not Found. Signing out.");
+           await supabase.auth.signOut();
+           window.location.reload(); // Hard reset to clear memory
+        }
+      } catch (err) {
+        console.error("Error checking session health:", err);
+      }
+    };
+    
+    checkSession();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

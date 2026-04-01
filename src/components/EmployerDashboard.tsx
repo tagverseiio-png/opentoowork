@@ -336,6 +336,7 @@ const EmployerDashboard = () => {
       expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
       experience_required: experienceRequired ? parseInt(experienceRequired) : 0,
       work_authorization: selectedWorkAuth,
+      is_active: true
     };
 
     // Only include job_id if the user explicitly provided one.
