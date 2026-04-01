@@ -15,7 +15,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Plus, Briefcase, Users, Check, X, FileText, MapPin, ChevronsUpDown, ChevronLeft, ChevronRight,
-  DollarSign, Power, Mail, Trash2, Ban, Upload, Pencil, Target, AlignLeft, Building2, Calendar, LayoutDashboard, Search, ExternalLink, Globe, ShieldCheck, MessageSquare, Terminal, Fingerprint, BadgeCheck, RefreshCw, Layers, Printer, Lock, Download 
+  DollarSign, Power, Mail, Trash2, Ban, Upload, Pencil, Target, AlignLeft, Building2, Calendar, LayoutDashboard, Search, ExternalLink, Globe, ShieldCheck, MessageSquare, Terminal, Fingerprint, BadgeCheck, RefreshCw, Layers, Printer, Lock, Download, Send
 } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
