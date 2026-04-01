@@ -75,8 +75,6 @@ const Index = () => {
           location
         )
       `)
-      .or('is_active.eq.true,is_active.is.null')
-      .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
       .order("created_at", { ascending: false });
 
     const { data, error } = await query;
