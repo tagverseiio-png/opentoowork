@@ -238,6 +238,8 @@ export type Database = {
           resume_text: string | null
           expires_at: string | null
           job_mode: string | null
+          desired_job_title: string | null
+          is_active: boolean | null
         }
         Insert: {
           bio?: string | null
@@ -255,6 +257,8 @@ export type Database = {
           resume_text: string | null
           expires_at: string | null
           job_mode: string | null
+          desired_job_title?: string | null
+          is_active?: boolean | null
         }
         Update: {
           bio?: string | null
@@ -272,6 +276,8 @@ export type Database = {
           resume_text?: string | null
           expires_at: string | null
           job_mode: string | null
+          desired_job_title?: string | null
+          is_active?: boolean | null
         }
         Relationships: [
           {
@@ -297,6 +303,7 @@ export type Database = {
           logo_url: string | null
           expires_at: string | null
           job_mode: string | null
+          is_active: boolean | null
         }
         Insert: {
           company_name: string
@@ -311,6 +318,7 @@ export type Database = {
           logo_url: string | null
           expires_at: string | null
           job_mode: string | null
+          is_active?: boolean | null
         }
         Update: {
           company_name?: string
@@ -325,6 +333,7 @@ export type Database = {
           logo_url?: string | null
           expires_at: string | null
           job_mode: string | null
+          is_active?: boolean | null
         }
         Relationships: [
           {
@@ -460,6 +469,7 @@ export type Database = {
       user_role: "candidate" | "employer" | "admin"
       work_authorization_type:
         | "H1B"
+        | "H1B Transfer"
         | "CPT-EAD"
         | "OPT-EAD"
         | "GC"
@@ -596,6 +606,7 @@ export const Constants = {
       user_role: ["candidate", "employer", "admin"],
       work_authorization_type: [
         "H1B",
+        "H1B Transfer",
         "CPT-EAD",
         "OPT-EAD",
         "GC",

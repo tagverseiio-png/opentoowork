@@ -194,6 +194,8 @@ export interface SkillRecord {
 export function calculateMatchScore(
   candidateSkills: SkillRecord[],
   jobSkills: SkillRecord[],
+  candidateTitle?: string | null,
+  jobTitle?: string | null,
 ): number {
   if (!candidateSkills.length || !jobSkills.length) return 0;
 
@@ -240,6 +242,22 @@ export function calculateMatchScore(
       if (match) optScore += 1;
     }
     score += (optScore / optSkills.length) * W_OPT * 100;
+  }
+
+  // ── Job Title Alignment (Multiplier) ──
+  // Matches by Job Title first, then aligns it with skill sets.
+  if (candidateTitle && jobTitle) {
+    const cWords: string[] = candidateTitle.toLowerCase().match(/\b(\w+)\b/g) || [];
+    const jWords: string[] = jobTitle.toLowerCase().match(/\b(\w+)\b/g) || [];
+    const matchesTitle = cWords.some(w => jWords.includes(w));
+    
+    // If they have title overlap, heavily weight it combined with skills.
+    // If no match, penalize score to prioritize those who actually match the title.
+    if (matchesTitle) {
+      score = (score * 0.5) + 50; // Boost to 50-100 range if skills are good
+    } else {
+      score = score * 0.5; // Cap at 50% if titles don't match at all
+    }
   }
 
   return Math.min(Math.round(score), 100);

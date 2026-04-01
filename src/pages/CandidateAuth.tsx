@@ -79,6 +79,7 @@ const CandidateAuth = () => {
     setLoading(true);
 
     try {
+      await supabase.auth.signOut(); // History cleanup for seamless re-registration
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -158,12 +159,17 @@ const CandidateAuth = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      await supabase.auth.signOut(); // History cleanup
+      const { data: { user }, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
+      if (user) {
+        // Silently reactivate soft-deleted accounts
+        await supabase.from("candidate_profiles").update({ is_active: true }).eq("user_id", user.id);
+      }
       toast({ title: "Welcome back!" });
       navigate(returnTo);
 

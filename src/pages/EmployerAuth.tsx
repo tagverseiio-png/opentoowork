@@ -64,6 +64,7 @@ const EmployerAuth = () => {
     setLoading(true);
 
     try {
+      await supabase.auth.signOut(); // History cleanup for seamless re-registration
       // We pass the company details in 'options.data' so the Database Trigger
       // can automatically create the employer_profile row.
       const { error } = await supabase.auth.signUp({
@@ -140,15 +141,19 @@ const EmployerAuth = () => {
   const handleSignIn = async (e: any) => {
     e.preventDefault();
     setLoading(true);
+    
+    await supabase.auth.signOut(); // Ensure clean login state
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: { user }, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
+    } else if (user) {
+      // If the account was soft-deleted, reactivate it silently upon login
+      await supabase.from("employer_profiles").update({ is_active: true }).eq("user_id", user.id);
       toast({ title: "Welcome back employer!" });
       navigate("/dashboard");
     }

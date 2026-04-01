@@ -63,6 +63,10 @@ const ALL_LOCATIONS = [
   ...usaCities.map(c => c.state_code ? `${c.city}, ${c.state_code}` : c.city)
 ];
 
+const UNIQUE_STATES = Array.from(
+  new Set(usaCities.filter(c => c.state && c.state_code).map(c => `${c.state} - ${c.state_code}`))
+).sort();
+
 const PLANS = [
   { name: "Free", price: 0, jobs: 1, resumes: "No", features: ["1 Job Post", "Dashboard Access"] },
   { name: "Basic", price: 49, jobs: 10, resumes: "Limited", features: ["10 Job Posts", "Limited Candidate Search"] },
@@ -111,6 +115,7 @@ const EmployerDashboard = () => {
   const [talentLoading, setTalentLoading] = useState(false);
   const [talentSearch, setTalentSearch] = useState("");
   const [talentLocation, setTalentLocation] = useState("");
+  const [talentState, setTalentState] = useState("All");
   const [talentVisa, setTalentVisa] = useState("All");
   const [talentExp, setTalentExp] = useState("All");
   const [pipelineView, setPipelineView] = useState("active");
@@ -656,7 +661,8 @@ const EmployerDashboard = () => {
 
       let query = supabase
         .from("candidate_profiles")
-        .select("*, profiles!inner(*), candidate_skills(*)");
+        .select("*, profiles!inner(*), candidate_skills(*)")
+        .eq("is_active", true);
 
       if (candidateIdsFilter) {
         query = query.in("id", candidateIdsFilter);
@@ -664,6 +670,12 @@ const EmployerDashboard = () => {
 
       if (talentLocation) {
         query = query.ilike("location", `%${talentLocation}%`);
+      }
+      if (talentState !== "All") {
+        const stateCode = talentState.split(" - ")[1];
+        if (stateCode) {
+          query = query.ilike("location", `%, %${stateCode}%`);
+        }
       }
       if (talentVisa !== "All") {
         query = query.eq("work_authorization", talentVisa);
@@ -1674,6 +1686,13 @@ const EmployerDashboard = () => {
               value={talentLocation}
               onChange={(e) => setTalentLocation(e.target.value)}
             />
+            <Select value={talentState} onValueChange={setTalentState}>
+              <SelectTrigger className="w-full md:w-48 bg-background h-11"><SelectValue placeholder="State" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All States</SelectItem>
+                {UNIQUE_STATES.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}
+              </SelectContent>
+            </Select>
             <Select value={talentVisa} onValueChange={setTalentVisa}>
               <SelectTrigger className="w-full md:w-36 bg-background h-11"><SelectValue placeholder="Visa" /></SelectTrigger>
               <SelectContent>
@@ -1697,37 +1716,49 @@ const EmployerDashboard = () => {
           {talentLoading ? (
             <div className="py-20 text-center animate-pulse text-muted-foreground uppercase font-black text-xs tracking-widest leading-none">Accessing Global Candidate Registry...</div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="flex flex-col gap-4">
               {talentPool.map(talent => (
-                <Card key={talent.id} className="p-6 border hover:border-primary/30 transition-all group rounded-2xl bg-card">
-                  <div className="flex flex-col gap-4">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
+                <Card key={talent.id} className="p-4 md:p-6 border hover:border-primary/30 transition-all group rounded-2xl bg-card">
+                  <div className="flex flex-col md:flex-row gap-4 items-start md:items-center w-full">
+                    {/* Candidate Info Section */}
+                    <div className="flex-1 space-y-1 w-full">
+                      <div className="flex items-center gap-3 mb-1">
                         <h3 className="font-black text-lg leading-tight uppercase tracking-tighter">{talent.profiles?.full_name}</h3>
-                        <p className="text-xs text-muted-foreground font-black uppercase tracking-widest">{talent.work_authorization} • {talent.experience_years}Y EXP</p>
+                        <Badge className="bg-primary/10 text-primary border-transparent tabular-nums text-[10px] font-black w-fit">
+                          {(() => {
+                            const activeJobWithSkills = jobs.find(j => j.is_active && j.job_skills?.length > 0);
+                            if (!activeJobWithSkills || !talent.candidate_skills?.length) return '— MATCH';
+                            const score = calculateMatchScore(talent.candidate_skills, activeJobWithSkills.job_skills, talent.desired_job_title, activeJobWithSkills.title);
+                            return `${score}% MATCH`;
+                          })()}
+                        </Badge>
                       </div>
-                      <Badge className="bg-primary/10 text-primary border-transparent tabular-nums text-xs font-black">
-                        {(() => {
-                          // Real math-based match score using the first active job's skills
-                          const activeJobWithSkills = jobs.find(j => j.is_active && j.job_skills?.length > 0);
-                          if (!activeJobWithSkills || !talent.candidate_skills?.length) return '—';
-                          const score = calculateMatchScore(talent.candidate_skills, activeJobWithSkills.job_skills);
-                          return `${score}% MATCH`;
-                        })()}
-                      </Badge>
+                      
+                      {talent.desired_job_title && (
+                        <p className="text-sm font-bold text-foreground/80 uppercase tracking-widest mb-2">{talent.desired_job_title}</p>
+                      )}
+                      
+                      <p className="text-xs text-muted-foreground font-black uppercase tracking-widest flex items-center gap-2 flex-wrap mb-3">
+                        <span><MapPin className="inline w-3 h-3 mr-1"/>{talent.location || 'No Location'}</span>
+                        <span className="text-border px-1">•</span>
+                        <span>{talent.work_authorization}</span>
+                        <span className="text-border px-1">•</span>
+                        <span>{talent.experience_years}Y EXP</span>
+                      </p>
+
+                      <div className="flex flex-wrap gap-1.5 content-start">
+                        {talent.candidate_skills?.map((s: any) => (
+                          <span key={s.id} className="text-[9px] font-black bg-muted px-2 py-1 rounded-sm uppercase tracking-tighter">
+                            {s.skill_name}
+                          </span>
+                        ))}
+                      </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-1.5 max-h-[5rem] overflow-y-auto custom-scrollbar content-start">
-                      {talent.candidate_skills?.map((s: any) => (
-                        <span key={s.id} className="text-[9px] font-black bg-muted px-2 py-1 rounded-sm uppercase tracking-tighter">
-                          {s.skill_name}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="flex gap-2 pt-4 border-t border-dashed">
+                    {/* Action Section */}
+                    <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-dashed">
                       {talent.resume_url ? (
-                        <div className="flex gap-2 flex-1">
+                        <div className="flex gap-2 flex-1 md:flex-initial">
                           <Button variant="outline" className="flex-1 h-10 font-black uppercase text-[10px] tracking-widest gap-2" onClick={() => handleViewResume(talent.resume_url)}>
                             <FileText className="h-3.5 w-3.5" /> View
                           </Button>
@@ -1736,14 +1767,21 @@ const EmployerDashboard = () => {
                           </Button>
                         </div>
                       ) : (
-                        <div className="text-[10px] text-muted-foreground uppercase font-black tracking-widest text-center w-full py-2">No Resume Attached</div>
+                        <div className="text-[10px] text-muted-foreground uppercase font-black tracking-widest text-center py-2 px-4 bg-muted/30 rounded-lg w-full md:w-auto h-10 flex items-center">No Resume Attached</div>
                       )}
                     </div>
                   </div>
                 </Card>
               ))}
+              
+              {talentPool.length === 0 && !talentLoading && (
+                <div className="text-center py-20 bg-muted/20 rounded-2xl border border-dashed text-muted-foreground uppercase font-black tracking-widest text-xs">
+                  No Talent Matches Found in Registry.
+                </div>
+              )}
             </div>
           )}
+
         </div>
       )}
     </div>

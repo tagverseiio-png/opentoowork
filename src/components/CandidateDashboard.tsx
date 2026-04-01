@@ -96,6 +96,7 @@ const CandidateDashboard = () => {
   
   const [isEditing, setIsEditing] = useState(false);
   const [editFullName, setEditFullName] = useState("");
+  const [editJobTitle, setEditJobTitle] = useState("");
   const [editExperience, setEditExperience] = useState("");
   const [editWorkAuth, setEditWorkAuth] = useState("");
   const [editLocation, setEditLocation] = useState("");
@@ -177,6 +178,7 @@ const CandidateDashboard = () => {
     if (data) {
       setProfile(data);
       setEditFullName(data.profiles?.full_name || "");
+      setEditJobTitle(data.desired_job_title || "");
       setEditExperience(data.experience_years?.toString() || "");
       setEditWorkAuth(data.work_authorization || "");
       setEditLocation(data.location || "");
@@ -258,7 +260,7 @@ const CandidateDashboard = () => {
       .filter(job => job.job_skills?.length > 0) // only jobs with defined skills
       .map(job => ({
         ...job,
-        score: calculateMatchScore(candidateSkills, job.job_skills)
+        score: calculateMatchScore(candidateSkills, job.job_skills, candidateProfile.desired_job_title, job.title)
       }))
       .filter(job => (job as any).score > 0) // must have at least some skill overlap
       .sort((a: any, b: any) => b.score - a.score);
@@ -315,6 +317,7 @@ const CandidateDashboard = () => {
         .from("candidate_profiles")
         .update({
           experience_years: editExperience ? parseInt(editExperience) : null,
+          desired_job_title: editJobTitle,
           work_authorization: editWorkAuth,
           location: editLocation,
           linkedin_url: editLinkedin,
@@ -383,7 +386,7 @@ const CandidateDashboard = () => {
       const matchedJobs = jobs
         .map(job => ({
           ...job,
-          score: job.job_skills?.length ? calculateMatchScore(candidateSkills, job.job_skills) : 0
+          score: job.job_skills?.length ? calculateMatchScore(candidateSkills, job.job_skills, candidateProfile.desired_job_title, job.title) : 0
         }))
         .filter(job => job.score >= 50)
         .sort((a, b) => b.score - a.score)
@@ -556,6 +559,15 @@ const CandidateDashboard = () => {
                           className="h-11 rounded-xl"
                           value={editFullName} 
                           onChange={(e) => setEditFullName(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest">Desired Job Title</Label>
+                        <Input 
+                          placeholder="e.g. Senior Frontend Developer"
+                          className="h-11 rounded-xl"
+                          value={editJobTitle} 
+                          onChange={(e) => setEditJobTitle(e.target.value)}
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
@@ -936,6 +948,11 @@ const CandidateDashboard = () => {
                  </div>
                  <div>
                     <h3 className="font-black text-xl text-foreground uppercase tracking-tight">{profile.profiles?.full_name}</h3>
+                    {profile.desired_job_title && (
+                      <div className="text-xs font-black text-primary uppercase tracking-widest mt-0.5">
+                        {profile.desired_job_title}
+                      </div>
+                    )}
                     <div className="text-xs text-muted-foreground font-medium flex items-center gap-1.5 mt-1">
                        <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
                        {profile.profiles?.email}
