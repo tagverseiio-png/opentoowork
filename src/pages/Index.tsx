@@ -75,7 +75,7 @@ const Index = () => {
           location
         )
       `)
-      .eq("is_active", true)
+      .or('is_active.eq.true,is_active.is.null')
       .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
       .order("created_at", { ascending: false });
 

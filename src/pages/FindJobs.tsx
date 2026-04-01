@@ -65,7 +65,8 @@ const FindJobs = () => {
   const fetchJobs = async () => {
     const now = new Date().toISOString();
     
-    // Fetch all active jobs, then filter by expiry in code to handle NULL cases easily
+    // Fetch all active jobs, being lenient with is_active if it's NULL (legacy data)
+    // and ensuring expires_at is handled correctly
     const { data, error } = await supabase
       .from("jobs")
       .select(`
@@ -73,11 +74,13 @@ const FindJobs = () => {
         employer:employer_profiles(company_name, location),
         job_skills(*)
       `)
-      .eq('is_active', true)
+      .or('is_active.eq.true,is_active.is.null')
       .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
       .order('created_at', { ascending: false });
 
-    if (!error) {
+    if (error) {
+      console.error("Job fetch error:", error);
+    } else {
       setJobs(data || []);
     }
     setLoading(false);
