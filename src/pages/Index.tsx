@@ -76,6 +76,7 @@ const Index = () => {
         )
       `)
       .eq("is_active", true)
+      .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
       .order("created_at", { ascending: false });
 
     const { data, error } = await query;

@@ -148,6 +148,7 @@ const JobDetail = () => {
   };
 
   const matchScore = getMatchScore();
+  const isJobExpired = job?.expires_at && new Date(job.expires_at) < new Date();
 
   const handleApply = async () => {
     if (!user) {
@@ -365,7 +366,7 @@ const JobDetail = () => {
                   )}
                 </div>
                 
-                {matchScore > 0 && (
+                 {matchScore > 0 && !isJobExpired && (
                    <div className="mt-6 p-4 bg-primary/5 border border-primary/20 rounded-2xl flex items-center justify-between">
                       <div className="flex items-center gap-4">
                          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
@@ -380,6 +381,16 @@ const JobDetail = () => {
                          {matchScore}%
                       </div>
                    </div>
+                )}
+
+                {isJobExpired && (
+                  <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-4 text-red-600 animate-pulse">
+                    <CheckCircle2 className="h-6 w-6 shrink-0 rotate-45" />
+                    <div>
+                      <div className="font-black uppercase tracking-tighter text-sm">Opportunity Expired</div>
+                      <div className="text-xs opacity-80 font-medium">This listing has reached its application deadline and is no longer active.</div>
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -480,9 +491,9 @@ const JobDetail = () => {
                         <Button 
                           className="w-full h-12 font-black uppercase text-[10px] shadow-xl bg-gradient-to-r from-primary to-accent" 
                           onClick={handleReferral}
-                          disabled={isReferring}
+                          disabled={isReferring || isJobExpired}
                         >
-                          {isReferring ? "Processing..." : userRole === 'employer' ? "Submit Representation" : "Submit Referral"}
+                          {isReferring ? "Processing..." : isJobExpired ? "Listing Expired" : userRole === 'employer' ? "Submit Representation" : "Submit Referral"}
                         </Button>
                       </div>
                     </DialogContent>
@@ -594,9 +605,13 @@ const JobDetail = () => {
                 // 3. Apply Button (Candidates Only)
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button size="lg" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg text-lg h-14 font-black uppercase tracking-widest">
-                      Apply Now
-                    </Button>
+                    <Button 
+                        size="lg" 
+                        disabled={isJobExpired}
+                        className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg text-lg h-14 font-black uppercase tracking-widest"
+                     >
+                       {isJobExpired ? "Opportunity Closed" : "Apply Now"}
+                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>

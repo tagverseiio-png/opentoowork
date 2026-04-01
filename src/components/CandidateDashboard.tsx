@@ -238,11 +238,8 @@ const CandidateDashboard = () => {
       `)
       .eq("is_active", true);
 
-    if (candidateProfile.work_authorization) {
-      query = query.contains('work_authorization', [candidateProfile.work_authorization]);
-    }
-
-    const { data: jobs } = await query;
+    const { data: jobs } = await query
+      .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
     if (!jobs?.length) {
       setRecommendations([]);
       return;
@@ -369,18 +366,17 @@ const CandidateDashboard = () => {
 
       if (!candidateSkills?.length) return;
 
-      // Fetch active jobs with their skills
-      let query = supabase
+      const query = supabase
         .from("jobs")
         .select("*, employer:employer_profiles(company_name), job_skills(*)")
         .eq("is_active", true);
 
-      // Filter by visa match if candidate has work auth set
       if (candidateProfile.work_authorization) {
-        query = query.contains("work_authorization", [candidateProfile.work_authorization]);
+        query.contains("work_authorization", [candidateProfile.work_authorization]);
       }
 
-      const { data: jobs } = await query;
+      const { data: jobs } = await query
+        .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
       if (!jobs?.length) return;
 
       // Calculate scores and filter >= 50%

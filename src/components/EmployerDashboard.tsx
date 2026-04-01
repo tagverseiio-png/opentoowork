@@ -1279,12 +1279,12 @@ const EmployerDashboard = () => {
                                 <span className="ml-2 text-[8px] opacity-60 uppercase bg-green-500/10 px-1.5 py-0.5 rounded tracking-tighter shadow-sm">/ {job.salary_period || "Annually"}</span>
                               </div>
                             )}
-                            {job.expires_at && (
-                              <div className="flex items-center text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded border border-orange-200/50">
-                                <Clock className="h-3.5 w-3.5 mr-2" />
-                                <span className="tabular-nums">EXP: {new Date(job.expires_at).toLocaleDateString()}</span>
-                              </div>
-                            )}
+                             {job.expires_at && (
+                               <div className={`flex items-center text-xs font-bold px-2 py-0.5 rounded border ${new Date(job.expires_at) < new Date() ? 'text-red-600 bg-red-50 border-red-200/50 animate-pulse' : 'text-orange-600 bg-orange-50 border-orange-200/50'}`}>
+                                 <Clock className="h-3.5 w-3.5 mr-2" />
+                                 <span className="tabular-nums">{new Date(job.expires_at) < new Date() ? 'EXPIRED' : 'EXP'}: {new Date(job.expires_at).toLocaleDateString()}</span>
+                               </div>
+                             )}
                           </div>
                         </div>
 
