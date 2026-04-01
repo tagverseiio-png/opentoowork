@@ -77,11 +77,7 @@ const FindJobs = () => {
       .order('created_at', { ascending: false });
 
     if (!error) {
-      const filteredJobs = (data || []).filter(job => {
-        if (!job.expires_at) return true;
-        return new Date(job.expires_at) > new Date();
-      });
-      setJobs(filteredJobs);
+      setJobs(data || []);
     }
     setLoading(false);
   };
