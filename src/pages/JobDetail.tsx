@@ -155,12 +155,18 @@ const JobDetail = () => {
       return;
     }
 
-    if (userRole !== "candidate" || !candidateProfile) {
+    if (userRole === "admin") {
       toast({
-        title: "Access Denied",
-        description: "Only candidates can apply for jobs",
+        title: "Administrator Notice",
+        description: "Admins cannot apply for jobs. Please use a candidate account.",
         variant: "destructive",
       });
+      return;
+    }
+
+    if (userRole === "employer") {
+      // Re-route to referral/representation dialog
+      setIsReferralDialogOpen(true);
       return;
     }
 
@@ -249,11 +255,14 @@ const JobDetail = () => {
 
     setIsReferring(true);
     try {
-      // 1. Save to DB
+      // 1. Save to DB with extra fields if provided
       const { error } = await supabase.from("referrals").insert({
         job_id: job.id,
         referrer_id: user?.id || null,
-        referred_email: referralEmail
+        referred_email: referralEmail,
+        candidate_name: referralName,
+        resume_url: referralResume,
+        cover_letter: referralNote
       });
 
       if (error) throw error;
@@ -268,21 +277,26 @@ const JobDetail = () => {
       );
 
       toast({ 
-        title: "Referral Sent!", 
-        description: `We've notified ${referralEmail} about this opportunity.` 
+        title: userRole === 'employer' ? "Candidate Submitted!" : "Referral Sent!", 
+        description: `We've notified ${referralEmail} and added them to the job's pipeline.` 
       });
       
       // Reset
       setReferralEmail("");
+      setReferralName("");
+      setReferralResume("");
       setReferralNote("");
       setIsReferralDialogOpen(false);
     } catch (error: any) {
       console.error("Error sending referral:", error);
-      toast({ title: "Referral failed", description: error.message, variant: "destructive" });
+      toast({ title: "Submission failed", description: error.message, variant: "destructive" });
     } finally {
       setIsReferring(false);
     }
   };
+
+  const [referralName, setReferralName] = useState("");
+  const [referralResume, setReferralResume] = useState("");
 
   if (loading) {
     return (
@@ -408,38 +422,66 @@ const JobDetail = () => {
                   <Dialog open={isReferralDialogOpen} onOpenChange={setIsReferralDialogOpen}>
                     <DialogTrigger asChild>
                       <Button variant="outline" className="flex-1 h-12 gap-2 font-black uppercase tracking-widest text-[10px] border-primary/20 hover:bg-primary/5">
-                        <Users className="h-4 w-4" /> Refer Talent
+                        <Users className="h-4 w-4" /> {userRole === 'employer' ? "Submit Candidate" : "Refer Talent"}
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="max-w-xl">
                       <DialogHeader>
-                        <DialogTitle className="uppercase font-black italic tracking-tighter">Refer a Candidate</DialogTitle>
+                        <DialogTitle className="uppercase font-black italic tracking-tighter">
+                          {userRole === 'employer' ? "Represent Candidate" : "Refer a Candidate"}
+                        </DialogTitle>
+                        <DialogDescription className="text-[10px] uppercase font-bold tracking-widest opacity-70">
+                          {userRole === 'employer' ? "Submit your candidate profile into the hiring partner's pipeline" : "Help someone in your network find their next career move"}
+                        </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] uppercase font-black tracking-widest">Candidate Full Name</Label>
+                            <Input 
+                              placeholder="John Doe" 
+                              className="h-11 rounded-xl"
+                              value={referralName}
+                              onChange={(e) => setReferralName(e.target.value)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] uppercase font-black tracking-widest">Candidate Email</Label>
+                            <Input 
+                              type="email"
+                              placeholder="candidate@example.com" 
+                              className="h-11 rounded-xl"
+                              value={referralEmail}
+                              onChange={(e) => setReferralEmail(e.target.value)}
+                            />
+                          </div>
+                        </div>
+
                         <div className="space-y-2">
-                          <Label className="text-[10px] uppercase font-black tracking-widest">Candidate Email</Label>
+                          <Label className="text-[10px] uppercase font-black tracking-widest">Resume Link (GDrive/Dropbox/URL)</Label>
                           <Input 
-                            placeholder="referral@example.com" 
+                            placeholder="https://..." 
                             className="h-11 rounded-xl"
-                            value={referralEmail}
-                            onChange={(e) => setReferralEmail(e.target.value)}
+                            value={referralResume}
+                            onChange={(e) => setReferralResume(e.target.value)}
                           />
                         </div>
+
                         <div className="space-y-2">
-                          <Label className="text-[10px] uppercase font-black tracking-widest">Why are they a fit?</Label>
+                          <Label className="text-[10px] uppercase font-black tracking-widest">Additional Notes / Cover Letter</Label>
                           <Textarea 
-                            placeholder="Briefly explain their expertise..." 
+                            placeholder="Briefly explain their expertise or your relationship to them..." 
                             className="rounded-xl min-h-[100px]" 
                             value={referralNote}
                             onChange={(e) => setReferralNote(e.target.value)}
                           />
                         </div>
                         <Button 
-                          className="w-full h-12 font-black uppercase text-[10px] shadow-xl" 
+                          className="w-full h-12 font-black uppercase text-[10px] shadow-xl bg-gradient-to-r from-primary to-accent" 
                           onClick={handleReferral}
                           disabled={isReferring}
                         >
-                          {isReferring ? "Sending..." : "Submit Referral"}
+                          {isReferring ? "Processing..." : userRole === 'employer' ? "Submit Representation" : "Submit Referral"}
                         </Button>
                       </div>
                     </DialogContent>
@@ -511,17 +553,31 @@ const JobDetail = () => {
 
               {/* === ACTION AREA === */}
               
-              {isRestrictedUser ? (
-                // 1. Restricted View for Admin/Employer
+              {userRole === 'admin' ? (
+                // 1. Restricted View for Admin
                 <div className="flex flex-col items-center justify-center p-6 bg-muted/30 rounded-xl border border-border border-dashed">
                   <Lock className="h-8 w-8 text-muted-foreground mb-2" />
                   <p className="text-lg font-semibold text-foreground">
-                    {userRole === 'admin' ? "Administrator View" : "Employer View"}
+                    Administrator View
                   </p>
                   <p className="text-muted-foreground text-sm">
-                    Job applications are disabled for your account type.
+                    Job applications are disabled for admin accounts.
                   </p>
                 </div>
+              ) : userRole === 'employer' ? (
+                 // 1b. Support for Employers submitting candidates
+                 <div className="w-full space-y-3">
+                   <Button 
+                     size="lg" 
+                     className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg text-lg h-14 font-black uppercase tracking-widest"
+                     onClick={() => setIsReferralDialogOpen(true)}
+                   >
+                     Submit Your Candidate
+                   </Button>
+                   <p className="text-[9px] text-center text-muted-foreground font-black uppercase tracking-widest">
+                     As an employer/representative, you can submit talent profiles directly to this hiring partner
+                   </p>
+                 </div>
               ) : hasApplied ? (
                 // 2. Already Applied State
                 <div className="w-full">

@@ -1781,17 +1781,20 @@ const EmployerDashboard = () => {
                                 <div className="space-y-1">
                                   <div className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Target Contact</div>
                                   <div className="flex items-center gap-3">
-                                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                                       <Mail className="h-5 w-5 text-primary" />
+                                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center font-black text-primary">
+                                       {ref.candidate_name?.charAt(0) || <Mail className="h-5 w-5 text-primary" />}
                                      </div>
-                                     <span className="font-black text-xl tracking-tight">{ref.referred_email}</span>
+                                     <div className="flex flex-col">
+                                       <span className="font-black text-xl tracking-tight leading-tight">{ref.candidate_name || "Anonymous Candidate"}</span>
+                                       <span className="text-sm font-bold text-muted-foreground">{ref.referred_email}</span>
+                                     </div>
                                   </div>
                                 </div>
 
                                 <div className="md:text-right border-l-4 border-primary/20 pl-4 md:border-l-0 md:pl-0 md:border-r-4 md:pr-4">
                                   <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Referrer Attribution</div>
                                   <div className="font-black italic uppercase tracking-tighter text-base bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                                    {ref.referrer?.full_name || "Community Partner"}
+                                    {ref.referrer_id === ref.referrer?.id ? (ref.referrer?.full_name || "Community Partner") : "Represented Source"}
                                   </div>
                                   <div className="text-[9px] font-bold text-muted-foreground/60">{ref.referrer?.email || "verified_member"}</div>
                                 </div>
