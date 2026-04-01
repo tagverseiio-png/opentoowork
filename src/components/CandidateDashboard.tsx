@@ -249,21 +249,25 @@ const CandidateDashboard = () => {
     // actual skill overlap — a Java dev should not see PM roles just
     // because they share the same visa status.
     if (!candidateSkills?.length) {
-      // Candidate has no skills added — can't compute matches
-      setRecommendations([]);
+      // Fallback: Show latest 10 active jobs if no skills added yet
+      setRecommendations(jobs.slice(0, 10).map(j => ({ ...j, score: 0 })));
       return;
     }
 
     const scoredJobs = jobs
-      .filter(job => job.job_skills?.length > 0) // only jobs with defined skills
+      .filter(job => job.job_skills?.length > 0) // prioritize jobs with defined skills
       .map(job => ({
         ...job,
         score: calculateMatchScore(candidateSkills, job.job_skills, candidateProfile.desired_job_title, job.title)
       }))
-      .filter(job => (job as any).score > 0) // must have at least some skill overlap
       .sort((a: any, b: any) => b.score - a.score);
     
-    setRecommendations(scoredJobs.slice(0, 10));
+    const highMatches = scoredJobs.filter(j => (j as any).score > 0);
+    if (highMatches.length > 0) {
+      setRecommendations(highMatches.slice(0, 10));
+    } else {
+      setRecommendations(jobs.slice(0, 10).map(j => ({ ...j, score: 0 })));
+    }
   };
 
   // Add alert logic hidden
