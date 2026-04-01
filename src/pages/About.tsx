@@ -91,7 +91,7 @@ const About = () => {
   };
   const missionTitle = missionContent?.mission_title || "Our Mission";
   const missionBody = missionContent?.mission_body || "We believe every skilled candidate deserves access to opportunities that match their ambitions.";
-  
+
   const heroTitle = aboutPage?.hero_title || "About Open Too Work";
   const heroDesc = aboutPage?.hero_description || "Open Too Work connects talented professionals with meaningful career opportunities across the United States.";
 
@@ -125,9 +125,8 @@ const About = () => {
                   <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                     {heroTitle}
                   </h1>
-                  <div className={`text-lg md:text-xl text-foreground/80 leading-relaxed space-y-4 ${
-                    heroDesc?.length > 100 ? 'text-justify' : 'text-center'
-                  }`}>
+                  <div className={`text-lg md:text-xl text-foreground/80 leading-relaxed space-y-4 ${heroDesc?.length > 100 ? 'text-justify' : 'text-center'
+                    }`}>
                     {heroDesc?.split('\n').map((line: string, idx: number) => (
                       line.trim() === '' ? (
                         <div key={idx} className="h-4" />
@@ -141,6 +140,23 @@ const About = () => {
             </header>
           </EditableSection>
         </div>
+
+        <section className="py-20 bg-primary/5 border-t border-primary/10">
+          <div className="container mx-auto px-4 text-center">
+            <h3 className="text-3xl font-bold mb-4">Ready to start your journey?</h3>
+            <p className="text-muted-foreground max-w-2xl mx-auto mb-8 text-lg">
+              Join thousands of professionals finding their dream jobs today.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a href="/onboard" className="inline-flex items-center justify-center px-8 py-4 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors shadow-lg hover:shadow-primary/25">
+                Get Started Now
+              </a>
+              <a href="/jobs" className="inline-flex items-center justify-center px-8 py-4 rounded-lg border border-border bg-background hover:bg-accent text-foreground font-semibold transition-colors">
+                Browse Open Roles
+              </a>
+            </div>
+          </div>
+        </section>
 
         {/* Why Choose Us Section - Separate Edit Button */}
         <EditableSection
@@ -188,9 +204,9 @@ const About = () => {
           content={{ mission_title: missionTitle, mission_body: missionBody }}
           userRole={userRole}
           onSave={(newContent) => {
-            setContent({ 
-              ...content, 
-              about_mission_section: newContent 
+            setContent({
+              ...content,
+              about_mission_section: newContent
             });
           }}
         >
@@ -198,9 +214,8 @@ const About = () => {
             <div className="container mx-auto px-4">
               <div className="max-w-3xl mx-auto text-center mb-16">
                 <h2 className="text-3xl md:text-4xl font-bold mb-6">{missionTitle}</h2>
-                <div className={`text-lg text-foreground leading-relaxed space-y-4 ${
-                  missionBody?.length > 100 ? 'text-justify' : 'text-center'
-                }`}>
+                <div className={`text-lg text-foreground leading-relaxed space-y-4 ${missionBody?.length > 100 ? 'text-justify' : 'text-center'
+                  }`}>
                   {missionBody?.split('\n').map((line: string, idx: number) => (
                     line.trim() === '' ? (
                       <div key={idx} className="h-4" />
@@ -226,9 +241,8 @@ const About = () => {
               <div className="container mx-auto px-4">
                 <div className="text-center mb-16">
                   <h2 className="text-4xl font-bold mb-4">{howItWorks.title}</h2>
-                  <div className={`text-xl text-muted-foreground space-y-4 ${
-                    howItWorks.subtitle?.length > 100 ? 'text-justify max-w-2xl mx-auto' : 'text-center'
-                  }`}>
+                  <div className={`text-xl text-muted-foreground space-y-4 ${howItWorks.subtitle?.length > 100 ? 'text-justify max-w-2xl mx-auto' : 'text-center'
+                    }`}>
                     {howItWorks.subtitle?.split('\n').map((line: string, idx: number) => (
                       line.trim() === '' ? (
                         <div key={idx} className="h-2" />
@@ -275,7 +289,7 @@ const About = () => {
               <div className="container mx-auto px-4">
                 <div className="max-w-5xl mx-auto">
                   <h2 className="text-3xl font-bold mb-12 text-center">Get in Touch</h2>
-                  
+
                   <div className="flex flex-wrap justify-center gap-8 md:gap-12">
                     {contactSection?.contact_email && (
                       <div className="flex flex-col items-center text-center p-6 bg-background rounded-2xl shadow-sm border border-border/50 min-w-[280px] flex-1 md:flex-none max-w-sm hover:-translate-y-1 transition-transform">
@@ -307,22 +321,7 @@ const About = () => {
           )}
         </EditableSection>
 
-        <section className="py-20 bg-primary/5 border-t border-primary/10">
-          <div className="container mx-auto px-4 text-center">
-            <h3 className="text-3xl font-bold mb-4">Ready to start your journey?</h3>
-            <p className="text-muted-foreground max-w-2xl mx-auto mb-8 text-lg">
-              Join thousands of professionals finding their dream jobs today.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="/onboard" className="inline-flex items-center justify-center px-8 py-4 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors shadow-lg hover:shadow-primary/25">
-                Get Started Now
-              </a>
-              <a href="/jobs" className="inline-flex items-center justify-center px-8 py-4 rounded-lg border border-border bg-background hover:bg-accent text-foreground font-semibold transition-colors">
-                Browse Open Roles
-              </a>
-            </div>
-          </div>
-        </section>
+
       </main>
 
       <Footer />
