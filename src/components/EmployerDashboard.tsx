@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  Plus, Briefcase, Users, Check, X, FileText, MapPin, ChevronsUpDown,
+  Plus, Briefcase, Users, Check, X, FileText, MapPin, ChevronsUpDown, ChevronLeft, ChevronRight,
   DollarSign, Power, Mail, Trash2, Ban, Upload, Pencil, Target, AlignLeft, Building2, Calendar, LayoutDashboard, Search, ExternalLink, Globe, ShieldCheck, MessageSquare, Terminal, Fingerprint, BadgeCheck, RefreshCw, Layers, Printer, Lock, Download 
 } from "lucide-react";
 import {
@@ -42,6 +42,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "./ui/separator";
 import { sendStatusChangeNotification, sendJobAlertEmail, calculateMatchScore } from "@/lib/email";
+import { formatLocation } from "@/lib/utils";
 
 const WORK_AUTH_OPTIONS = [
   "H1B", "CPT-EAD", "OPT-EAD", "GC", "GC-EAD", "USC", "TN"
@@ -119,6 +120,7 @@ const EmployerDashboard = () => {
   const [talentVisa, setTalentVisa] = useState("All");
   const [talentExp, setTalentExp] = useState("All");
   const [pipelineView, setPipelineView] = useState("active");
+  const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   const [noteChanges, setNoteChanges] = useState<Record<string, string>>({});
 
   // Profile Form States
@@ -1233,7 +1235,7 @@ const EmployerDashboard = () => {
                           <div className="flex flex-wrap gap-x-6 gap-y-3">
                             <div className="flex items-center text-xs font-bold text-muted-foreground">
                               <MapPin className="h-4 w-4 mr-2 text-primary/40" />
-                              <span className="uppercase tracking-widest">{job.location}</span>
+                              <span className="uppercase tracking-widest">{formatLocation(job.location)}</span>
                               <Badge className="ml-2 h-4 text-[8px] bg-muted/40 text-muted-foreground uppercase font-black">{job.job_mode}</Badge>
                             </div>
                             <div className="flex items-center text-xs font-bold text-muted-foreground">
@@ -1354,7 +1356,7 @@ const EmployerDashboard = () => {
 
       {/* Applications Dialog */}
       {selectedJob && (
-        <Dialog open={!!selectedJob} onOpenChange={() => setSelectedJob(null)}>
+        <Dialog open={!!selectedJob} onOpenChange={() => { setSelectedJob(null); setSelectedApplicationId(null); }}>
           <DialogContent className="max-w-7xl max-h-[90vh] flex flex-col p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
             <DialogHeader className="sr-only">
               <DialogTitle>Job Applications Pipeline</DialogTitle>
@@ -1390,226 +1392,339 @@ const EmployerDashboard = () => {
                 </div>
 
                 <TabsContent value="list" className="flex-1 overflow-hidden mt-0">
-                  <div className="px-8 py-4 border-b flex items-center justify-between bg-muted/5">
-                    <div className="flex gap-2">
-                      <Button 
-                        variant={pipelineView === "active" ? "secondary" : "ghost"} 
-                        size="sm"
-                        onClick={() => setPipelineView("active")}
-                        className={`text-[9px] font-black uppercase tracking-widest h-8 px-4 ${pipelineView === 'active' ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
-                      >
-                        Active Pipeline
-                      </Button>
-                      <Button 
-                        variant={pipelineView === "archive" ? "secondary" : "ghost"} 
-                        size="sm"
-                        onClick={() => setPipelineView("archive")}
-                        className={`text-[9px] font-black uppercase tracking-widest h-8 px-4 ${pipelineView === 'archive' ? 'bg-muted-foreground text-white' : ''}`}
-                      >
-                        Archive ({applications.filter(a => a.status === 'rejected').length})
-                      </Button>
-                    </div>
-                  </div>
-                  {(() => {
-                    const filteredApps = applications.filter(app => {
-                      if (pipelineView === "active") return app.status !== "rejected";
-                      return app.status === "rejected";
-                    });
+                  <div className="flex h-full">
+                    {(() => {
+                      const filteredApps = applications.filter(app => {
+                        if (pipelineView === "active") return app.status !== "rejected";
+                        return app.status === "rejected";
+                      });
 
-                    if (filteredApps.length === 0) {
-                      return (
-                        <div className="h-full flex flex-col items-center justify-center p-24 text-center">
-                          <div className="w-24 h-24 bg-muted/30 rounded-full flex items-center justify-center mb-6">
-                            <Users className="h-10 w-10 text-muted-foreground/30" />
+                      // Auto-select first app if none selected
+                      if (!selectedApplicationId && filteredApps.length > 0) {
+                        setSelectedApplicationId(filteredApps[0].id);
+                      }
+
+                      const selectedAppIndex = filteredApps.findIndex(a => a.id === selectedApplicationId);
+                      const selectedApp = filteredApps[selectedAppIndex];
+
+                      if (filteredApps.length === 0) {
+                        return (
+                          <div className="flex-1 flex flex-col items-center justify-center p-24 text-center bg-background">
+                            <div className="w-24 h-24 bg-muted/30 rounded-full flex items-center justify-center mb-6">
+                              <Users className="h-10 w-10 text-muted-foreground/30" />
+                            </div>
+                            <h3 className="text-2xl font-bold">No {pipelineView === 'archive' ? 'rejected' : 'active'} candidates</h3>
+                            <p className="text-muted-foreground max-w-xs mt-2 font-medium">
+                              {pipelineView === 'archive' ? 'Successfully rejected candidates will appear here for historical reference.' : 'As soon as candidates apply to this role, they will appear in this pipeline.'}
+                            </p>
+                            <div className="flex gap-4 mt-8">
+                                <Button 
+                                    variant={pipelineView === "active" ? "secondary" : "ghost"} 
+                                    size="sm"
+                                    onClick={() => setPipelineView("active")}
+                                    className={`text-[9px] font-black uppercase tracking-widest h-8 px-4 ${pipelineView === 'active' ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
+                                >
+                                    Active Pipeline
+                                </Button>
+                                <Button 
+                                    variant={pipelineView === "archive" ? "secondary" : "ghost"} 
+                                    size="sm"
+                                    onClick={() => setPipelineView("archive")}
+                                    className={`text-[9px] font-black uppercase tracking-widest h-8 px-4 ${pipelineView === 'archive' ? 'bg-muted-foreground text-white' : ''}`}
+                                >
+                                    Archive ({applications.filter(a => a.status === 'rejected').length})
+                                </Button>
+                            </div>
                           </div>
-                          <h3 className="text-2xl font-bold">No {pipelineView === 'archive' ? 'rejected' : 'active'} candidates</h3>
-                          <p className="text-muted-foreground max-w-xs mt-2 font-medium">
-                            {pipelineView === 'archive' ? 'Successfully rejected candidates will appear here for historical reference.' : 'As soon as candidates apply to this role, they will appear in this pipeline.'}
-                          </p>
-                        </div>
-                      );
-                    }
+                        );
+                      }
 
-                    return (
-                      <ScrollArea className="h-[calc(100%-64px)] w-full">
-                        <div className="p-8">
-                          <Table>
-                            <TableHeader className="bg-muted/5 border-none">
-                              <TableRow className="hover:bg-transparent border-b-2">
-                                <TableHead className="w-[300px] text-[10px] font-black uppercase tracking-widest py-6">Candidate Information</TableHead>
-                                <TableHead className="text-[10px] font-black uppercase tracking-widest py-6">Skill Alignment</TableHead>
-                                <TableHead className="text-[10px] font-black uppercase tracking-widest py-6">Supporting Material</TableHead>
-                                <TableHead className="text-[10px] font-black uppercase tracking-widest py-6">Resume</TableHead>
-                                <TableHead className="text-[10px] font-black uppercase tracking-widest py-6">ATS Status</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {filteredApps.map((app) => (
-                                <TableRow key={app.id} className={`hover:bg-muted/10 transition-colors border-b ${app.status === 'rejected' ? 'bg-muted/5 opacity-70' : ''}`}>
-                                <TableCell className="py-6">
-                                  <div className="space-y-4">
-                                    <div className="flex items-center gap-3">
-                                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-black text-primary text-xs border border-primary/20">
+                      return (
+                        <>
+                          {/* Sidebar: Candidate List */}
+                          <div className="w-[340px] border-r bg-muted/5 flex flex-col shrink-0 overflow-hidden">
+                            <div className="p-4 border-b flex flex-col gap-3">
+                              <div className="flex gap-2">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => setPipelineView("active")}
+                                  className={`flex-1 text-[9px] font-black uppercase tracking-widest h-8 px-1 ${pipelineView === 'active' ? 'bg-primary/10 text-primary border border-primary/20' : 'text-muted-foreground'}`}
+                                >
+                                  Active ({applications.filter(a => a.status !== 'rejected').length})
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => setPipelineView("archive")}
+                                  className={`flex-1 text-[9px] font-black uppercase tracking-widest h-8 px-1 ${pipelineView === 'archive' ? 'bg-muted text-foreground border border-border' : 'text-muted-foreground'}`}
+                                >
+                                  Archive ({applications.filter(a => a.status === 'rejected').length})
+                                </Button>
+                              </div>
+                            </div>
+                            <ScrollArea className="flex-1">
+                              <div className="p-2 space-y-1">
+                                {filteredApps.map((app) => (
+                                  <div
+                                    key={app.id}
+                                    onClick={() => setSelectedApplicationId(app.id)}
+                                    className={`p-4 rounded-xl cursor-pointer transition-all border-2 ${
+                                      selectedApplicationId === app.id
+                                        ? "bg-primary/10 border-primary shadow-sm"
+                                        : "bg-transparent border-transparent hover:bg-muted/50"
+                                    }`}
+                                  >
+                                    <div className="flex items-start gap-3">
+                                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs shrink-0 ${
+                                        selectedApplicationId === app.id ? "bg-primary text-white" : "bg-muted/50 text-muted-foreground"
+                                      }`}>
                                         {app.candidate?.profiles?.full_name?.charAt(0)}
                                       </div>
-                                      <div>
-                                        <div className="font-black text-base text-foreground tracking-tight leading-none uppercase flex items-center gap-2">
+                                      <div className="flex-1 min-w-0">
+                                        <div className={`font-black text-xs uppercase truncate ${selectedApplicationId === app.id ? "text-primary" : "text-foreground"}`}>
                                           {app.candidate?.profiles?.full_name}
-                                          {app.candidate?.resume_url && (
-                                            <button onClick={() => handleViewResume(app.candidate.resume_url)} className="inline-flex">
-                                              <FileText className="h-3 w-3 text-primary/50 hover:text-primary transition-colors cursor-pointer" />
-                                            </button>
-                                          )}
                                         </div>
-                                        <div className="text-xs text-muted-foreground font-medium mt-1">{app.candidate?.profiles?.email}</div>
-                                      </div>
-                                    </div>
-                                    <div className="flex flex-wrap gap-2">
-                                      {app.candidate?.linkedin_url && (
-                                        <a href={app.candidate.linkedin_url} target="_blank" rel="noreferrer">
-                                          <Button variant="outline" size="sm" className="h-7 px-3 gap-1.5 text-[9px] font-bold border-blue-200 text-[#0A66C2] bg-[#0A66C2]/5 hover:bg-[#0A66C2]/10 transition-all">
-                                            <Linkedin className="h-3 w-3" /> LinkedIn
-                                          </Button>
-                                        </a>
-                                      )}
-                                      <div className="h-7 px-2 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest bg-muted/40 text-muted-foreground rounded">
-                                        <Calendar className="h-3 w-3" /> {new Date(app.applied_at).toLocaleDateString()}
+                                        <div className="text-[10px] text-muted-foreground font-bold mt-0.5 uppercase tracking-tighter truncate italic">
+                                          {app.candidate?.work_authorization} • {app.candidate?.experience_years}Y EXP
+                                        </div>
+                                        <div className="mt-2 flex items-center gap-2">
+                                            <Badge variant="outline" className={`text-[8px] font-black uppercase tracking-tighter h-4 px-1.5 ${
+                                                app.status === 'pending' ? 'border-amber-200 text-amber-700 bg-amber-50' : 
+                                                app.status === 'shortlisted' ? 'border-primary/20 text-primary bg-primary/5' :
+                                                app.status === 'interview_scheduled' ? 'border-purple-200 text-purple-700 bg-purple-50' :
+                                                app.status === 'accepted' ? 'border-success/20 text-success bg-success/5' : 'bg-muted border-none opacity-50'
+                                            }`}>
+                                                {app.status.replace('_', ' ')}
+                                            </Badge>
+                                            <span className="text-[8px] font-black text-muted-foreground tabular-nums ml-auto">
+                                                {new Date(app.applied_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                            </span>
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
-                                </TableCell>
+                                ))}
+                              </div>
+                            </ScrollArea>
+                          </div>
 
-                                <TableCell className="py-6">
-                                  <div className="space-y-3">
-                                    <div className="flex gap-2">
-                                      <Badge className="bg-blue-600/10 text-blue-600 border-transparent text-[10px] uppercase font-black tracking-tighter">
-                                        {app.candidate?.work_authorization}
-                                      </Badge>
-                                      <Badge variant="outline" className="text-[10px] uppercase font-black tracking-tighter tabular-nums bg-background">
-                                        {app.candidate?.experience_years ? `${app.candidate.experience_years}Y PROF EXP` : "ENTRY LEVEL"}
-                                      </Badge>
-                                    </div>
-                                    <div className="flex flex-wrap gap-1.5 min-h-[40px]">
-                                      {app.candidate?.candidate_skills && app.candidate.candidate_skills.slice(0, 4).map((s: any) => (
-                                        <span key={s.id} className="text-[9px] bg-primary/5 text-primary border border-primary/10 px-1.5 py-0.5 rounded-sm font-bold uppercase tracking-tighter">
-                                          {s.skill_name}
-                                        </span>
-                                      ))}
-                                      {app.candidate?.candidate_skills && app.candidate.candidate_skills.length > 4 && (
-                                        <span className="text-[9px] text-muted-foreground font-bold flex items-center">+{app.candidate.candidate_skills.length - 4}</span>
-                                      )}
-                                    </div>
+                          {/* Detail Pane: Unified Review View */}
+                          <div className="flex-1 flex flex-col bg-background min-w-0">
+                            {selectedApp ? (
+                              <>
+                                {/* Floating Navigation Header */}
+                                <div className="h-16 px-8 border-b flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-10 shrink-0">
+                                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                    <Users className="h-3.5 w-3.5" /> 
+                                    Candidate {selectedAppIndex + 1} of {filteredApps.length}
                                   </div>
-                                </TableCell>
+                                  <div className="flex gap-2">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="h-9 px-3 gap-1.5 text-[10px] font-black uppercase tracking-widest border-border/70 hover:border-primary disabled:opacity-30"
+                                      disabled={selectedAppIndex <= 0}
+                                      onClick={() => setSelectedApplicationId(filteredApps[selectedAppIndex - 1].id)}
+                                    >
+                                      <ChevronLeft className="h-3.5 w-3.5" /> Previous
+                                    </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="h-9 px-3 gap-1.5 text-[10px] font-black uppercase tracking-widest border-border/70 hover:border-primary disabled:opacity-30"
+                                      disabled={selectedAppIndex >= filteredApps.length - 1}
+                                      onClick={() => setSelectedApplicationId(filteredApps[selectedAppIndex + 1].id)}
+                                    >
+                                      Next <ChevronRight className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                </div>
 
-                                <TableCell className="py-6">
-                                  {app.cover_letter ? (
-                                    <Dialog>
-                                      <DialogTrigger asChild>
-                                        <Button variant="ghost" className="h-9 px-3 gap-2 text-xs font-bold hover:bg-primary/5 border hover:border-primary/20">
-                                          <AlignLeft className="h-3.5 w-3.5 text-primary" />
-                                          <span className="uppercase tracking-widest">Read Note</span>
-                                        </Button>
-                                      </DialogTrigger>
-                                      <DialogContent className="max-w-2xl border-none shadow-2xl rounded-2xl p-0 overflow-hidden">
-                                        <DialogHeader className="sr-only">
-                                          <DialogTitle>Cover Letter</DialogTitle>
-                                          <DialogDescription>Candidate's personal statement and cover letter.</DialogDescription>
-                                        </DialogHeader>
-                                        <div className="bg-primary/5 p-8 border-b">
-                                          <div className="flex items-center gap-3 mb-4">
-                                            <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
-                                              <Mail className="h-6 w-6 text-primary" />
-                                            </div>
-                                            <div>
-                                              <h4 className="font-black text-xl tracking-tighter uppercase">Message from Candidate</h4>
-                                              <p className="text-xs text-muted-foreground font-medium">Applicant: {app.candidate?.profiles?.full_name}</p>
-                                            </div>
+                                <ScrollArea className="flex-1">
+                                  <div className="p-10 space-y-10">
+                                    {/* Header Section */}
+                                    <div className="flex flex-col md:flex-row gap-8 items-start justify-between">
+                                      <div className="flex gap-6">
+                                        <div className="w-16 h-16 rounded-2xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center font-black text-3xl text-primary shrink-0 shadow-sm shadow-primary/10">
+                                          {selectedApp.candidate?.profiles?.full_name?.charAt(0)}
+                                        </div>
+                                        <div>
+                                          <h2 className="text-3xl font-black tracking-tight uppercase leading-none mb-2">
+                                            {selectedApp.candidate?.profiles?.full_name}
+                                          </h2>
+                                          <div className="flex flex-wrap items-center gap-3">
+                                            <span className="text-sm font-bold text-muted-foreground flex items-center gap-1.5">
+                                              <Mail className="h-4 w-4" /> {selectedApp.candidate?.profiles?.email}
+                                            </span>
+                                            <span className="text-muted-foreground/30">•</span>
+                                            <span className="text-sm font-bold text-muted-foreground flex items-center gap-1.5">
+                                              <Calendar className="h-4 w-4" /> Applied {new Date(selectedApp.applied_at).toLocaleDateString(undefined, { dateStyle: 'medium' })}
+                                            </span>
                                           </div>
-                                        </div>
-                                        <ScrollArea className="h-[400px] p-8 font-inter">
-                                          <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-wrap italic">
-                                            "{app.cover_letter}"
-                                          </p>
-                                        </ScrollArea>
-                                      </DialogContent>
-                                    </Dialog>
-                                  ) : (
-                                    <span className="text-xs text-muted-foreground font-black uppercase opacity-20 tracking-widest">No Statement</span>
-                                  )}
-                                </TableCell>
-
-                                <TableCell className="py-6">
-                                  <div className="flex flex-col gap-2">
-                                    {app.candidate?.resume_url && (
-                                      <div className="flex flex-col gap-2">
-                                        <Button variant="outline" className="w-full h-8 px-4 gap-2 text-[10px] font-black uppercase tracking-[0.2em] border-primary/20 hover:bg-primary/5 hover:border-primary/50 text-foreground transition-all" onClick={() => handleViewResume(app.candidate.resume_url)}>
-                                          <FileText className="w-3.5 h-3.5 text-primary" /> View Dossier
-                                        </Button>
-                                        <Button variant="ghost" className="w-full h-8 px-4 gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 hover:text-primary transition-all" onClick={() => handleViewResume(app.candidate.resume_url, `${app.candidate.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.doc`)}>
-                                          <Download className="w-3.5 h-3.5" /> Download
-                                        </Button>
-                                      </div>
-                                    )}
-                                    {app.candidate?.resume_text && (
-                                      <Dialog>
-                                        <DialogTrigger asChild>
-                                          <Button variant="ghost" size="sm" className="h-8 gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">
-                                            <LayoutDashboard className="w-3.5 h-3.5" /> Parsed Text
-                                          </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="max-w-4xl border-none shadow-2xl rounded-2xl p-0 overflow-hidden">
-                                          <DialogHeader className="sr-only">
-                                            <DialogTitle>Parsed Resume Text</DialogTitle>
-                                            <DialogDescription>Full text content extracted from the candidate resume.</DialogDescription>
-                                          </DialogHeader>
-                                          <div className="p-6 border-b bg-muted/5 flex items-center justify-between">
-                                            <div>
-                                              <h4 className="font-black text-xl uppercase tracking-tighter">Raw Resume Content</h4>
-                                              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Full text extraction from candidate profile</p>
-                                            </div>
-                                            <Button
-                                              variant="outline"
-                                              onClick={() => handleDownloadProfile(app.candidate)}
-                                              className="h-10 text-[10px] font-black uppercase tracking-widest gap-2"
-                                            >
-                                              <Printer className="w-3.5 h-3.5" /> Print PDF
+                                          <div className="flex gap-2 mt-4">
+                                            {selectedApp.candidate?.linkedin_url && (
+                                              <a href={selectedApp.candidate.linkedin_url} target="_blank" rel="noreferrer">
+                                                <Button size="sm" variant="outline" className="h-8 gap-2 text-[10px] font-black uppercase border-blue-200 text-[#0A66C2] bg-[#0A66C2]/5 hover:bg-[#0A66C2]/10">
+                                                  <Linkedin className="h-3 w-3" /> Linkedin Profile
+                                                </Button>
+                                              </a>
+                                            )}
+                                            <Button size="sm" variant="outline" className="h-8 gap-2 text-[10px] font-black uppercase border-primary/20 text-primary bg-primary/5 hover:bg-primary/10">
+                                              <Target className="h-3 w-3" /> Match Breakdown
                                             </Button>
                                           </div>
-                                          <ScrollArea className="h-[70vh] p-8 bg-zinc-950 text-zinc-300 font-mono text-xs leading-relaxed">
-                                            {app.candidate.resume_text}
-                                          </ScrollArea>
-                                        </DialogContent>
-                                      </Dialog>
-                                    )}
-                                  </div>
-                                </TableCell>
+                                        </div>
+                                      </div>
 
-                                <TableCell className="py-6">
-                                  <Select
-                                    value={app.status}
-                                    onValueChange={(val) => updateApplicationStatus(app.id, val)}
-                                  >
-                                    <SelectTrigger className="h-10 w-[200px] text-[10px] font-black uppercase tracking-widest border-none bg-muted/50 focus:ring-0 shadow-sm rounded-lg hover:bg-muted/80 transition-colors">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="border-none shadow-2xl rounded-xl">
-                                      {STATUS_OPTIONS.map(opt => (
-                                        <SelectItem key={opt.value} value={opt.value} className="text-[10px] font-black uppercase tracking-widest focus:bg-primary focus:text-white transition-colors cursor-pointer">
-                                          {opt.label}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    </ScrollArea>
-                    );
-                  })()}
+                                      {/* Quick Status Control */}
+                                      <div className="bg-muted/20 p-6 rounded-2xl border flex flex-col gap-3 min-w-[240px]">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select Outcome</label>
+                                        <Select
+                                          value={selectedApp.status}
+                                          onValueChange={(val) => updateApplicationStatus(selectedApp.id, val)}
+                                        >
+                                          <SelectTrigger className="h-11 border-none bg-background shadow-md font-black uppercase text-[11px] tracking-widest rounded-xl hover:scale-[1.02] transition-transform">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent className="border-none shadow-2xl rounded-xl">
+                                            {STATUS_OPTIONS.map(opt => (
+                                              <SelectItem key={opt.value} value={opt.value} className="text-[10px] font-black uppercase tracking-widest py-3">
+                                                {opt.label}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-12 gap-10">
+                                      {/* Evaluation Section */}
+                                      <div className="col-span-8 space-y-10">
+                                        <div className="space-y-4">
+                                            <h4 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-foreground">
+                                                <BadgeCheck className="h-4 w-4 text-primary" /> Key Qualifications
+                                            </h4>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="p-4 bg-muted/10 rounded-xl border border-dashed border-border/60">
+                                                    <div className="text-[10px] font-black text-muted-foreground uppercase mb-1">Work Eligibility</div>
+                                                    <div className="text-sm font-black uppercase tracking-tight">{selectedApp.candidate?.work_authorization || 'N/A'}</div>
+                                                </div>
+                                                <div className="p-4 bg-muted/10 rounded-xl border border-dashed border-border/60">
+                                                    <div className="text-[10px] font-black text-muted-foreground uppercase mb-1">Professional Exp</div>
+                                                    <div className="text-sm font-black uppercase tracking-tight">{selectedApp.candidate?.experience_years ? `${selectedApp.candidate.experience_years} Years` : 'Entry Level'}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <h4 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-foreground">
+                                                <Layers className="h-4 w-4 text-primary" /> Candidate Skill Cloud
+                                            </h4>
+                                            <div className="flex flex-wrap gap-2 p-6 bg-muted/5 rounded-2xl border">
+                                              {selectedApp.candidate?.candidate_skills?.map((s: any) => (
+                                                <span key={s.id} className="px-3 py-2 bg-background border rounded-lg text-[11px] font-black uppercase tracking-tight text-foreground shadow-sm">
+                                                  {s.skill_name}
+                                                </span>
+                                              )) || <span className="text-muted-foreground text-xs italic">No skills listed in profile</span>}
+                                            </div>
+                                        </div>
+
+                                        {selectedApp.cover_letter && (
+                                            <div className="space-y-4">
+                                                <h4 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-foreground">
+                                                    <MessageSquare className="h-4 w-4 text-primary" /> Statement from Candidate
+                                                </h4>
+                                                <div className="p-8 bg-primary/5 rounded-2xl border-l-4 border-l-primary/50 relative">
+                                                    <p className="text-base leading-relaxed text-foreground/80 font-inter italic whitespace-pre-wrap">
+                                                        "{selectedApp.cover_letter}"
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+                                      </div>
+
+                                      {/* Side Tools Section */}
+                                      <div className="col-span-4 space-y-6">
+                                        <div className="space-y-4">
+                                            <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Resume Handling</h4>
+                                            <div className="flex flex-col gap-3">
+                                                {selectedApp.candidate?.resume_url ? (
+                                                    <>
+                                                        <Button 
+                                                            className="h-12 w-full font-black uppercase tracking-widest text-[11px] gap-2 shadow-lg shadow-primary/20" 
+                                                            onClick={() => handleViewResume(selectedApp.candidate.resume_url)}
+                                                        >
+                                                            <FileText className="h-4 w-4" /> Open Resume View
+                                                        </Button>
+                                                        <Button 
+                                                            variant="outline" 
+                                                            className="h-10 w-full font-black uppercase tracking-widest text-[10px] gap-2 border-border/60"
+                                                            onClick={() => handleViewResume(selectedApp.candidate.resume_url, `${selectedApp.candidate.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.doc`)}
+                                                        >
+                                                            <Download className="h-3.5 w-3.5" /> Download Doc
+                                                        </Button>
+                                                    </>
+                                                ) : (
+                                                    <div className="p-6 bg-muted/20 border-2 border-dotted text-center rounded-2xl">
+                                                        <X className="h-6 w-6 text-muted-foreground/30 mx-auto mb-2" />
+                                                        <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">No Resume Uploaded</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {selectedApp.candidate?.resume_text && (
+                                            <div className="p-6 bg-zinc-950 rounded-2xl border-none shadow-2xl relative group overflow-hidden">
+                                                <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                <h4 className="text-zinc-500 text-[10px] font-black uppercase tracking-widest mb-3 flex justify-between items-center relative z-10">
+                                                    Parsed Resume Text
+                                                    <Terminal className="h-3 w-3" />
+                                                </h4>
+                                                <div className="max-h-[200px] overflow-hidden text-[10px] font-mono text-zinc-400 leading-relaxed relative z-10">
+                                                    {selectedApp.candidate.resume_text.substring(0, 300)}...
+                                                </div>
+                                                <Dialog>
+                                                    <DialogTrigger asChild>
+                                                        <Button variant="ghost" className="w-full mt-4 h-8 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-white hover:bg-white/5 relative z-10">
+                                                            View Full Extraction
+                                                        </Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent className="max-w-4xl border-none shadow-2xl rounded-2xl p-0 overflow-hidden">
+                                                        <DialogHeader className="sr-only">
+                                                            <DialogTitle>Parsed Resume Text</DialogTitle>
+                                                        </DialogHeader>
+                                                        <div className="p-6 border-b bg-muted/5 flex items-center justify-between">
+                                                            <h4 className="font-black text-xl uppercase tracking-tighter">Raw Data Stream</h4>
+                                                        </div>
+                                                        <ScrollArea className="h-[70vh] p-8 bg-zinc-950 text-zinc-400 font-mono text-xs leading-relaxed">
+                                                            {selectedApp.candidate.resume_text}
+                                                        </ScrollArea>
+                                                    </DialogContent>
+                                                </Dialog>
+                                            </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </ScrollArea>
+                              </>
+                            ) : (
+                              <div className="flex-1 flex flex-col items-center justify-center p-24 text-center">
+                                <div className="w-20 h-20 bg-muted/30 rounded-full flex items-center justify-center mb-6">
+                                  <Users className="h-8 w-8 text-muted-foreground/30 shadow-inner" />
+                                </div>
+                                <h3 className="text-xl font-bold">Select a Candidate</h3>
+                                <p className="text-muted-foreground max-w-xs mt-2 font-medium text-sm">
+                                  Pick a candidate from the list on the left to begin the review process.
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
                 </TabsContent>
                 <TabsContent value="notes" className="flex-1 overflow-hidden bg-background mt-0 p-8">
                   <div className="h-full flex flex-col">
@@ -1739,7 +1854,7 @@ const EmployerDashboard = () => {
                       )}
                       
                       <p className="text-xs text-muted-foreground font-black uppercase tracking-widest flex items-center gap-2 flex-wrap mb-3">
-                        <span><MapPin className="inline w-3 h-3 mr-1"/>{talent.location || 'No Location'}</span>
+                        <span><MapPin className="inline w-3 h-3 mr-1"/>{formatLocation(talent.location)}</span>
                         <span className="text-border px-1">•</span>
                         <span>{talent.work_authorization}</span>
                         <span className="text-border px-1">•</span>

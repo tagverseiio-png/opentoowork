@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import usaCities from "@/lib/usa_cities_cleaned.json";
+import { formatLocation } from "@/lib/utils";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -963,7 +964,7 @@ const CandidateDashboard = () => {
               <div className="grid grid-cols-2 gap-3">
                   <div className="bg-muted/5 border p-3 rounded-xl flex flex-col">
                     <span className="text-[9px] text-muted-foreground uppercase font-black mb-1">Location</span>
-                    <span className="text-xs font-bold truncate">{profile.location || "Not specified"}</span>
+                    <span className="text-xs font-bold truncate">{formatLocation(profile.location) || "Not specified"}</span>
                   </div>
                   <div className="bg-muted/5 border p-3 rounded-xl flex flex-col">
                     <span className="text-[9px] text-muted-foreground uppercase font-black mb-1">Experience</span>
@@ -1232,7 +1233,7 @@ const CandidateDashboard = () => {
                                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1.5">{job.employer?.company_name}</p>
                               </div>
                               <div className="flex flex-wrap gap-2">
-                                 <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-background border-primary/20">{job.location}</Badge>
+                                 <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-background border-primary/20">{formatLocation(job.location)}</Badge>
                                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-primary/10 text-primary border-transparent">{job.job_type}</Badge>
                                  {job.salary_min && (
                                     <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-green-500/10 text-green-600 border-transparent">

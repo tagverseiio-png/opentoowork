@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { MapPin, Building2, DollarSign, Briefcase, Calendar, Lock, CheckCircle2, Globe, Target, Share2, Users } from "lucide-react";
 import { ToastAction } from "@/components/ui/toast";
 import { sendApplicationConfirmation, sendEmployerNewApplicantAlert, calculateMatchScore } from "@/lib/email";
+import { formatLocation } from "@/lib/utils";
 
 const JobDetail = () => {
   const { id } = useParams();
@@ -277,7 +278,7 @@ const JobDetail = () => {
                   </span>
                   <span className="flex items-center gap-2">
                     <MapPin className="h-5 w-5" />
-                    {job.location}
+                    {formatLocation(job.location)}
                   </span>
                   <span className="flex items-center gap-2">
                     <Briefcase className="h-5 w-5" />

@@ -3,6 +3,7 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { MapPin, Building2, DollarSign, Briefcase, Percent } from "lucide-react";
 import { Link } from "react-router-dom";
+import { formatLocation } from "@/lib/utils";
 
 interface JobCardProps {
   id: string;
@@ -64,7 +65,7 @@ const JobCard = ({
               <Building2 className="h-4 w-4" /> {company}
             </span>
             <span className="flex items-center gap-1">
-              <MapPin className="h-4 w-4" /> {location}
+              <MapPin className="h-4 w-4" /> {formatLocation(location)}
             </span>
           </div>
         </div>
