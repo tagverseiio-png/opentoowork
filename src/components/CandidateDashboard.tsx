@@ -220,7 +220,7 @@ const CandidateDashboard = () => {
       .from("candidate_profiles")
       .select("*")
       .eq("user_id", session.user.id)
-      .single();
+      .maybeSingle();
 
     if (!candidateProfile) return;
 
@@ -359,7 +359,7 @@ const CandidateDashboard = () => {
         .from("candidate_profiles")
         .select("*, profiles!inner(full_name, email)")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
 
       if (!candidateProfile?.profiles?.email) return;
 

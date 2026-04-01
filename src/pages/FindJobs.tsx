@@ -48,7 +48,7 @@ const FindJobs = () => {
         .from("candidate_profiles")
         .select("id")
         .eq("user_id", session.user.id)
-        .single();
+        .maybeSingle();
         
       if (profile) {
         const { data: skills } = await supabase
