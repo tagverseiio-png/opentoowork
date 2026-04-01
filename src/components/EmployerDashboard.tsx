@@ -110,6 +110,7 @@ const EmployerDashboard = () => {
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [applications, setApplications] = useState<any[]>([]);
+  const [referrals, setReferrals] = useState<any[]>([]);
   const [subscription, setSubscription] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [talentPool, setTalentPool] = useState<any[]>([]);
@@ -224,7 +225,8 @@ const EmployerDashboard = () => {
           *,
           job_skills(*),
           view_count:job_views(count),
-          application_count:applications(count)
+          application_count:applications(count),
+          referral_count:referrals(count)
         `)
         .eq("employer_id", employerProfile.id)
         .order("created_at", { ascending: false });
@@ -238,7 +240,8 @@ const EmployerDashboard = () => {
   };
 
   const fetchApplications = async (jobId: string) => {
-    const { data } = await supabase
+    // 1. Fetch direct applications
+    const { data: appsData } = await supabase
       .from("applications")
       .select(`
         *,
@@ -251,7 +254,22 @@ const EmployerDashboard = () => {
       .eq("job_id", jobId)
       .order('applied_at', { ascending: false });
 
-    setApplications(data || []);
+    setApplications(appsData || []);
+
+    // 2. Fetch talent referrals for this job
+    const { data: refsData } = await supabase
+      .from("referrals")
+      .select(`
+        *,
+        referrer:referrer_id(
+          full_name,
+          email
+        )
+      `)
+      .eq("job_id", jobId)
+      .order('created_at', { ascending: false });
+    
+    setReferrals(refsData || []);
   };
 
   const handleUpdateProfile = async () => {
@@ -1243,9 +1261,13 @@ const EmployerDashboard = () => {
                               <Users className="h-4 w-4 mr-2 text-primary/40" />
                               <span className="uppercase tracking-widest">{job.view_count?.[0]?.count || 0} Views</span>
                             </div>
-                            <div className="flex items-center text-xs font-bold text-muted-foreground">
+                            <div className="flex items-center text-xs font-bold text-muted-foreground mr-4">
                               <Target className="h-4 w-4 mr-2 text-primary/40" />
                               <span className="uppercase tracking-widest">{job.application_count?.[0]?.count || 0} Apps</span>
+                            </div>
+                            <div className="flex items-center text-xs font-bold text-muted-foreground mr-4">
+                              <Users className="h-4 w-4 mr-2 text-primary/40" />
+                              <span className="uppercase tracking-widest">{job.referral_count?.[0]?.count || 0} Referrals</span>
                             </div>
                             <div className="flex items-center text-xs font-bold text-muted-foreground">
                               <Briefcase className="h-4 w-4 mr-2 text-primary/40" />
@@ -1388,6 +1410,10 @@ const EmployerDashboard = () => {
                 <div className="px-8 border-b bg-muted/5">
                   <TabsList className="bg-transparent h-12 gap-6 p-0">
                     <TabsTrigger value="list" className="h-12 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none font-black uppercase tracking-widest text-[10px]">Applicants Pipeline</TabsTrigger>
+                    <TabsTrigger value="referrals" className="h-12 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none font-black uppercase tracking-widest text-[10px] relative">
+                      Referrals
+                      {referrals.length > 0 && <span className="absolute -top-1 -right-2 bg-primary text-primary-foreground text-[8px] h-4 w-4 flex items-center justify-center rounded-full font-bold">{referrals.length}</span>}
+                    </TabsTrigger>
                     <TabsTrigger value="notes" className="h-12 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none font-black uppercase tracking-widest text-[10px]">Recruiter Notes</TabsTrigger>
                   </TabsList>
                 </div>
@@ -1725,6 +1751,70 @@ const EmployerDashboard = () => {
                         </>
                       );
                     })()}
+                  </div>
+                </TabsContent>
+                <TabsContent value="referrals" className="flex-1 overflow-hidden bg-background mt-0 p-8">
+                  <div className="h-full flex flex-col">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-xl font-black uppercase tracking-tighter">Talent Referrals</h3>
+                      <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[9px] font-black uppercase tracking-widest">
+                        Community Source
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-6 font-medium">Candidates referred to this role by our network. These individuals have been notified but may not have applied yet.</p>
+                    
+                    <ScrollArea className="flex-1 pr-4">
+                      {referrals.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
+                          <Users className="h-12 w-12 mb-4" />
+                          <div className="text-sm font-black uppercase tracking-widest">No Referrals Yet</div>
+                        </div>
+                      ) : (
+                        <div className="space-y-4 pb-8">
+                          {referrals.map((ref) => (
+                            <div key={ref.id} className="border p-6 rounded-2xl bg-muted/5 hover:bg-muted/10 transition-all border-border/40 group relative overflow-hidden">
+                              <div className="absolute top-0 right-0 p-3">
+                                 <Users className="h-8 w-8 text-primary/10" shrink-0 />
+                              </div>
+                              
+                              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                <div className="space-y-1">
+                                  <div className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Target Contact</div>
+                                  <div className="flex items-center gap-3">
+                                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                                       <Mail className="h-5 w-5 text-primary" />
+                                     </div>
+                                     <span className="font-black text-xl tracking-tight">{ref.referred_email}</span>
+                                  </div>
+                                </div>
+
+                                <div className="md:text-right border-l-4 border-primary/20 pl-4 md:border-l-0 md:pl-0 md:border-r-4 md:pr-4">
+                                  <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Referrer Attribution</div>
+                                  <div className="font-black italic uppercase tracking-tighter text-base bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                                    {ref.referrer?.full_name || "Community Partner"}
+                                  </div>
+                                  <div className="text-[9px] font-bold text-muted-foreground/60">{ref.referrer?.email || "verified_member"}</div>
+                                </div>
+                              </div>
+                              
+                              <div className="mt-6 pt-4 border-t border-border/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                   <div className="flex items-center gap-1.5"><Calendar className="h-3 w-3" /> {new Date(ref.created_at).toLocaleDateString()}</div>
+                                   <div className="flex items-center gap-1.5"><ShieldCheck className="h-3 w-3" /> Verified Entry</div>
+                                </div>
+                                <Button 
+                                  size="sm" 
+                                  className="h-10 px-6 gap-2 text-[10px] font-black uppercase tracking-widest bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/10"
+                                  onClick={() => window.open(`mailto:${ref.referred_email}?subject=Opportunity: Referral for ${selectedJob?.title} via OpenTooWork`, "_blank")}
+                                >
+                                  <Mail className="h-3 w-3" /> Initiate Outreach
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </ScrollArea>
                   </div>
                 </TabsContent>
                 <TabsContent value="notes" className="flex-1 overflow-hidden bg-background mt-0 p-8">

@@ -12,7 +12,7 @@ import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Building2, DollarSign, Briefcase, Calendar, Lock, CheckCircle2, Globe, Target, Share2, Users } from "lucide-react";
 import { ToastAction } from "@/components/ui/toast";
-import { sendApplicationConfirmation, sendEmployerNewApplicantAlert, calculateMatchScore } from "@/lib/email";
+import { sendApplicationConfirmation, sendEmployerNewApplicantAlert, calculateMatchScore, sendReferralEmail } from "@/lib/email";
 import { formatLocation } from "@/lib/utils";
 
 const JobDetail = () => {
@@ -31,6 +31,12 @@ const JobDetail = () => {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [candidateProfile, setCandidateProfile] = useState<any>(null);
   const [candidateSkills, setCandidateSkills] = useState<any[]>([]);
+
+  // Referral states
+  const [referralEmail, setReferralEmail] = useState("");
+  const [referralNote, setReferralNote] = useState("");
+  const [isReferring, setIsReferring] = useState(false);
+  const [isReferralDialogOpen, setIsReferralDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchJob();
@@ -235,6 +241,49 @@ const JobDetail = () => {
     }
   };
 
+  const handleReferral = async () => {
+    if (!referralEmail) {
+      toast({ title: "Email required", description: "Please enter the candidate's email address.", variant: "destructive" });
+      return;
+    }
+
+    setIsReferring(true);
+    try {
+      // 1. Save to DB
+      const { error } = await supabase.from("referrals").insert({
+        job_id: job.id,
+        referrer_id: user?.id || null,
+        referred_email: referralEmail
+      });
+
+      if (error) throw error;
+
+      // 2. Send Email
+      await sendReferralEmail(
+        referralEmail,
+        user?.user_metadata?.full_name || user?.email || "Someone",
+        job.title,
+        job.employer?.company_name || "a Company",
+        job.id
+      );
+
+      toast({ 
+        title: "Referral Sent!", 
+        description: `We've notified ${referralEmail} about this opportunity.` 
+      });
+      
+      // Reset
+      setReferralEmail("");
+      setReferralNote("");
+      setIsReferralDialogOpen(false);
+    } catch (error: any) {
+      console.error("Error sending referral:", error);
+      toast({ title: "Referral failed", description: error.message, variant: "destructive" });
+    } finally {
+      setIsReferring(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen">
@@ -356,7 +405,7 @@ const JobDetail = () => {
                     </DialogContent>
                   </Dialog>
 
-                  <Dialog>
+                  <Dialog open={isReferralDialogOpen} onOpenChange={setIsReferralDialogOpen}>
                     <DialogTrigger asChild>
                       <Button variant="outline" className="flex-1 h-12 gap-2 font-black uppercase tracking-widest text-[10px] border-primary/20 hover:bg-primary/5">
                         <Users className="h-4 w-4" /> Refer Talent
@@ -369,16 +418,28 @@ const JobDetail = () => {
                       <div className="space-y-4 py-4">
                         <div className="space-y-2">
                           <Label className="text-[10px] uppercase font-black tracking-widest">Candidate Email</Label>
-                          <Input placeholder="referral@example.com" className="h-11 rounded-xl" />
+                          <Input 
+                            placeholder="referral@example.com" 
+                            className="h-11 rounded-xl"
+                            value={referralEmail}
+                            onChange={(e) => setReferralEmail(e.target.value)}
+                          />
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[10px] uppercase font-black tracking-widest">Why are they a fit?</Label>
-                          <Textarea placeholder="Briefly explain their expertise..." className="rounded-xl min-h-[100px]" />
+                          <Textarea 
+                            placeholder="Briefly explain their expertise..." 
+                            className="rounded-xl min-h-[100px]" 
+                            value={referralNote}
+                            onChange={(e) => setReferralNote(e.target.value)}
+                          />
                         </div>
-                        <Button className="w-full h-12 font-black uppercase text-[10px] shadow-xl" onClick={() => {
-                          toast({ title: "Referral Sent!", description: "We've notified the candidate about this opportunity." });
-                        }}>
-                          Submit Referral
+                        <Button 
+                          className="w-full h-12 font-black uppercase text-[10px] shadow-xl" 
+                          onClick={handleReferral}
+                          disabled={isReferring}
+                        >
+                          {isReferring ? "Sending..." : "Submit Referral"}
                         </Button>
                       </div>
                     </DialogContent>

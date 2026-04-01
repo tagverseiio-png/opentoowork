@@ -168,6 +168,30 @@ export function sendJobAlertEmail(
 }
 
 // ═══════════════════════════════════════════════════════════════
+// 5. REFERRAL EMAIL — sent to the referred friend
+// ═══════════════════════════════════════════════════════════════
+export function sendReferralEmail(
+  toEmail: string,
+  referrerName: string,
+  jobTitle: string,
+  companyName: string,
+  jobId: string,
+) {
+  return sendEmail({
+    to: toEmail,
+    subject: `Opportunity: ${referrerName} referred you to ${jobTitle}`,
+    html: wrap(`
+      <h2>You've Been Referred!</h2>
+      <p>Hi there,</p>
+      <p><strong>${referrerName}</strong> thought you'd be a great fit for the <strong>${jobTitle}</strong> position at <strong>${companyName}</strong>.</p>
+      <p>Click the link below to view the job details and apply directly:</p>
+      <p><a href="https://opentoowork.tech/jobs/${jobId}" style="display:inline-block;background:#18181b;color:#fff;padding:12px 28px;border-radius:8px;font-size:12px;font-weight:800;text-decoration:none;text-transform:uppercase;letter-spacing:1px;margin-top:8px;">View Job &amp; Apply</a></p>
+      <p style="margin-top:24px;font-size:12px;color:#71717a;">Join OpenToWork to find more opportunities matching your skills.</p>
+    `),
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
 // Skill Name Normalizer — trims whitespace, lowercases,
 // collapses multiple spaces, strips special chars at edges
 // ═══════════════════════════════════════════════════════════════
