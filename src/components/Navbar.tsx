@@ -178,17 +178,16 @@ const Navbar = () => {
         <div className="flex h-16 items-center justify-between">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-12 h-12 rounded-xl overflow-hidden shadow-md group-hover:shadow-primary/20 transition-all">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 group">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden shadow-md group-hover:shadow-primary/20 transition-all">
               <img src="/favicon.ico" alt="Logo" className="w-full h-full object-cover p-1.5" />
             </div>
-            <span className="text-xl font-bold text-primary tracking-wide hidden sm:block">
+            <span className="text-lg sm:text-xl font-bold text-primary tracking-wide hidden min-[400px]:block">
               Open Too Work
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-4">
             <NavLinks />
             {userRole && (
               <div className="flex items-center gap-2 border-l border-border/40 pl-4 ml-2">
@@ -214,41 +213,36 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile Menu */}
-          <div className="md:hidden">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 p-2">
-                <div className="flex flex-col gap-2">
-                  <NavLinks mobile />
-                  {userRole && (
-                    <>
-                      <div className="px-2 py-2 border-b border-border mb-2">
-                        <p className="text-xs text-muted-foreground">Signed in as</p>
-                        <p className="text-sm font-medium truncate">{userEmail}</p>
-                      </div>
-                      <div className="h-px bg-border my-1" />
-                      <div className="px-2 py-4 flex items-center justify-between bg-primary/5 rounded-xl mb-2">
-                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Alert Protocols</span>
-                         <NotificationBell />
-                      </div>
-                      <Button 
-                        onClick={handleSignOut} 
-                        variant="ghost" 
-                        className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 font-black uppercase tracking-widest text-[10px]"
-                      >
-                        <LogOut className="h-4 w-4 mr-2" />
-                        Sign Out
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <div className="lg:hidden flex items-center gap-3">
+             {userRole && <NotificationBell />}
+             <DropdownMenu>
+               <DropdownMenuTrigger asChild>
+                 <Button variant="ghost" size="icon" className="rounded-xl hover:bg-primary/5">
+                   <Menu className="h-6 w-6 text-primary" />
+                 </Button>
+               </DropdownMenuTrigger>
+               <DropdownMenuContent align="end" className="w-64 p-3 rounded-2xl shadow-2xl border-none">
+                 <div className="flex flex-col gap-2">
+                   <NavLinks mobile />
+                   {userRole ? (
+                     <>
+                       <div className="px-3 py-3 bg-muted/30 rounded-xl mt-2 mb-2">
+                         <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-1">Signed in as</p>
+                         <p className="text-xs font-bold truncate text-primary/80">{userEmail}</p>
+                       </div>
+                       <Button 
+                         onClick={handleSignOut} 
+                         variant="ghost" 
+                         className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 font-black uppercase tracking-widest text-[10px] h-11 rounded-xl"
+                       >
+                         <LogOut className="h-4 w-4 mr-2" />
+                         Sign Out
+                       </Button>
+                     </>
+                   ) : null}
+                 </div>
+               </DropdownMenuContent>
+             </DropdownMenu>
           </div>
         </div>
       </div>

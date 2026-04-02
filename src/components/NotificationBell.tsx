@@ -135,7 +135,12 @@ export const NotificationBell = () => {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 sm:w-96 p-0 border-none shadow-2xl rounded-2xl overflow-hidden bg-card animate-in fade-in zoom-in duration-300" align="end">
+      <PopoverContent 
+        className="w-[calc(100vw-2rem)] sm:w-96 p-0 border-none shadow-2xl rounded-2xl overflow-hidden bg-card animate-in fade-in zoom-in duration-300" 
+        align="end"
+        sideOffset={8}
+        collisionPadding={16}
+      >
         <div className="p-4 bg-primary/5 border-b border-primary/10 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-black uppercase tracking-widest">Protocol Alerts</h3>
@@ -147,7 +152,7 @@ export const NotificationBell = () => {
             </Button>
           )}
         </div>
-        <ScrollArea className="h-[400px]">
+        <ScrollArea className="h-[min(400px,70vh)]">
           {loading ? (
             <div className="flex flex-col items-center justify-center h-full p-8 gap-3">
               <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
@@ -176,11 +181,11 @@ export const NotificationBell = () => {
                       )}
                     </div>
                     <div className="flex-1 space-y-1 pr-6">
-                      <div className="flex items-center justify-between">
-                        <p className={`text-xs font-black uppercase tracking-tight ${!n.is_read ? 'text-primary' : 'text-foreground'}`}>
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <p className={`text-xs font-black uppercase tracking-tight flex-1 min-w-0 break-words ${!n.is_read ? 'text-primary' : 'text-foreground'}`}>
                           {n.title}
                         </p>
-                        <span className="text-[9px] font-bold text-muted-foreground/60 tabular-nums">
+                        <span className="text-[9px] font-bold text-muted-foreground/60 tabular-nums whitespace-nowrap pt-0.5">
                           {new Date(n.created_at).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
