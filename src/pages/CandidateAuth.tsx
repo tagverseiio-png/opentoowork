@@ -35,6 +35,8 @@ const CandidateAuth = () => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [userLocation, setUserLocation] = useState("");
+  const [desiredJobTitle, setDesiredJobTitle] = useState("");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [resetEmail, setResetEmail] = useState("");
@@ -76,6 +78,15 @@ const CandidateAuth = () => {
       return;
     }
 
+    if (!desiredJobTitle.trim() || !linkedinUrl.trim()) {
+      toast({
+        title: "Required Fields Missing",
+        description: "Job title and LinkedIn URL are mandatory.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -88,12 +99,25 @@ const CandidateAuth = () => {
             full_name: fullName,
             phone: phone,
             location: userLocation,
+            desired_job_title: desiredJobTitle,
+            linkedin_url: linkedinUrl,
             role: "candidate",
           },
         },
       });
 
       if (error) throw error;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        await supabase
+          .from("candidate_profiles")
+          .update({
+            desired_job_title: desiredJobTitle,
+            linkedin_url: linkedinUrl,
+          })
+          .eq("user_id", session.user.id);
+      }
 
       toast({ title: "Verification code sent to your email!" });
       setShowOtpInput(true); 
@@ -417,6 +441,27 @@ const CandidateAuth = () => {
                       </Command>
                     </PopoverContent>
                   </Popover>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-title">Job Title</Label>
+                  <Input
+                    id="signup-title"
+                    placeholder="e.g. Software Engineer"
+                    value={desiredJobTitle}
+                    onChange={(e) => setDesiredJobTitle(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-linkedin">LinkedIn URL</Label>
+                  <Input
+                    id="signup-linkedin"
+                    type="url"
+                    placeholder="https://linkedin.com/in/..."
+                    value={linkedinUrl}
+                    onChange={(e) => setLinkedinUrl(e.target.value)}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>

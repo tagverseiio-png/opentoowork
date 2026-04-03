@@ -33,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { calculateMatchScore, normalizeSkillName, sendEmail } from "@/lib/email";
+import { calculateJobTitleMatchScore, normalizeSkillName, sendEmail } from "@/lib/email";
 
 const WORK_AUTH_OPTIONS = [
   "H1B", "CPT-EAD", "OPT-EAD", "GC", "GC-EAD", "USC", "TN"
@@ -224,11 +224,6 @@ const CandidateDashboard = () => {
 
     if (!candidateProfile) return;
 
-    const { data: candidateSkills } = await supabase
-      .from("candidate_skills")
-      .select("*")
-      .eq("candidate_id", candidateProfile.id);
-
     let query = supabase
       .from("jobs")
       .select(`
@@ -245,20 +240,10 @@ const CandidateDashboard = () => {
       return;
     }
 
-    // Score jobs by skill match. Only recommend jobs where there is
-    // actual skill overlap — a Java dev should not see PM roles just
-    // because they share the same visa status.
-    if (!candidateSkills?.length) {
-      // Fallback: Show latest 10 active jobs if no skills added yet
-      setRecommendations(jobs.slice(0, 10).map(j => ({ ...j, score: 0 })));
-      return;
-    }
-
     const scoredJobs = jobs
-      .filter(job => job.job_skills?.length > 0) // prioritize jobs with defined skills
       .map(job => ({
         ...job,
-        score: calculateMatchScore(candidateSkills, job.job_skills, candidateProfile.desired_job_title, job.title)
+        score: calculateJobTitleMatchScore(candidateProfile.desired_job_title, job.title)
       }))
       .sort((a: any, b: any) => b.score - a.score);
     
@@ -302,6 +287,10 @@ const CandidateDashboard = () => {
   const handleUpdateProfile = async () => {
     setSavingProfile(true);
     try {
+      if (!editJobTitle.trim() || !editLinkedin.trim()) {
+        throw new Error("Job title and LinkedIn URL are mandatory.");
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
 
@@ -387,7 +376,7 @@ const CandidateDashboard = () => {
       const matchedJobs = jobs
         .map(job => ({
           ...job,
-          score: job.job_skills?.length ? calculateMatchScore(candidateSkills, job.job_skills, candidateProfile.desired_job_title, job.title) : 0
+          score: calculateJobTitleMatchScore(candidateProfile.desired_job_title, job.title)
         }))
         .filter(job => job.score >= 50)
         .sort((a, b) => b.score - a.score)
@@ -1236,6 +1225,12 @@ const CandidateDashboard = () => {
                               <div className="flex flex-wrap gap-2">
                                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-background border-primary/20">{formatLocation(job.location)}</Badge>
                                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-primary/10 text-primary border-transparent">{job.job_type}</Badge>
+                                 <Badge
+                                   variant="outline"
+                                   className={`text-[9px] font-black uppercase tracking-widest border-transparent ${applications.some((app) => (app.job_id || app.jobs?.id) === job.id) ? "bg-green-500/10 text-green-600" : "bg-muted text-muted-foreground"}`}
+                                 >
+                                   {applications.some((app) => (app.job_id || app.jobs?.id) === job.id) ? "Applied" : "Not Applied"}
+                                 </Badge>
                                  {job.salary_min && (
                                     <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-green-500/10 text-green-600 border-transparent">
                                       ${job.salary_min.toLocaleString()} - {job.salary_max?.toLocaleString()} <span className="ml-1 opacity-60">{job.salary_period || 'Annually'}</span>

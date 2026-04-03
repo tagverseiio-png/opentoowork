@@ -203,6 +203,48 @@ export function normalizeSkillName(name: string): string {
     .replace(/[^a-z0-9.#+\- /]/g, ''); // keep alphanumeric + common skill chars
 }
 
+const TITLE_STOP_WORDS = new Set([
+  "a", "an", "and", "for", "in", "of", "on", "the", "to", "with",
+  "jr", "junior", "sr", "senior", "lead", "principal", "staff"
+]);
+
+const normalizeTitleToken = (value: string) =>
+  value.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+const tokenizeTitle = (value?: string | null): string[] => {
+  if (!value) return [];
+  return value
+    .split(/\s+/)
+    .map(normalizeTitleToken)
+    .filter((token) => token.length > 1 && !TITLE_STOP_WORDS.has(token));
+};
+
+export function calculateJobTitleMatchScore(
+  candidateTitle?: string | null,
+  jobTitle?: string | null,
+): number {
+  const candidateTokens = tokenizeTitle(candidateTitle);
+  const jobTokens = tokenizeTitle(jobTitle);
+
+  if (!candidateTokens.length || !jobTokens.length) return 0;
+
+  const candidateSet = new Set(candidateTokens);
+  const jobSet = new Set(jobTokens);
+
+  let overlap = 0;
+  for (const token of candidateSet) {
+    if (jobSet.has(token)) overlap += 1;
+  }
+
+  if (!overlap) return 0;
+
+  const precision = overlap / candidateSet.size;
+  const recall = overlap / jobSet.size;
+  const f1 = (2 * precision * recall) / (precision + recall);
+
+  return Math.round(Math.min(1, f1) * 100);
+}
+
 // ═══════════════════════════════════════════════════════════════
 // Math-based Candidate Match Score Calculator (reusable)
 // Uses weighted scoring: Required skills 80%, Optional skills 20%

@@ -76,9 +76,9 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
-      <div className="py-6">
+      <div className="py-6 flex-1 overflow-y-auto">
         {userRole === "candidate" && <CandidateDashboard />}
         {userRole === "employer" && <EmployerDashboard />}
         {userRole === "admin" && <AdminDashboard />} 

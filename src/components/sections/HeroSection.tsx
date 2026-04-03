@@ -3,6 +3,13 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, MapPin, Briefcase } from "lucide-react";
 import heroImage from "@/assets/hero-boardroom.jpg";
+import usaCities from "@/lib/usa_cities_cleaned.json";
+
+const HERO_LOCATIONS = [
+  "all",
+  "Remote (US)",
+  ...usaCities.slice(0, 200).map((c) => (c.state_code ? `${c.city}, ${c.state_code}` : c.city)),
+];
 
 interface HeroSectionProps {
   searchTerm: string;
@@ -67,14 +74,24 @@ const HeroSection = ({
               </div>
               <div className="relative">
                 <label className="block text-sm font-semibold text-foreground mb-2 text-left">Location</label>
-                <MapPin className="absolute left-4 bottom-4 h-5 w-5 text-muted-foreground" />
-                <Input
-                  placeholder="City or State"
-                  className="pl-12 h-14 border-border/50 focus:border-primary transition-colors text-base"
-                  value={locationFilter}
-                  onChange={(e) => setLocationFilter(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                />
+                <Select
+                  value={locationFilter || "all"}
+                  onValueChange={(value) => setLocationFilter(value === "all" ? "" : value)}
+                >
+                  <SelectTrigger className="h-14 border-border/50 focus:border-primary transition-colors text-base">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-5 w-5 text-muted-foreground" />
+                      <SelectValue placeholder="Select location" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {HERO_LOCATIONS.map((location) => (
+                      <SelectItem key={location} value={location}>
+                        {location === "all" ? "Any Location" : location}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <Button 
                 className="h-14 px-10 bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity text-lg font-semibold shadow-lg rounded-xl" 

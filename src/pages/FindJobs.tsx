@@ -14,13 +14,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { calculateMatchScore } from "@/lib/email";
+import { calculateJobTitleMatchScore } from "@/lib/email";
 
 const FindJobs = () => {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [candidateSkills, setCandidateSkills] = useState<any[]>([]);
-  const [session, setSession] = useState<any>(null);
+  const [candidateProfile, setCandidateProfile] = useState<any>(null);
   
   // Search states
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,22 +39,17 @@ const FindJobs = () => {
 
   const fetchSessionAndData = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    setSession(session);
 
     if (session) {
       // Fetch Candidate Skills if they are a candidate
       const { data: profile } = await supabase
         .from("candidate_profiles")
-        .select("id")
+        .select("id, desired_job_title")
         .eq("user_id", session.user.id)
         .maybeSingle();
         
       if (profile) {
-        const { data: skills } = await supabase
-          .from("candidate_skills")
-          .select("*")
-          .eq("candidate_id", profile.id);
-        setCandidateSkills(skills || []);
+        setCandidateProfile(profile);
       }
     }
 
@@ -87,9 +81,8 @@ const FindJobs = () => {
   };
 
   const getMatchScore = (job: any) => {
-    if (!candidateSkills || candidateSkills.length === 0) return 0;
-    if (!job.job_skills || job.job_skills.length === 0) return 0;
-    return calculateMatchScore(candidateSkills, job.job_skills);
+    if (!candidateProfile?.desired_job_title) return 0;
+    return calculateJobTitleMatchScore(candidateProfile.desired_job_title, job.title);
   };
 
   // Filter jobs
@@ -265,9 +258,9 @@ const FindJobs = () => {
 
         <div className="mb-6 flex justify-between items-center text-sm text-muted-foreground">
            <span>Showing <strong className="text-foreground">{sortedJobs.length}</strong> jobs</span>
-           {candidateSkills.length > 0 && (
+            {candidateProfile?.desired_job_title && (
               <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
-                 Sorted by Match Score 🎯
+                Sorted by Job Title Match 🎯
               </Badge>
            )}
         </div>

@@ -89,42 +89,54 @@ const UsersTab = () => {
     return matchesName && matchesRole;
   });
 
+  const splitLocation = (value?: string | null) => {
+    if (!value) return { city: "-", state: "-" };
+    const parts = value.split(",").map((part) => part.trim());
+    return {
+      city: parts[0] || "-",
+      state: parts[1] || "-",
+    };
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Query entity by name or digital address..." 
-            value={nameFilter}
-            onChange={(e) => setNameFilter(e.target.value)}
-            className="pl-10 h-11 bg-muted/20 border-border/40 focus:ring-primary/20" 
-          />
-        </div>
-        <Select value={roleFilter} onValueChange={setRoleFilter}>
-          <SelectTrigger className="w-full md:w-[200px] h-11 font-bold text-xs uppercase tracking-widest bg-muted/20 border-border/40">
-            <SelectValue placeholder="Access Tier" />
-          </SelectTrigger>
-          <SelectContent className="border-none shadow-2xl rounded-xl">
-            <SelectItem value="all" className="font-bold text-xs uppercase tracking-widest">Global Scan</SelectItem>
-            <SelectItem value="candidate" className="font-bold text-xs uppercase tracking-widest">Candidates</SelectItem>
-            <SelectItem value="employer" className="font-bold text-xs uppercase tracking-widest">Employers</SelectItem>
-            <SelectItem value="admin" className="font-bold text-xs uppercase tracking-widest">Administrators</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
       <div className="rounded-2xl border border-border/50 overflow-hidden shadow-sm bg-card">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader className="bg-muted/30">
-            <TableRow className="hover:bg-transparent border-border/40">
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] px-6 py-5 text-muted-foreground">Entity Identity</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] py-5 text-muted-foreground">Access Layer</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] py-5 text-muted-foreground">Registration</TableHead>
-              <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.2em] px-6 py-5 text-muted-foreground">Governance</TableHead>
-            </TableRow>
-          </TableHeader>
+              <TableRow className="hover:bg-transparent border-border/40">
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] px-6 py-5 text-muted-foreground">Entity Identity</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] py-5 text-muted-foreground">Access Layer</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] py-5 text-muted-foreground">Registration</TableHead>
+                <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.2em] px-6 py-5 text-muted-foreground">Governance</TableHead>
+              </TableRow>
+              <TableRow className="hover:bg-transparent border-border/40">
+                <TableHead colSpan={4} className="px-6 py-4 bg-card">
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Query entity by name or digital address..."
+                        value={nameFilter}
+                        onChange={(e) => setNameFilter(e.target.value)}
+                        className="pl-10 h-11 bg-muted/20 border-border/40 focus:ring-primary/20"
+                      />
+                    </div>
+                    <Select value={roleFilter} onValueChange={setRoleFilter}>
+                      <SelectTrigger className="w-full md:w-[200px] h-11 font-bold text-xs uppercase tracking-widest bg-muted/20 border-border/40">
+                        <SelectValue placeholder="Access Tier" />
+                      </SelectTrigger>
+                      <SelectContent className="border-none shadow-2xl rounded-xl">
+                        <SelectItem value="all" className="font-bold text-xs uppercase tracking-widest">Global Scan</SelectItem>
+                        <SelectItem value="candidate" className="font-bold text-xs uppercase tracking-widest">Candidates</SelectItem>
+                        <SelectItem value="employer" className="font-bold text-xs uppercase tracking-widest">Employers</SelectItem>
+                        <SelectItem value="admin" className="font-bold text-xs uppercase tracking-widest">Administrators</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
@@ -206,7 +218,7 @@ const UsersTab = () => {
 
                                   <Separator className="bg-border/40" />
 
-                                  {userDetails ? (
+                                   {userDetails ? (
                                      <div className="grid grid-cols-2 gap-10">
                                         <div className="space-y-6">
                                            {selectedUser.role === 'employer' ? (
@@ -219,9 +231,21 @@ const UsersTab = () => {
                                                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">HQ Location</Label>
                                                     <div className="text-sm font-bold flex items-center gap-3 bg-muted/30 p-3 rounded-xl border border-border/40"><MapPin className="h-4 w-4 text-primary" /> {userDetails.location}</div>
                                                  </div>
+                                                 <div className="space-y-2">
+                                                   <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Recruiter Title</Label>
+                                                   <div className="text-sm font-bold bg-muted/30 p-3 rounded-xl border border-border/40">{userDetails.recruiter_job_title || '-'}</div>
+                                                 </div>
+                                                 <div className="space-y-2">
+                                                   <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">LinkedIn</Label>
+                                                   <div className="text-sm font-bold bg-muted/30 p-3 rounded-xl border border-border/40 break-all">{userDetails.linkedin_url || '-'}</div>
+                                                 </div>
                                               </>
                                            ) : (
                                               <>
+                                                 <div className="space-y-2">
+                                                   <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Desired Job Title</Label>
+                                                   <div className="text-sm font-bold bg-muted/30 p-3 rounded-xl border border-border/40">{userDetails.desired_job_title || '-'}</div>
+                                                 </div>
                                                  <div className="space-y-2">
                                                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Biographic Index</Label>
                                                     <div className="text-xs font-medium leading-relaxed italic border-l-4 border-primary/30 pl-4 py-2 bg-primary/5 rounded-r-xl">"{userDetails.bio || 'Detailed biographic index not initialized.'}"</div>
@@ -236,6 +260,16 @@ const UsersTab = () => {
                                            )}
                                         </div>
                                         <div className="space-y-6">
+                                           <div className="space-y-2">
+                                             <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Contact</Label>
+                                             <div className="text-sm font-bold flex items-center gap-3 bg-muted/30 p-3 rounded-xl border border-border/40"><Phone className="h-4 w-4 text-primary" /> {selectedUser.phone || '-'}</div>
+                                           </div>
+                                           <div className="space-y-2">
+                                             <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">City / State</Label>
+                                             <div className="text-sm font-bold bg-muted/30 p-3 rounded-xl border border-border/40">
+                                              {splitLocation(userDetails.location).city} / {splitLocation(userDetails.location).state}
+                                             </div>
+                                           </div>
                                            <div className="space-y-2">
                                               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Registration Date</Label>
                                               <div className="text-sm font-bold flex items-center gap-3 bg-muted/30 p-3 rounded-xl border border-border/40"><Calendar className="h-4 w-4 text-primary" /> {new Date(selectedUser.created_at).toLocaleDateString(undefined, { dateStyle: 'long' })}</div>

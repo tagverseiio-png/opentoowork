@@ -32,6 +32,8 @@ const EmployerAuth = () => {
   const [companyWebsite, setCompanyWebsite] = useState("");
   const [location, setLocation] = useState("");
   const [phone, setPhone] = useState("");
+  const [recruiterJobTitle, setRecruiterJobTitle] = useState("");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState(""); // New state for OTP
@@ -61,6 +63,15 @@ const EmployerAuth = () => {
       return;
     }
 
+    if (!recruiterJobTitle.trim() || !linkedinUrl.trim()) {
+      toast({
+        title: "Required Fields Missing",
+        description: "Job title and LinkedIn URL are mandatory.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -77,11 +88,24 @@ const EmployerAuth = () => {
             company_website: companyWebsite,
             location: location,
             phone: phone,
+            recruiter_job_title: recruiterJobTitle,
+            linkedin_url: linkedinUrl,
           },
         },
       });
 
       if (error) throw error;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        await supabase
+          .from("employer_profiles")
+          .update({
+            recruiter_job_title: recruiterJobTitle,
+            linkedin_url: linkedinUrl,
+          })
+          .eq("user_id", session.user.id);
+      }
 
       toast({ title: "Verification code sent to your email!" });
       setShowOtpInput(true);
@@ -393,6 +417,12 @@ const EmployerAuth = () => {
 
                 <Label>Contact Phone</Label>
                 <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 (555) 000-0000" required />
+
+                <Label>Recruiter Job Title</Label>
+                <Input value={recruiterJobTitle} onChange={(e) => setRecruiterJobTitle(e.target.value)} placeholder="e.g. Senior Recruiter" required />
+
+                <Label>LinkedIn URL</Label>
+                <Input type="url" value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} placeholder="https://linkedin.com/in/..." required />
 
                 <Label>Email</Label>
                 <Input type="email" value={email} required onChange={(e) => setEmail(e.target.value)} />

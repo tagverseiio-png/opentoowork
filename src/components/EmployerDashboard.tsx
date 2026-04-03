@@ -41,7 +41,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "./ui/separator";
-import { sendStatusChangeNotification, sendJobAlertEmail, calculateMatchScore } from "@/lib/email";
+import { sendStatusChangeNotification, sendJobAlertEmail, calculateJobTitleMatchScore } from "@/lib/email";
 import { formatLocation } from "@/lib/utils";
 
 const WORK_AUTH_OPTIONS = [
@@ -131,6 +131,8 @@ const EmployerDashboard = () => {
   const [employerLocationSearch, setEmployerLocationSearch] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editWebsite, setEditWebsite] = useState("");
+  const [editRecruiterJobTitle, setEditRecruiterJobTitle] = useState("");
+  const [editLinkedin, setEditLinkedin] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
@@ -181,6 +183,8 @@ const EmployerDashboard = () => {
       setEditEmployerLocation(data.location || "");
       setEditDescription(data.description || "");
       setEditWebsite(data.company_website || "");
+      setEditRecruiterJobTitle(data.recruiter_job_title || "");
+      setEditLinkedin(data.linkedin_url || "");
       setEditLogoUrl(data.logo_url || "");
     }
   };
@@ -274,6 +278,10 @@ const EmployerDashboard = () => {
 
   const handleUpdateProfile = async () => {
     try {
+      if (!editRecruiterJobTitle.trim() || !editLinkedin.trim()) {
+        throw new Error("Job title and LinkedIn URL are mandatory.");
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
 
@@ -302,6 +310,8 @@ const EmployerDashboard = () => {
           location: editEmployerLocation,
           description: editDescription,
           company_website: editWebsite,
+          recruiter_job_title: editRecruiterJobTitle,
+          linkedin_url: editLinkedin,
           logo_url: finalLogoUrl || editLogoUrl
         })
         .eq("user_id", session.user.id);
@@ -402,8 +412,8 @@ const EmployerDashboard = () => {
     fetchJobs();
 
     // ── Fire match-based email notifications for NEW jobs (not edits) ──
-    if (!editingJobId && jobResult && jobSkills.length > 0) {
-      notifyMatchingCandidates(jobResult, jobSkills);
+    if (!editingJobId && jobResult) {
+      notifyMatchingCandidates(jobResult);
     }
 
     // Reset Form
@@ -415,18 +425,8 @@ const EmployerDashboard = () => {
    * and sends them a job alert email. Fire-and-forget.
    * Only notifies candidates with match score >= 50%.
    */
-  const notifyMatchingCandidates = async (
-    job: any,
-    skills: { name: string; exp: string; isRequired: boolean }[]
-  ) => {
+  const notifyMatchingCandidates = async (job: any) => {
     try {
-      // Build job_skills format for calculateMatchScore
-      const jobSkillsFormatted = skills.map(s => ({
-        skill_name: s.name,
-        years_experience: parseInt(s.exp) || 0,
-        is_required: s.isRequired,
-      }));
-
       // Fetch candidates whose work_authorization overlaps with the job's
       let query = supabase
         .from("candidate_profiles")
@@ -447,7 +447,7 @@ const EmployerDashboard = () => {
         if (!candidate.candidate_skills?.length) continue;
         if (!candidate.profiles?.email) continue;
 
-        const score = calculateMatchScore(candidate.candidate_skills, jobSkillsFormatted);
+        const score = calculateJobTitleMatchScore(candidate.desired_job_title, job.title);
 
         // Only notify candidates with >= 50% match
         if (score >= 50) {
@@ -917,6 +917,16 @@ const EmployerDashboard = () => {
                 <div className="space-y-2">
                   <Label>Website</Label>
                   <Input value={editWebsite} onChange={(e) => setEditWebsite(e.target.value)} placeholder="https://..." />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Recruiter Job Title</Label>
+                    <Input value={editRecruiterJobTitle} onChange={(e) => setEditRecruiterJobTitle(e.target.value)} placeholder="e.g. Senior Recruiter" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>LinkedIn URL</Label>
+                    <Input value={editLinkedin} onChange={(e) => setEditLinkedin(e.target.value)} placeholder="https://linkedin.com/in/..." />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Description</Label>
@@ -1938,7 +1948,7 @@ const EmployerDashboard = () => {
                           {(() => {
                             const activeJobWithSkills = jobs.find(j => j.is_active && j.job_skills?.length > 0);
                             if (!activeJobWithSkills || !talent.candidate_skills?.length) return '— MATCH';
-                            const score = calculateMatchScore(talent.candidate_skills, activeJobWithSkills.job_skills, talent.desired_job_title, activeJobWithSkills.title);
+                            const score = calculateJobTitleMatchScore(talent.desired_job_title, activeJobWithSkills.title);
                             return `${score}% MATCH`;
                           })()}
                         </Badge>
