@@ -1390,26 +1390,26 @@ const EmployerDashboard = () => {
       {/* Applications Dialog */}
       {selectedJob && (
         <Dialog open={!!selectedJob} onOpenChange={() => { setSelectedJob(null); setSelectedApplicationId(null); }}>
-          <DialogContent className="max-w-7xl max-h-[90vh] flex flex-col p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
+          <DialogContent className="w-[96vw] sm:max-w-7xl max-h-[92vh] flex flex-col p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
             <DialogHeader className="sr-only">
               <DialogTitle>Job Applications Pipeline</DialogTitle>
               <DialogDescription>
                 View and manage candidates who applied for this role.
               </DialogDescription>
             </DialogHeader>
-            <DialogHeader className="p-8 border-b bg-muted/10 shrink-0 relative overflow-hidden">
+            <DialogHeader className="p-4 sm:p-8 border-b bg-muted/10 shrink-0 relative overflow-hidden">
               <div className="absolute top-0 right-0 p-8 opacity-5">
                 <Users className="h-32 w-32" />
               </div>
-              <div className="relative z-10 flex items-center justify-between">
+              <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <Badge variant="outline" className="mb-3 text-[9px] font-black uppercase tracking-[0.2em] border-primary/30 text-primary">Workforce Pipeline</Badge>
-                  <DialogTitle className="text-4xl font-black text-foreground tracking-tighter leading-none">
+                  <DialogTitle className="text-2xl sm:text-4xl font-black text-foreground tracking-tighter leading-none">
                     Talent for <span className="text-primary">{selectedJob.title}</span>
                   </DialogTitle>
                 </div>
-                <div className="text-right">
-                  <div className="text-3xl font-black tabular-nums">{applications.length}</div>
+                <div className="text-left sm:text-right">
+                  <div className="text-2xl sm:text-3xl font-black tabular-nums">{applications.length}</div>
                   <div className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Total Applicants</div>
                 </div>
               </div>
@@ -1417,8 +1417,8 @@ const EmployerDashboard = () => {
 
             <div className="flex-1 bg-background min-h-0">
               <Tabs defaultValue="list" className="h-full flex flex-col min-h-0">
-                <div className="px-8 border-b bg-muted/5">
-                  <TabsList className="bg-transparent h-12 gap-6 p-0">
+                <div className="px-4 sm:px-8 border-b bg-muted/5 overflow-x-auto">
+                  <TabsList className="bg-transparent h-12 gap-4 sm:gap-6 p-0 min-w-max">
                     <TabsTrigger value="list" className="h-12 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none font-black uppercase tracking-widest text-[10px]">Applicants Pipeline</TabsTrigger>
                     <TabsTrigger value="referrals" className="h-12 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none font-black uppercase tracking-widest text-[10px] relative">
                       Referrals
@@ -1429,7 +1429,7 @@ const EmployerDashboard = () => {
                 </div>
 
                 <TabsContent value="list" className="flex-1 mt-0 min-h-0">
-                  <div className="flex h-full min-h-0">
+                  <div className="flex h-full min-h-0 flex-col lg:flex-row">
                     {(() => {
                       const filteredApps = applications.filter(app => {
                         if (pipelineView === "active") return app.status !== "rejected";
@@ -1479,7 +1479,7 @@ const EmployerDashboard = () => {
                       return (
                         <>
                           {/* Sidebar: Candidate List */}
-                          <div className="w-[340px] border-r bg-muted/5 flex flex-col shrink-0 overflow-hidden">
+                          <div className="w-full lg:w-[340px] border-b lg:border-b-0 lg:border-r bg-muted/5 flex flex-col shrink-0 overflow-hidden max-h-[45vh] lg:max-h-none">
                             <div className="p-4 border-b flex flex-col gap-3">
                               <div className="flex gap-2">
                                 <Button 
@@ -1551,7 +1551,7 @@ const EmployerDashboard = () => {
                             {selectedApp ? (
                               <>
                                 {/* Floating Navigation Header */}
-                                <div className="h-16 px-8 border-b flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-10 shrink-0">
+                                <div className="h-auto min-h-16 px-4 sm:px-8 py-2 sm:py-0 border-b flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sticky top-0 bg-background/80 backdrop-blur-md z-10 shrink-0">
                                   <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                                     <Users className="h-3.5 w-3.5" /> 
                                     Candidate {selectedAppIndex + 1} of {filteredApps.length}
@@ -1579,7 +1579,7 @@ const EmployerDashboard = () => {
                                 </div>
 
                                 <ScrollArea className="flex-1 min-h-0">
-                                  <div className="p-10 space-y-10">
+                                  <div className="p-4 sm:p-10 space-y-10">
                                     {/* Header Section */}
                                     <div className="flex flex-col md:flex-row gap-8 items-start justify-between">
                                       <div className="flex gap-6">
@@ -1615,7 +1615,7 @@ const EmployerDashboard = () => {
                                       </div>
 
                                       {/* Quick Status Control */}
-                                      <div className="bg-muted/20 p-6 rounded-2xl border flex flex-col gap-3 min-w-[240px]">
+                                      <div className="bg-muted/20 p-6 rounded-2xl border flex flex-col gap-3 w-full md:w-auto md:min-w-[240px]">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select Outcome</label>
                                         <Select
                                           value={selectedApp.status}
@@ -1635,14 +1635,14 @@ const EmployerDashboard = () => {
                                       </div>
                                     </div>
 
-                                    <div className="grid grid-cols-12 gap-10">
+                                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
                                       {/* Evaluation Section */}
-                                      <div className="col-span-8 space-y-10">
+                                      <div className="lg:col-span-8 space-y-10">
                                         <div className="space-y-4">
                                             <h4 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-foreground">
                                                 <BadgeCheck className="h-4 w-4 text-primary" /> Key Qualifications
                                             </h4>
-                                            <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <div className="p-4 bg-muted/10 rounded-xl border border-dashed border-border/60">
                                                     <div className="text-[10px] font-black text-muted-foreground uppercase mb-1">Work Eligibility</div>
                                                     <div className="text-sm font-black uppercase tracking-tight">{selectedApp.candidate?.work_authorization || 'N/A'}</div>
@@ -1682,7 +1682,7 @@ const EmployerDashboard = () => {
                                       </div>
 
                                       {/* Side Tools Section */}
-                                      <div className="col-span-4 space-y-6">
+                                      <div className="lg:col-span-4 space-y-6">
                                         <div className="space-y-4">
                                             <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Resume Handling</h4>
                                             <div className="flex flex-col gap-3">
