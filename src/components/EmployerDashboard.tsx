@@ -1500,7 +1500,7 @@ const EmployerDashboard = () => {
                                 </Button>
                               </div>
                             </div>
-                            <ScrollArea className="flex-1">
+                            <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
                               <div className="p-2 space-y-1">
                                 {filteredApps.map((app) => (
                                   <div
@@ -1543,7 +1543,7 @@ const EmployerDashboard = () => {
                                   </div>
                                 ))}
                               </div>
-                            </ScrollArea>
+                            </div>
                           </div>
 
                           {/* Detail Pane: Unified Review View */}
@@ -1578,7 +1578,7 @@ const EmployerDashboard = () => {
                                   </div>
                                 </div>
 
-                                <ScrollArea className="flex-1 min-h-0">
+                                <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
                                   <div className="p-4 sm:p-10 space-y-10">
                                     {/* Header Section */}
                                     <div className="flex flex-col md:flex-row gap-8 items-start justify-between">
@@ -1745,7 +1745,7 @@ const EmployerDashboard = () => {
                                       </div>
                                     </div>
                                   </div>
-                                </ScrollArea>
+                                </div>
                               </>
                             ) : (
                               <div className="flex-1 flex flex-col items-center justify-center p-24 text-center">
@@ -1774,7 +1774,7 @@ const EmployerDashboard = () => {
                     </div>
                     <p className="text-sm text-muted-foreground mb-6 font-medium">Candidates referred to this role by our network. These individuals have been notified but may not have applied yet.</p>
                     
-                    <ScrollArea className="flex-1 pr-4">
+                    <div className="flex-1 overflow-y-auto pr-4 min-h-0 custom-scrollbar">
                       {referrals.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
                           <Users className="h-12 w-12 mb-4" />
@@ -1828,14 +1828,14 @@ const EmployerDashboard = () => {
                           ))}
                         </div>
                       )}
-                    </ScrollArea>
+                    </div>
                   </div>
                 </TabsContent>
                 <TabsContent value="notes" className="flex-1 overflow-hidden bg-background mt-0 p-8 flex flex-col min-h-0">
                   <div className="h-full flex flex-col min-h-0">
                     <h3 className="text-xl font-black uppercase tracking-tighter mb-4 shrink-0">Internal Recruiter Notes</h3>
-                    <p className="text-sm text-muted-foreground mb-6">Add private notes about candidates for your team. These notes are not visible to applicants.</p>
-                    <ScrollArea className="flex-1 pr-4">
+                    <p className="text-sm text-muted-foreground mb-6 shrink-0">Add private notes about candidates for your team. These notes are not visible to applicants.</p>
+                    <div className="flex-1 overflow-y-auto pr-4 min-h-0 custom-scrollbar">
                       <div className="space-y-6">
                         {applications.map((app) => (
                           <div key={app.id} className="border p-4 rounded-lg bg-muted/5">
@@ -1876,7 +1876,7 @@ const EmployerDashboard = () => {
                           </div>
                         ))}
                       </div>
-                    </ScrollArea>
+                    </div>
                   </div>
                 </TabsContent>
               </Tabs>
