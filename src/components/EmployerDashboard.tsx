@@ -1417,7 +1417,7 @@ const EmployerDashboard = () => {
 
             <div className="flex-1 bg-background min-h-0 flex flex-col overflow-hidden">
               <Tabs defaultValue="list" className="flex-1 flex flex-col min-h-0 overflow-hidden">
-                <div className="px-4 sm:px-8 border-b bg-muted/5 overflow-x-auto shrink-0">
+                <div className="px-4 sm:px-8 border-b bg-muted/5 overflow-x-auto shrink-0 max-w-full">
                   <TabsList className="bg-transparent h-12 gap-4 sm:gap-6 p-0 min-w-max">
                     <TabsTrigger value="list" className="h-12 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none font-black uppercase tracking-widest text-[10px]">Applicants Pipeline</TabsTrigger>
                     <TabsTrigger value="referrals" className="h-12 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none font-black uppercase tracking-widest text-[10px] relative">
@@ -1581,12 +1581,12 @@ const EmployerDashboard = () => {
                                 <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
                                   <div className="p-4 sm:p-10 space-y-10">
                                     {/* Header Section */}
-                                    <div className="flex flex-col md:flex-row gap-8 items-start justify-between">
-                                      <div className="flex gap-4 sm:gap-6 min-w-0 w-full md:w-auto">
+                                    <div className="flex flex-col md:flex-row gap-8 items-start justify-between min-w-0 max-w-full">
+                                      <div className="flex gap-4 sm:gap-6 min-w-0 w-full md:w-auto max-w-full">
                                         <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center font-black text-2xl sm:text-3xl text-primary shrink-0 shadow-sm shadow-primary/10">
                                           {selectedApp.candidate?.profiles?.full_name?.charAt(0)}
                                         </div>
-                                        <div className="min-w-0 flex-1">
+                                        <div className="min-w-0 flex-1 max-w-full">
                                           <h2 className="text-2xl sm:text-3xl font-black tracking-tight uppercase leading-none mb-2 truncate">
                                             {selectedApp.candidate?.profiles?.full_name}
                                           </h2>
@@ -1718,7 +1718,7 @@ const EmployerDashboard = () => {
                                                     Parsed Resume Text
                                                     <Terminal className="h-3 w-3" />
                                                 </h4>
-                                                <div className="max-h-[200px] overflow-hidden text-[10px] font-mono text-zinc-400 leading-relaxed relative z-10">
+                                                <div className="max-h-[200px] overflow-hidden text-[10px] font-mono text-zinc-400 leading-relaxed relative z-10 whitespace-pre-wrap break-words w-full">
                                                     {selectedApp.candidate.resume_text.substring(0, 300)}...
                                                 </div>
                                                 <Dialog>
@@ -1735,7 +1735,7 @@ const EmployerDashboard = () => {
                                                         <div className="p-6 border-b bg-muted/5 flex items-center justify-between">
                                                             <h4 className="font-black text-xl uppercase tracking-tighter">Raw Data Stream</h4>
                                                         </div>
-                                                        <ScrollArea className="h-[70vh] p-8 bg-zinc-950 text-zinc-400 font-mono text-xs leading-relaxed">
+                                                        <ScrollArea className="h-[70vh] p-8 bg-zinc-950 text-zinc-400 font-mono text-xs leading-relaxed whitespace-pre-wrap break-words">
                                                             {selectedApp.candidate.resume_text}
                                                         </ScrollArea>
                                                     </DialogContent>
