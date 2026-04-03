@@ -1415,9 +1415,9 @@ const EmployerDashboard = () => {
               </div>
             </DialogHeader>
 
-            <div className="flex-1 bg-background min-h-0">
-              <Tabs defaultValue="list" className="h-full flex flex-col min-h-0">
-                <div className="px-4 sm:px-8 border-b bg-muted/5 overflow-x-auto">
+            <div className="flex-1 bg-background min-h-0 flex flex-col overflow-hidden">
+              <Tabs defaultValue="list" className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                <div className="px-4 sm:px-8 border-b bg-muted/5 overflow-x-auto shrink-0">
                   <TabsList className="bg-transparent h-12 gap-4 sm:gap-6 p-0 min-w-max">
                     <TabsTrigger value="list" className="h-12 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none font-black uppercase tracking-widest text-[10px]">Applicants Pipeline</TabsTrigger>
                     <TabsTrigger value="referrals" className="h-12 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none font-black uppercase tracking-widest text-[10px] relative">
@@ -1428,8 +1428,8 @@ const EmployerDashboard = () => {
                   </TabsList>
                 </div>
 
-                <TabsContent value="list" className="flex-1 mt-0 min-h-0">
-                  <div className="flex h-full min-h-0 flex-col lg:flex-row">
+                <TabsContent value="list" className="flex-1 mt-0 min-h-0 flex flex-col overflow-hidden">
+                  <div className="flex h-full min-h-0 flex-col lg:flex-row overflow-hidden">
                     {(() => {
                       const filteredApps = applications.filter(app => {
                         if (pipelineView === "active") return app.status !== "rejected";
@@ -1547,7 +1547,7 @@ const EmployerDashboard = () => {
                           </div>
 
                           {/* Detail Pane: Unified Review View */}
-                          <div className="flex-1 flex flex-col bg-background min-w-0 min-h-0">
+                          <div className="flex-1 flex flex-col bg-background min-w-0 min-h-0 overflow-hidden">
                             {selectedApp ? (
                               <>
                                 {/* Floating Navigation Header */}
@@ -1764,9 +1764,9 @@ const EmployerDashboard = () => {
                     })()}
                   </div>
                 </TabsContent>
-                <TabsContent value="referrals" className="flex-1 overflow-hidden bg-background mt-0 p-8">
-                  <div className="h-full flex flex-col">
-                    <div className="flex items-center justify-between mb-2">
+                <TabsContent value="referrals" className="flex-1 overflow-hidden bg-background mt-0 p-8 flex flex-col min-h-0">
+                  <div className="h-full flex flex-col min-h-0">
+                    <div className="flex items-center justify-between mb-2 shrink-0">
                       <h3 className="text-xl font-black uppercase tracking-tighter">Talent Referrals</h3>
                       <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[9px] font-black uppercase tracking-widest">
                         Community Source
@@ -1831,9 +1831,9 @@ const EmployerDashboard = () => {
                     </ScrollArea>
                   </div>
                 </TabsContent>
-                <TabsContent value="notes" className="flex-1 overflow-hidden bg-background mt-0 p-8">
-                  <div className="h-full flex flex-col">
-                    <h3 className="text-xl font-black uppercase tracking-tighter mb-4">Internal Recruiter Notes</h3>
+                <TabsContent value="notes" className="flex-1 overflow-hidden bg-background mt-0 p-8 flex flex-col min-h-0">
+                  <div className="h-full flex flex-col min-h-0">
+                    <h3 className="text-xl font-black uppercase tracking-tighter mb-4 shrink-0">Internal Recruiter Notes</h3>
                     <p className="text-sm text-muted-foreground mb-6">Add private notes about candidates for your team. These notes are not visible to applicants.</p>
                     <ScrollArea className="flex-1 pr-4">
                       <div className="space-y-6">
