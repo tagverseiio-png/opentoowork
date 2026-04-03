@@ -1415,8 +1415,8 @@ const EmployerDashboard = () => {
               </div>
             </DialogHeader>
 
-            <div className="flex-1 overflow-hidden bg-background">
-              <Tabs defaultValue="list" className="h-full flex flex-col">
+            <div className="flex-1 bg-background min-h-0">
+              <Tabs defaultValue="list" className="h-full flex flex-col min-h-0">
                 <div className="px-8 border-b bg-muted/5">
                   <TabsList className="bg-transparent h-12 gap-6 p-0">
                     <TabsTrigger value="list" className="h-12 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none font-black uppercase tracking-widest text-[10px]">Applicants Pipeline</TabsTrigger>
@@ -1428,8 +1428,8 @@ const EmployerDashboard = () => {
                   </TabsList>
                 </div>
 
-                <TabsContent value="list" className="flex-1 overflow-hidden mt-0">
-                  <div className="flex h-full">
+                <TabsContent value="list" className="flex-1 mt-0 min-h-0">
+                  <div className="flex h-full min-h-0">
                     {(() => {
                       const filteredApps = applications.filter(app => {
                         if (pipelineView === "active") return app.status !== "rejected";
@@ -1547,7 +1547,7 @@ const EmployerDashboard = () => {
                           </div>
 
                           {/* Detail Pane: Unified Review View */}
-                          <div className="flex-1 flex flex-col bg-background min-w-0">
+                          <div className="flex-1 flex flex-col bg-background min-w-0 min-h-0">
                             {selectedApp ? (
                               <>
                                 {/* Floating Navigation Header */}
@@ -1578,7 +1578,7 @@ const EmployerDashboard = () => {
                                   </div>
                                 </div>
 
-                                <ScrollArea className="flex-1">
+                                <ScrollArea className="flex-1 min-h-0">
                                   <div className="p-10 space-y-10">
                                     {/* Header Section */}
                                     <div className="flex flex-col md:flex-row gap-8 items-start justify-between">

@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, MapPin, Briefcase } from "lucide-react";
+import { Search, MapPin, ChevronsUpDown, Check } from "lucide-react";
 import heroImage from "@/assets/hero-boardroom.jpg";
 import usaCities from "@/lib/usa_cities_cleaned.json";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 
 const HERO_LOCATIONS = [
   "all",
@@ -32,6 +34,9 @@ const HeroSection = ({
   onSearch,
   heroImage
 }: HeroSectionProps) => {
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [locationSearch, setLocationSearch] = useState("");
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       onSearch();
@@ -74,24 +79,53 @@ const HeroSection = ({
               </div>
               <div className="relative">
                 <label className="block text-sm font-semibold text-foreground mb-2 text-left">Location</label>
-                <Select
-                  value={locationFilter || "all"}
-                  onValueChange={(value) => setLocationFilter(value === "all" ? "" : value)}
-                >
-                  <SelectTrigger className="h-14 border-border/50 focus:border-primary transition-colors text-base">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-5 w-5 text-muted-foreground" />
-                      <SelectValue placeholder="Select location" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {HERO_LOCATIONS.map((location) => (
-                      <SelectItem key={location} value={location}>
-                        {location === "all" ? "Any Location" : location}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={locationOpen} onOpenChange={setLocationOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={locationOpen}
+                      className="h-14 w-full justify-between border-border/50 focus:border-primary transition-colors text-base font-normal"
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <MapPin className="h-5 w-5 text-muted-foreground shrink-0" />
+                        <span className={`truncate ${!locationFilter && "text-muted-foreground"}`}>
+                          {locationFilter || "Any Location"}
+                        </span>
+                      </div>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+                    <Command shouldFilter={false}>
+                      <CommandInput
+                        placeholder="Search locations..."
+                        value={locationSearch}
+                        onValueChange={setLocationSearch}
+                      />
+                      <CommandList className="max-h-60">
+                        <CommandEmpty>No location found.</CommandEmpty>
+                        <CommandGroup>
+                          {HERO_LOCATIONS.filter((location) =>
+                            location.toLowerCase().includes(locationSearch.toLowerCase())
+                          ).map((location) => (
+                            <CommandItem
+                              key={location}
+                              value={location}
+                              onSelect={() => {
+                                setLocationFilter(location === "all" ? "" : location);
+                                setLocationOpen(false);
+                              }}
+                            >
+                              <Check className={`mr-2 h-4 w-4 ${((location === "all" && !locationFilter) || locationFilter === location) ? "opacity-100" : "opacity-0"}`} />
+                              {location === "all" ? "Any Location" : location}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
               <Button 
                 className="h-14 px-10 bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity text-lg font-semibold shadow-lg rounded-xl" 

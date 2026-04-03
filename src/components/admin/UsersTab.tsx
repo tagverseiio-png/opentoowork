@@ -239,6 +239,10 @@ const UsersTab = () => {
                                                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">LinkedIn</Label>
                                                    <div className="text-sm font-bold bg-muted/30 p-3 rounded-xl border border-border/40 break-all">{userDetails.linkedin_url || '-'}</div>
                                                  </div>
+                                                 <div className="space-y-2">
+                                                   <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Visa Type</Label>
+                                                   <div className="text-sm font-bold bg-muted/30 p-3 rounded-xl border border-border/40">{userDetails.work_authorization || userDetails.visa_type || '-'}</div>
+                                                 </div>
                                               </>
                                            ) : (
                                               <>

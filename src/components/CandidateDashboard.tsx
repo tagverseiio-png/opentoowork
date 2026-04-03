@@ -88,6 +88,37 @@ const ALL_LOCATIONS = [
   ...usaCities.map(c => c.state_code ? `${c.city}, ${c.state_code}` : c.city)
 ];
 
+const TITLE_GENERIC_TERMS = new Set([
+  "engineer",
+  "developer",
+  "manager",
+  "analyst",
+  "specialist",
+  "consultant",
+  "associate",
+  "assistant",
+  "coordinator",
+  "officer",
+  "executive",
+]);
+
+const tokenizeTitleKeywords = (value?: string | null): string[] => {
+  if (!value) return [];
+  return value
+    .toLowerCase()
+    .split(/\s+/)
+    .map((token) => token.replace(/[^a-z0-9]/g, ""))
+    .filter((token) => token.length > 1);
+};
+
+const hasSpecificTitleOverlap = (candidateTitle?: string | null, jobTitle?: string | null): boolean => {
+  const candidateTokens = tokenizeTitleKeywords(candidateTitle).filter(
+    (token) => !TITLE_GENERIC_TERMS.has(token),
+  );
+  const jobTokens = new Set(tokenizeTitleKeywords(jobTitle));
+  return candidateTokens.some((token) => jobTokens.has(token));
+};
+
 const CandidateDashboard = () => {
   const { toast } = useToast();
   const [profile, setProfile] = useState<any>(null);
@@ -223,6 +254,10 @@ const CandidateDashboard = () => {
       .maybeSingle();
 
     if (!candidateProfile) return;
+    if (!candidateProfile.desired_job_title) {
+      setRecommendations([]);
+      return;
+    }
 
     let query = supabase
       .from("jobs")
@@ -232,6 +267,10 @@ const CandidateDashboard = () => {
         job_skills(*)
       `)
       .eq("is_active", true);
+
+    if (candidateProfile.work_authorization) {
+      query = query.contains("work_authorization", [candidateProfile.work_authorization]);
+    }
 
     const { data: jobs } = await query
       .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
@@ -243,16 +282,13 @@ const CandidateDashboard = () => {
     const scoredJobs = jobs
       .map(job => ({
         ...job,
-        score: calculateJobTitleMatchScore(candidateProfile.desired_job_title, job.title)
+        score: calculateJobTitleMatchScore(candidateProfile.desired_job_title, job.title),
+        hasSpecificOverlap: hasSpecificTitleOverlap(candidateProfile.desired_job_title, job.title),
       }))
       .sort((a: any, b: any) => b.score - a.score);
-    
-    const highMatches = scoredJobs.filter(j => (j as any).score > 0);
-    if (highMatches.length > 0) {
-      setRecommendations(highMatches.slice(0, 10));
-    } else {
-      setRecommendations(jobs.slice(0, 10).map(j => ({ ...j, score: 0 })));
-    }
+
+    const highMatches = scoredJobs.filter((job: any) => job.score >= 50 && job.hasSpecificOverlap);
+    setRecommendations(highMatches.slice(0, 10));
   };
 
   // Add alert logic hidden
@@ -1217,6 +1253,12 @@ const CandidateDashboard = () => {
                     <div className="grid md:grid-cols-2 gap-6">
                       {recommendations.map(job => (
                         <Card key={job.id} className="p-6 border border-muted-foreground/10 hover:shadow-2xl transition-all group relative overflow-hidden bg-muted/5 rounded-3xl">
+                           <Badge
+                             variant="outline"
+                             className={`absolute top-4 right-4 z-10 text-[9px] font-black uppercase tracking-widest border-transparent ${applications.some((app) => (app.job_id || app.jobs?.id) === job.id) ? "bg-green-500/10 text-green-600" : "bg-muted text-muted-foreground"}`}
+                           >
+                             {applications.some((app) => (app.job_id || app.jobs?.id) === job.id) ? "Applied" : "Not Applied"}
+                           </Badge>
                            <div className="space-y-4">
                               <div>
                                  <h4 className="text-lg font-black uppercase tracking-tighter leading-none group-hover:text-primary transition-colors">{job.title}</h4>
@@ -1225,12 +1267,6 @@ const CandidateDashboard = () => {
                               <div className="flex flex-wrap gap-2">
                                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-background border-primary/20">{formatLocation(job.location)}</Badge>
                                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-primary/10 text-primary border-transparent">{job.job_type}</Badge>
-                                 <Badge
-                                   variant="outline"
-                                   className={`text-[9px] font-black uppercase tracking-widest border-transparent ${applications.some((app) => (app.job_id || app.jobs?.id) === job.id) ? "bg-green-500/10 text-green-600" : "bg-muted text-muted-foreground"}`}
-                                 >
-                                   {applications.some((app) => (app.job_id || app.jobs?.id) === job.id) ? "Applied" : "Not Applied"}
-                                 </Badge>
                                  {job.salary_min && (
                                     <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-green-500/10 text-green-600 border-transparent">
                                       ${job.salary_min.toLocaleString()} - {job.salary_max?.toLocaleString()} <span className="ml-1 opacity-60">{job.salary_period || 'Annually'}</span>
