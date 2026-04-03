@@ -1401,14 +1401,14 @@ const EmployerDashboard = () => {
               <div className="absolute top-0 right-0 p-8 opacity-5">
                 <Users className="h-32 w-32" />
               </div>
-              <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
+              <div className="relative z-10 flex flex-wrap items-start justify-between gap-4 w-full pr-6">
+                <div className="flex-1 min-w-[240px]">
                   <Badge variant="outline" className="mb-3 text-[9px] font-black uppercase tracking-[0.2em] border-primary/30 text-primary">Workforce Pipeline</Badge>
-                  <DialogTitle className="text-2xl sm:text-4xl font-black text-foreground tracking-tighter leading-none">
+                  <DialogTitle className="text-2xl sm:text-4xl font-black text-foreground tracking-tighter leading-tight break-words pr-4">
                     Talent for <span className="text-primary">{selectedJob.title}</span>
                   </DialogTitle>
                 </div>
-                <div className="text-left sm:text-right">
+                <div className="text-left sm:text-right shrink-0 pb-2">
                   <div className="text-2xl sm:text-3xl font-black tabular-nums">{applications.length}</div>
                   <div className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Total Applicants</div>
                 </div>
@@ -1479,7 +1479,7 @@ const EmployerDashboard = () => {
                       return (
                         <>
                           {/* Sidebar: Candidate List */}
-                          <div className="w-full lg:w-[340px] border-b lg:border-b-0 lg:border-r bg-muted/5 flex flex-col shrink-0 overflow-hidden max-h-[45vh] lg:max-h-none">
+                          <div className="w-full lg:w-[340px] border-b lg:border-b-0 lg:border-r bg-muted/5 flex flex-col shrink-0 overflow-hidden max-h-[30vh] lg:max-h-none">
                             <div className="p-4 border-b flex flex-col gap-3">
                               <div className="flex gap-2">
                                 <Button 
@@ -1551,12 +1551,12 @@ const EmployerDashboard = () => {
                             {selectedApp ? (
                               <>
                                 {/* Floating Navigation Header */}
-                                <div className="h-auto min-h-16 px-4 sm:px-8 py-2 sm:py-0 border-b flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sticky top-0 bg-background/80 backdrop-blur-md z-10 shrink-0">
-                                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                    <Users className="h-3.5 w-3.5" /> 
-                                    Candidate {selectedAppIndex + 1} of {filteredApps.length}
+                                <div className="h-auto min-h-14 w-full px-4 sm:px-8 py-3 sm:py-0 border-b flex flex-wrap gap-2 items-center justify-between sticky top-0 bg-background/95 backdrop-blur-md z-20 shrink-0">
+                                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground w-full sm:w-auto">
+                                    <Users className="h-3.5 w-3.5 shrink-0" /> 
+                                    <span className="truncate">Candidate {selectedAppIndex + 1} of {filteredApps.length}</span>
                                   </div>
-                                  <div className="flex gap-2">
+                                  <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-start sm:justify-end pb-1 sm:pb-0">
                                     <Button 
                                       variant="outline" 
                                       size="sm" 
@@ -1582,24 +1582,24 @@ const EmployerDashboard = () => {
                                   <div className="p-4 sm:p-10 space-y-10">
                                     {/* Header Section */}
                                     <div className="flex flex-col md:flex-row gap-8 items-start justify-between">
-                                      <div className="flex gap-6">
-                                        <div className="w-16 h-16 rounded-2xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center font-black text-3xl text-primary shrink-0 shadow-sm shadow-primary/10">
+                                      <div className="flex gap-4 sm:gap-6 min-w-0 w-full md:w-auto">
+                                        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center font-black text-2xl sm:text-3xl text-primary shrink-0 shadow-sm shadow-primary/10">
                                           {selectedApp.candidate?.profiles?.full_name?.charAt(0)}
                                         </div>
-                                        <div>
-                                          <h2 className="text-3xl font-black tracking-tight uppercase leading-none mb-2">
+                                        <div className="min-w-0 flex-1">
+                                          <h2 className="text-2xl sm:text-3xl font-black tracking-tight uppercase leading-none mb-2 truncate">
                                             {selectedApp.candidate?.profiles?.full_name}
                                           </h2>
-                                          <div className="flex flex-wrap items-center gap-3">
-                                            <span className="text-sm font-bold text-muted-foreground flex items-center gap-1.5">
-                                              <Mail className="h-4 w-4" /> {selectedApp.candidate?.profiles?.email}
+                                          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                                            <span className="text-[11px] sm:text-sm font-bold text-muted-foreground flex items-center gap-1.5 truncate min-w-0">
+                                              <Mail className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{selectedApp.candidate?.profiles?.email}</span>
                                             </span>
-                                            <span className="text-muted-foreground/30">•</span>
-                                            <span className="text-sm font-bold text-muted-foreground flex items-center gap-1.5">
-                                              <Calendar className="h-4 w-4" /> Applied {new Date(selectedApp.applied_at).toLocaleDateString(undefined, { dateStyle: 'medium' })}
+                                            <span className="text-muted-foreground/30 hidden sm:inline shrink-0">•</span>
+                                            <span className="text-[11px] sm:text-sm font-bold text-muted-foreground flex items-center gap-1.5 shrink-0">
+                                              <Calendar className="h-3.5 w-3.5 shrink-0" /> Applied {new Date(selectedApp.applied_at).toLocaleDateString(undefined, { dateStyle: 'medium' })}
                                             </span>
                                           </div>
-                                          <div className="flex gap-2 mt-4">
+                                          <div className="flex flex-wrap gap-2 mt-4 pb-1">
                                             {selectedApp.candidate?.linkedin_url && (
                                               <a href={selectedApp.candidate.linkedin_url} target="_blank" rel="noreferrer">
                                                 <Button size="sm" variant="outline" className="h-8 gap-2 text-[10px] font-black uppercase border-blue-200 text-[#0A66C2] bg-[#0A66C2]/5 hover:bg-[#0A66C2]/10">
@@ -1727,7 +1727,7 @@ const EmployerDashboard = () => {
                                                             View Full Extraction
                                                         </Button>
                                                     </DialogTrigger>
-                                                    <DialogContent className="max-w-4xl border-none shadow-2xl rounded-2xl p-0 overflow-hidden">
+                                                    <DialogContent className="w-[96vw] max-w-4xl border-none shadow-2xl rounded-2xl p-0 overflow-hidden">
                                                         <DialogHeader className="sr-only">
                                                             <DialogTitle>Parsed Resume Text</DialogTitle>
                                                             <DialogDescription>Full text extraction from the candidate's uploaded resume for review.</DialogDescription>
