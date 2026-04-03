@@ -1390,7 +1390,7 @@ const EmployerDashboard = () => {
       {/* Applications Dialog */}
       {selectedJob && (
         <Dialog open={!!selectedJob} onOpenChange={() => { setSelectedJob(null); setSelectedApplicationId(null); }}>
-          <DialogContent className="w-[96vw] sm:max-w-7xl max-h-[92vh] flex flex-col p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
+          <DialogContent className="w-[96vw] lg:max-w-7xl h-[90dvh] lg:h-auto lg:max-h-[92vh] flex flex-col p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
             <DialogHeader className="sr-only">
               <DialogTitle>Job Applications Pipeline</DialogTitle>
               <DialogDescription>
