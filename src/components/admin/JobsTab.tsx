@@ -66,7 +66,7 @@ const JobsTab = () => {
     <div className="space-y-6">
       <div className="rounded-2xl border border-border/50 overflow-hidden shadow-sm bg-card">
         <div className="overflow-x-auto">
-          <Table>
+          <Table className="min-w-[1000px]">
             <TableHeader className="bg-muted/30">
               <TableRow className="hover:bg-transparent border-border/40">
                 <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] px-6 py-5 text-muted-foreground">Listing Identity</TableHead>

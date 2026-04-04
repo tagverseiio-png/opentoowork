@@ -41,7 +41,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "./ui/separator";
-import { sendStatusChangeNotification, sendJobAlertEmail, calculateJobTitleMatchScore } from "@/lib/email";
+import { sendStatusChangeNotification, sendJobAlertEmail, calculateJobTitleMatchScore, calculateMatchScore } from "@/lib/email";
 import { formatLocation } from "@/lib/utils";
 
 const WORK_AUTH_OPTIONS = [
@@ -653,7 +653,8 @@ const EmployerDashboard = () => {
       let candidateIdsFilter: string[] | null = null;
       
       if (talentSearch.trim()) {
-        const term = `%${talentSearch.trim()}%`;
+        const exactTerm = talentSearch.trim();
+        const term = `%${exactTerm}%`;
         
         // 1. Search in profiles for full_name
         const { data: matchedProfiles } = await supabase
@@ -662,15 +663,23 @@ const EmployerDashboard = () => {
           .eq("role", "candidate")
           .ilike("full_name", term);
           
-        // 2. Search in candidate_skills for skill_name
+        // 2. Search in candidate_skills for exact skill_name case-insensitively
+        // This prevents searching "java" from mistakenly returning candidates who only have "javascript"
         const { data: matchedSkills } = await supabase
           .from("candidate_skills")
           .select("candidate_id")
-          .ilike("skill_name", term);
+          .ilike("skill_name", exactTerm);
+
+        // 3. Search in candidate_profiles for desired_job_title
+        const { data: matchedTitles } = await supabase
+          .from("candidate_profiles")
+          .select("id")
+          .ilike("desired_job_title", term);
 
         const ids = new Set([
           ...(matchedProfiles?.map(p => p.id) || []),
-          ...(matchedSkills?.map(s => s.candidate_id) || [])
+          ...(matchedSkills?.map(s => s.candidate_id) || []),
+          ...(matchedTitles?.map(t => t.id) || [])
         ]);
         
         // If search returned nothing, exit early with empty pool
@@ -709,7 +718,18 @@ const EmployerDashboard = () => {
       }
 
       const { data } = await query.limit(50);
-      setTalentPool(data || []);
+      
+      let finalData = data || [];
+      if (talentSearch.trim() && finalData.length > 0) {
+        const searchLower = talentSearch.trim().toLowerCase();
+        finalData.sort((a, b) => {
+          const aTitleMatch = a.desired_job_title?.toLowerCase().includes(searchLower) ? 1 : 0;
+          const bTitleMatch = b.desired_job_title?.toLowerCase().includes(searchLower) ? 1 : 0;
+          return bTitleMatch - aTitleMatch;
+        });
+      }
+
+      setTalentPool(finalData);
     } catch (e) {
       console.error(e);
       setTalentPool([]);
@@ -920,7 +940,7 @@ const EmployerDashboard = () => {
                   <Label>Website</Label>
                   <Input value={editWebsite} onChange={(e) => setEditWebsite(e.target.value)} placeholder="https://..." />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Recruiter Job Title</Label>
                     <Input value={editRecruiterJobTitle} onChange={(e) => setEditRecruiterJobTitle(e.target.value)} placeholder="e.g. Senior Recruiter" />
@@ -958,7 +978,7 @@ const EmployerDashboard = () => {
 
               <div className="flex-1 overflow-y-auto px-6 custom-scrollbar min-h-0">
                 <form id="job-form" onSubmit={handlePostJob} className="space-y-8 py-8">
-                  <div className="grid md:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                     <div className="space-y-2">
                       <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Internal Job ID</Label>
                       <Input
@@ -975,7 +995,7 @@ const EmployerDashboard = () => {
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <div className="space-y-2">
                       <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Location *</Label>
                       <div className="flex gap-3">
@@ -1085,7 +1105,7 @@ const EmployerDashboard = () => {
 
 
 
-                  <div className="grid md:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
                     <div className="p-5 border rounded-xl bg-gradient-to-br from-primary/5 to-transparent border-primary/10 space-y-6">
                       <Label className="flex items-center gap-2 text-primary font-black uppercase text-[10px] tracking-[0.2em]"><Target className="h-4 w-4" /> Expertise Requirements</Label>
 
@@ -1212,7 +1232,7 @@ const EmployerDashboard = () => {
 
           <div className="lg:col-span-12 space-y-8">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-black flex items-center gap-3 uppercase tracking-tighter">
+              <h2 className="text-xl sm:text-2xl font-black flex items-center gap-3 uppercase tracking-tighter">
                 <Briefcase className="h-7 w-7 text-primary" />
                 Listings Management
                 <Badge className="ml-2 bg-primary/10 text-primary border-transparent h-6 tabular-nums">{jobs.length}</Badge>
@@ -1257,7 +1277,7 @@ const EmployerDashboard = () => {
                                   {job.is_active ? 'Active' : 'Draft/Closed'}
                                 </Badge>
                               </div>
-                              <h3 className="text-2xl font-black text-foreground group-hover:text-primary transition-colors leading-tight tracking-tighter">
+                              <h3 className="text-xl sm:text-2xl font-black text-foreground group-hover:text-primary transition-colors leading-tight tracking-tighter">
                                 {job.title}
                               </h3>
                             </div>
@@ -1392,7 +1412,7 @@ const EmployerDashboard = () => {
       {/* Applications Dialog */}
       {selectedJob && (
         <Dialog open={!!selectedJob} onOpenChange={() => { setSelectedJob(null); setSelectedApplicationId(null); setShowMobileList(true); }}>
-          <DialogContent className="w-[96vw] lg:max-w-7xl h-[90dvh] lg:h-auto lg:max-h-[92vh] flex flex-col p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
+          <DialogContent className="w-[96vw] lg:max-w-7xl h-[85dvh] lg:h-auto max-h-[90vh] lg:max-h-[92vh] flex flex-col p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
             <DialogHeader className="sr-only">
               <DialogTitle>Job Applications Pipeline</DialogTitle>
               <DialogDescription>
@@ -1430,7 +1450,7 @@ const EmployerDashboard = () => {
                   </TabsList>
                 </div>
 
-                <TabsContent value="list" className="flex-1 mt-0 min-h-0 flex flex-col overflow-hidden">
+                <TabsContent value="list" className="flex-1 mt-0 min-h-0 data-[state=active]:flex data-[state=inactive]:hidden flex-col overflow-hidden">
                   <div className="flex h-full min-h-0 flex-col lg:flex-row overflow-hidden">
                     {(() => {
                       const filteredApps = applications.filter(app => {
@@ -1778,7 +1798,7 @@ const EmployerDashboard = () => {
                     })()}
                   </div>
                 </TabsContent>
-                <TabsContent value="referrals" className="flex-1 overflow-hidden bg-background mt-0 p-8 flex flex-col min-h-0">
+                <TabsContent value="referrals" className="flex-1 overflow-hidden bg-background mt-0 p-8 data-[state=active]:flex data-[state=inactive]:hidden flex-col min-h-0">
                   <div className="h-full flex flex-col min-h-0">
                     <div className="flex items-center justify-between mb-2 shrink-0">
                       <h3 className="text-xl font-black uppercase tracking-tighter">Talent Referrals</h3>
@@ -1845,7 +1865,7 @@ const EmployerDashboard = () => {
                     </div>
                   </div>
                 </TabsContent>
-                <TabsContent value="notes" className="flex-1 overflow-hidden bg-background mt-0 p-8 flex flex-col min-h-0">
+                <TabsContent value="notes" className="flex-1 overflow-hidden bg-background mt-0 p-8 data-[state=active]:flex data-[state=inactive]:hidden flex-col min-h-0">
                   <div className="h-full flex flex-col min-h-0">
                     <h3 className="text-xl font-black uppercase tracking-tighter mb-4 shrink-0">Internal Recruiter Notes</h3>
                     <p className="text-sm text-muted-foreground mb-6 shrink-0">Add private notes about candidates for your team. These notes are not visible to applicants.</p>
@@ -1902,7 +1922,7 @@ const EmployerDashboard = () => {
       {activeTab === "talent" && (
         <div className="mt-8 space-y-6 animate-in fade-in duration-500">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-black uppercase tracking-tighter flex items-center gap-3">
+            <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tighter flex items-center gap-3">
               <Users className="h-7 w-7 text-primary" /> Verified Talent Pool
             </h2>
           </div>
@@ -1960,10 +1980,19 @@ const EmployerDashboard = () => {
                         <h3 className="font-black text-lg leading-tight uppercase tracking-tighter">{talent.profiles?.full_name}</h3>
                         <Badge className="bg-primary/10 text-primary border-transparent tabular-nums text-[10px] font-black w-fit">
                           {(() => {
-                            const activeJobWithSkills = jobs.find(j => j.is_active && j.job_skills?.length > 0);
-                            if (!activeJobWithSkills || !talent.candidate_skills?.length) return '— MATCH';
-                            const score = calculateJobTitleMatchScore(talent.desired_job_title, activeJobWithSkills.title);
-                            return `${score}% MATCH`;
+                            const activeJobsWithSkills = jobs.filter(j => j.is_active && j.job_skills?.length > 0);
+                            if (activeJobsWithSkills.length === 0 || !talent.candidate_skills?.length) return '— MATCH';
+                            
+                            const maxScore = Math.max(...activeJobsWithSkills.map(job => 
+                              calculateMatchScore(
+                                talent.candidate_skills, 
+                                job.job_skills, 
+                                talent.desired_job_title, 
+                                job.title
+                              )
+                            ));
+                            
+                            return maxScore > 0 ? `${Math.round(maxScore)}% MATCH` : '0% MATCH';
                           })()}
                         </Badge>
                       </div>

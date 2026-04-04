@@ -21,6 +21,39 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Filter } from "lucide-react";
+
+const FilterHeader = ({ label, filterValue, setFilterValue }: { label: string, filterValue: string, setFilterValue: (val: string) => void }) => (
+  <div className="flex items-center gap-2">
+    <span>{label}</span>
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" className={`h-6 w-6 rounded-md ${filterValue ? 'text-primary bg-primary/10' : 'text-muted-foreground/50 hover:text-muted-foreground'}`}>
+          <Filter className="h-3 w-3" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-3 shadow-xl rounded-xl z-50" align="start">
+        <div className="space-y-3">
+          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Filter by {label}</Label>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
+            <Input
+              autoFocus
+              className="pl-8 h-8 text-xs bg-muted/20 border-border/40 focus:ring-primary/20"
+              placeholder={`Search ${label.toLowerCase()}...`}
+              value={filterValue}
+              onChange={(e) => setFilterValue(e.target.value)}
+            />
+          </div>
+          {filterValue && (
+             <Button variant="ghost" size="sm" onClick={() => setFilterValue('')} className="h-7 w-full text-[10px] uppercase font-bold tracking-wider text-muted-foreground hover:text-foreground">Clear Filter</Button>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  </div>
+);
 
 const UsersTab = () => {
   const { toast } = useToast();
@@ -28,9 +61,12 @@ const UsersTab = () => {
   const [loading, setLoading] = useState(true);
   const [nameFilter, setNameFilter] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [userDetails, setUserDetails] = useState<any>(null);
-  const [detailsLoading, setDetailsLoading] = useState(false);
+
+  // Sheet-style column filters
+  const [filterTitle, setFilterTitle] = useState("");
+  const [filterContact, setFilterContact] = useState("");
+  const [filterLocation, setFilterLocation] = useState("");
+  const [filterVisa, setFilterVisa] = useState("");
 
   useEffect(() => {
     fetchUsers();
@@ -38,35 +74,30 @@ const UsersTab = () => {
 
   const fetchUsers = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .order("created_at", { ascending: false });
+    try {
+      const [profilesRes, candidatesRes, employersRes] = await Promise.all([
+        supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+        supabase.from("candidate_profiles").select("*"),
+        supabase.from("employer_profiles").select("*")
+      ]);
 
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      setUsers(data || []);
+      if (profilesRes.error) throw profilesRes.error;
+      
+      const candidatesMap = (candidatesRes.data || []).reduce((acc: any, c: any) => ({ ...acc, [c.user_id]: c }), {});
+      const employersMap = (employersRes.data || []).reduce((acc: any, e: any) => ({ ...acc, [e.user_id]: e }), {});
+
+      const merged = (profilesRes.data || []).map((p: any) => {
+        let details = {};
+        if (p.role === 'candidate') details = candidatesMap[p.id] || {};
+        if (p.role === 'employer') details = employersMap[p.id] || {};
+        return { ...p, details };
+      });
+      
+      setUsers(merged);
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to fetch users", variant: "destructive" });
     }
     setLoading(false);
-  };
-
-  const fetchUserDetails = async (user: any) => {
-    setSelectedUser(user);
-    setDetailsLoading(true);
-    
-    let table = user.role === 'employer' ? 'employer_profiles' : 'candidate_profiles';
-    const { data, error } = await supabase
-      .from(table)
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    
-    if (error) {
-      console.error("Error fetching details:", error);
-    }
-    setUserDetails(data);
-    setDetailsLoading(false);
   };
 
   const handleDeleteUser = async (userId: string) => {
@@ -82,36 +113,64 @@ const UsersTab = () => {
     }
   };
 
-  const filteredUsers = users.filter((user) => {
-    const matchesName = (user.full_name?.toLowerCase().includes(nameFilter.toLowerCase()) || 
-                        user.email?.toLowerCase().includes(nameFilter.toLowerCase()));
-    const matchesRole = roleFilter === "all" || user.role === roleFilter;
-    return matchesName && matchesRole;
-  });
-
   const splitLocation = (value?: string | null) => {
     if (!value) return { city: "-", state: "-" };
     const parts = value.split(",").map((part) => part.trim());
     return {
       city: parts[0] || "-",
-      state: parts[1] || "-",
+      state: parts.length > 1 ? parts[1] : "-",
     };
   };
+
+  const filteredUsers = users.filter((user) => {
+    const matchesName = (user.full_name?.toLowerCase().includes(nameFilter.toLowerCase()) || 
+                        user.email?.toLowerCase().includes(nameFilter.toLowerCase()));
+    const matchesRole = roleFilter === "all" || user.role === roleFilter;
+
+    // Advanced column filters
+    const userLocationParts = splitLocation(user.details?.location);
+    const userLocationStr = `${userLocationParts.city}, ${userLocationParts.state}`.toLowerCase();
+    
+    // Title/Role extraction mapping what is displayed
+    const userTitle = (user.role === 'candidate' ? user.details?.desired_job_title : (user.details?.job_title || user.details?.recruiter_job_title)) || '';
+    const userVisa = user.details?.work_authorization || user.details?.visa_type || '';
+    const userContactInfo = user.details?.phone || user.phone || '';
+
+    const matchesTitle = userTitle.toLowerCase().includes(filterTitle.toLowerCase());
+    const matchesContact = userContactInfo.toLowerCase().includes(filterContact.toLowerCase());
+    const matchesLoc = userLocationStr.includes(filterLocation.toLowerCase());
+    const matchesVisa = userVisa.toLowerCase().includes(filterVisa.toLowerCase());
+
+    return matchesName && matchesRole && matchesTitle && matchesContact && matchesLoc && matchesVisa;
+  });
+
 
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-border/50 overflow-hidden shadow-sm bg-card">
         <div className="overflow-x-auto">
-          <Table>
+          <Table className="min-w-[1000px]">
             <TableHeader className="bg-muted/30">
               <TableRow className="hover:bg-transparent border-border/40">
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] px-6 py-5 text-muted-foreground">Entity Identity</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] py-5 text-muted-foreground">Access Layer</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] py-5 text-muted-foreground">Registration</TableHead>
-                <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.2em] px-6 py-5 text-muted-foreground">Governance</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] px-6 py-5 text-muted-foreground whitespace-nowrap">Entity Identity</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] py-5 text-muted-foreground whitespace-nowrap">
+                   <FilterHeader label="Title / Role" filterValue={filterTitle} setFilterValue={setFilterTitle} />
+                </TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] py-5 text-muted-foreground whitespace-nowrap">
+                   <FilterHeader label="Contact Info" filterValue={filterContact} setFilterValue={setFilterContact} />
+                </TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] py-5 text-muted-foreground whitespace-nowrap">
+                   <FilterHeader label="Location" filterValue={filterLocation} setFilterValue={setFilterLocation} />
+                </TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] py-5 text-muted-foreground whitespace-nowrap">
+                   <FilterHeader label="Visa Type" filterValue={filterVisa} setFilterValue={setFilterVisa} />
+                </TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] py-5 text-muted-foreground whitespace-nowrap">Links</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] py-5 text-muted-foreground whitespace-nowrap">Access Layer</TableHead>
+                <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.2em] px-6 py-5 text-muted-foreground whitespace-nowrap">Governance</TableHead>
               </TableRow>
               <TableRow className="hover:bg-transparent border-border/40">
-                <TableHead colSpan={4} className="px-6 py-4 bg-card">
+                <TableHead colSpan={8} className="px-6 py-4 bg-card">
                   <div className="flex flex-col md:flex-row gap-4">
                     <div className="relative flex-1">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -140,7 +199,7 @@ const UsersTab = () => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-24">
+                <TableCell colSpan={8} className="text-center py-24">
                   <div className="flex flex-col items-center gap-3">
                     <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
                     <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Synchronizing Registry...</span>
@@ -149,7 +208,7 @@ const UsersTab = () => {
               </TableRow>
             ) : filteredUsers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-24 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-24 text-muted-foreground">
                   <div className="flex flex-col items-center gap-2">
                     <Search className="h-8 w-8 opacity-20" />
                     <span className="text-sm font-bold opacity-40">No entities found in this sector.</span>
@@ -157,181 +216,99 @@ const UsersTab = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredUsers.map((user) => (
+              filteredUsers.map((user) => {
+                const { city, state } = splitLocation(user.details?.location);
+                return (
                 <TableRow key={user.id} className="group border-border/40 hover:bg-muted/10 transition-colors">
-                  <TableCell className="px-6 py-5">
+                  <TableCell className="px-6 py-4 max-w-[200px]">
                      <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-center font-black text-primary text-xs tracking-tighter shrink-0 shadow-sm group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
-                           {user.full_name?.substring(0, 2).toUpperCase()}
+                           {user.full_name?.substring(0, 2).toUpperCase() || '-'}
                         </div>
                         <div className="flex flex-col min-w-0">
-                           <span className="font-black text-sm tracking-tight truncate uppercase">{user.full_name}</span>
-                           <span className="text-[11px] text-muted-foreground font-medium truncate">{user.email}</span>
+                           <span className="font-black text-sm tracking-tight truncate uppercase">{user.full_name || '-'}</span>
+                           <span className="text-[11px] text-muted-foreground font-medium truncate">{user.email || '-'}</span>
                         </div>
                      </div>
                   </TableCell>
-                  <TableCell className="py-5">
+                  
+                  <TableCell className="py-4 whitespace-nowrap">
+                    <span className="text-xs font-medium text-foreground">
+                      {user.role === 'candidate' ? user.details?.desired_job_title || '-' : 
+                       user.role === 'employer' ? user.details?.job_title || user.details?.recruiter_job_title || '-' : '-'}
+                    </span>
+                  </TableCell>
+                  
+                  <TableCell className="py-4 whitespace-nowrap">
+                     <div className="flex flex-col">
+                       <span className="text-[11px] text-muted-foreground truncate">{user.details?.phone || user.phone || '-'}</span>
+                     </div>
+                  </TableCell>
+
+                  <TableCell className="py-4 whitespace-nowrap">
+                     {(city !== '-' || state !== '-') ? (
+                       <span className="text-xs font-medium truncate">{city}, {state}</span>
+                     ) : (
+                       <span className="text-xs text-muted-foreground">-</span>
+                     )}
+                  </TableCell>
+
+                  <TableCell className="py-4 whitespace-nowrap truncate max-w-[150px]">
+                    {user.details?.work_authorization || user.details?.visa_type ? (
+                        <span className="text-[11px] font-bold px-1.5 py-0.5 rounded bg-muted/30 text-muted-foreground">
+                        {user.details.work_authorization || user.details?.visa_type}
+                        </span>
+                    ) : (
+                        <span className="text-[11px] text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
+                  
+                  <TableCell className="py-4 whitespace-nowrap">
+                    <div className="flex gap-2">
+                       {user.details?.linkedin_url ? (
+                         <a href={user.details.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 transition-colors">
+                           <ExternalLink className="h-4 w-4" />
+                         </a>
+                       ) : (
+                         <span className="text-xs text-muted-foreground">-</span>
+                       )}
+                    </div>
+                  </TableCell>
+                  
+                  <TableCell className="py-4 whitespace-nowrap">
                      <Badge variant={user.role === 'admin' ? 'destructive' : 'secondary'} className="text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 border-transparent shadow-sm">
                         {user.role}
                      </Badge>
                   </TableCell>
-                  <TableCell className="py-5 font-bold text-[11px] text-muted-foreground tabular-nums tracking-tight">
-                     {new Date(user.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
-                  </TableCell>
-                  <TableCell className="text-right px-6 py-5 text-muted-foreground tabular-nums">
+
+                  <TableCell className="text-right px-6 py-4 text-muted-foreground tabular-nums whitespace-nowrap">
                     <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <Dialog>
-                         <DialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-9 w-9 text-primary hover:bg-primary/10 rounded-xl" onClick={() => fetchUserDetails(user)}>
-                               <ExternalLink className="h-4 w-4" />
-                            </Button>
-                         </DialogTrigger>
-                         <DialogContent className="max-w-xl p-0 overflow-hidden border-none shadow-2xl rounded-3xl bg-card animate-in zoom-in-95 duration-300">
-                            <DialogHeader className="p-8 pb-4 bg-primary/5 border-b border-primary/10">
-                               <DialogTitle className="flex items-center gap-3 text-2xl font-black uppercase tracking-tighter">
-                                  <User className="h-6 w-6 text-primary outline outline-4 outline-primary/10 rounded-full" />
-                                  Profile Insight
-                               </DialogTitle>
-                               <DialogDescription className="sr-only">
-                                 View detailed information about this user including their role, contact details, and professional profile.
-                               </DialogDescription>
-                            </DialogHeader>
-                            {detailsLoading ? (
-                               <div className="p-20 text-center flex flex-col items-center gap-4">
-                                  <Loader2 className="h-10 w-10 animate-spin text-primary/40" />
-                                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Accessing Extended Records...</span>
-                               </div>
-                            ) : selectedUser && (
-                               <div className="p-8 space-y-8">
-                                  <div className="flex justify-between items-start">
-                                     <div className="space-y-2">
-                                        <h3 className="text-3xl font-black uppercase tracking-tighter leading-none">{selectedUser.full_name}</h3>
-                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.1em]">
-                                           <div className="flex items-center gap-1.5"><Mail className="h-3 w-3" /> {selectedUser.email}</div>
-                                           {selectedUser.phone && <><Separator orientation="vertical" className="h-3 bg-border/40" /><div className="flex items-center gap-1.5"><Phone className="h-3 w-3" /> {selectedUser.phone}</div></>}
-                                        </div>
-                                     </div>
-                                     <Badge variant={selectedUser.role === 'admin' ? 'destructive' : 'default'} className="uppercase tracking-widest text-[9px] font-black px-4 py-1.5 shadow-lg shadow-primary/20">
-                                        {selectedUser.role}
-                                     </Badge>
-                                  </div>
-
-                                  <Separator className="bg-border/40" />
-
-                                   {userDetails ? (
-                                     <div className="grid grid-cols-2 gap-10">
-                                        <div className="space-y-6">
-                                           {selectedUser.role === 'employer' ? (
-                                              <>
-                                                 <div className="space-y-2">
-                                                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Corporation</Label>
-                                                    <div className="text-sm font-black flex items-center gap-3 bg-muted/30 p-3 rounded-xl border border-border/40"><Briefcase className="h-4 w-4 text-primary" /> {userDetails.company_name}</div>
-                                                 </div>
-                                                 <div className="space-y-2">
-                                                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">HQ Location</Label>
-                                                    <div className="text-sm font-bold flex items-center gap-3 bg-muted/30 p-3 rounded-xl border border-border/40"><MapPin className="h-4 w-4 text-primary" /> {userDetails.location}</div>
-                                                 </div>
-                                                 <div className="space-y-2">
-                                                   <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Recruiter Title</Label>
-                                                   <div className="text-sm font-bold bg-muted/30 p-3 rounded-xl border border-border/40">{userDetails.recruiter_job_title || '-'}</div>
-                                                 </div>
-                                                 <div className="space-y-2">
-                                                   <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">LinkedIn</Label>
-                                                   <div className="text-sm font-bold bg-muted/30 p-3 rounded-xl border border-border/40 break-all">{userDetails.linkedin_url || '-'}</div>
-                                                 </div>
-                                                 <div className="space-y-2">
-                                                   <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Visa Type</Label>
-                                                   <div className="text-sm font-bold bg-muted/30 p-3 rounded-xl border border-border/40">{userDetails.work_authorization || userDetails.visa_type || '-'}</div>
-                                                 </div>
-                                              </>
-                                           ) : (
-                                              <>
-                                                 <div className="space-y-2">
-                                                   <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Desired Job Title</Label>
-                                                   <div className="text-sm font-bold bg-muted/30 p-3 rounded-xl border border-border/40">{userDetails.desired_job_title || '-'}</div>
-                                                 </div>
-                                                 <div className="space-y-2">
-                                                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Biographic Index</Label>
-                                                    <div className="text-xs font-medium leading-relaxed italic border-l-4 border-primary/30 pl-4 py-2 bg-primary/5 rounded-r-xl">"{userDetails.bio || 'Detailed biographic index not initialized.'}"</div>
-                                                 </div>
-                                                 <div className="space-y-2">
-                                                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Work Authorization</Label>
-                                                    <div className="text-xs font-black uppercase bg-blue-600/5 text-blue-600 px-3 py-1.5 rounded-lg w-fit border border-blue-200/50 flex items-center gap-2 shadow-sm">
-                                                       <Shield className="h-3.5 w-3.5" /> {userDetails.work_authorization}
-                                                    </div>
-                                                 </div>
-                                              </>
-                                           )}
-                                        </div>
-                                        <div className="space-y-6">
-                                           <div className="space-y-2">
-                                             <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Contact</Label>
-                                             <div className="text-sm font-bold flex items-center gap-3 bg-muted/30 p-3 rounded-xl border border-border/40"><Phone className="h-4 w-4 text-primary" /> {selectedUser.phone || '-'}</div>
-                                           </div>
-                                           <div className="space-y-2">
-                                             <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">City / State</Label>
-                                             <div className="text-sm font-bold bg-muted/30 p-3 rounded-xl border border-border/40">
-                                              {splitLocation(userDetails.location).city} / {splitLocation(userDetails.location).state}
-                                             </div>
-                                           </div>
-                                           <div className="space-y-2">
-                                              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Registration Date</Label>
-                                              <div className="text-sm font-bold flex items-center gap-3 bg-muted/30 p-3 rounded-xl border border-border/40"><Calendar className="h-4 w-4 text-primary" /> {new Date(selectedUser.created_at).toLocaleDateString(undefined, { dateStyle: 'long' })}</div>
-                                           </div>
-                                           {selectedUser.role === 'candidate' && (
-                                              <div className="space-y-3">
-                                                 <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Asset Repository</Label>
-                                                 <div className="flex flex-col gap-2">
-                                                    {userDetails.resume_url ? (
-                                                       <Button variant="default" size="sm" className="h-10 text-[10px] font-black uppercase tracking-widest gap-3 w-full shadow-lg shadow-primary/20" onClick={() => window.open(userDetails.resume_url, '_blank')}>
-                                                          <FileText className="h-4 w-4" /> Inspect Core Assets
-                                                       </Button>
-                                                    ) : <div className="text-[10px] font-black uppercase tracking-tighter text-muted-foreground/40 bg-muted/20 p-3 rounded-xl border border-dashed text-center">No Assets Deployed</div>}
-                                                    {userDetails.linkedin_url && (
-                                                      <Button variant="outline" size="sm" className="h-10 text-[10px] font-black uppercase tracking-widest gap-3 w-full border-muted-foreground/20" onClick={() => window.open(userDetails.linkedin_url, '_blank')}>
-                                                         External Connection
-                                                      </Button>
-                                                    )}
-                                                 </div>
-                                              </div>
-                                           )}
-                                        </div>
-                                     </div>
-                                  ) : (
-                                     <div className="py-16 text-center bg-muted/20 rounded-3xl border border-dashed border-muted text-muted-foreground/40 text-sm font-black uppercase tracking-widest">
-                                        Incomplete profile record detected
-                                     </div>
-                                  )}
-                               </div>
-                            )}
-                         </DialogContent>
-                      </Dialog>
-
                       <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-destructive/10 rounded-xl">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="rounded-[2.5rem] border-none shadow-2xl p-10 animate-in fade-in-0 slide-in-from-bottom-5 duration-500">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle className="text-3xl font-black uppercase tracking-tighter text-destructive">Decommission Entity?</AlertDialogTitle>
-                            <AlertDialogDescription className="text-base font-semibold text-muted-foreground/80 leading-relaxed pt-2">
-                              This protocol is strictly irreversible. All security credentials, profile metadata, and associated data streams will be permanently purged from the registry.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter className="mt-10 gap-4">
-                            <AlertDialogCancel className="rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] border-muted-foreground/20 px-8 h-12">Abort Deletion</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteUser(user.id)} className="rounded-2xl bg-destructive hover:bg-destructive/90 font-black uppercase tracking-[0.2em] text-[10px] px-10 h-12 shadow-2xl shadow-destructive/40">
-                              Purge Registry
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
+                         <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-destructive/10 hover:text-destructive rounded-xl">
+                               <Trash2 className="h-4 w-4" />
+                            </Button>
+                         </AlertDialogTrigger>
+                         <AlertDialogContent className="border-destructive/20 bg-destructive/5 sm:rounded-3xl">
+                            <AlertDialogHeader>
+                               <AlertDialogTitle className="text-2xl font-black uppercase tracking-tighter text-destructive">Eradicate Entity?</AlertDialogTitle>
+                               <AlertDialogDescription className="text-sm font-medium text-destructive/80">
+                                  This command is irreversible. All data, clearance levels, and operational history will be purged from the central database.
+                               </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                               <AlertDialogCancel className="rounded-xl font-bold uppercase tracking-widest text-xs h-12">Halt</AlertDialogCancel>
+                               <AlertDialogAction onClick={() => handleDeleteUser(user.id)} className="rounded-xl font-bold uppercase tracking-widest text-xs h-12 bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+                                  Execute Purge
+                               </AlertDialogAction>
+                            </AlertDialogFooter>
+                         </AlertDialogContent>
                       </AlertDialog>
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
+              );
+              })
             )}
           </TableBody>
         </Table>
