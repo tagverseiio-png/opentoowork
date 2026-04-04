@@ -1288,10 +1288,10 @@ const EmployerDashboard = () => {
                               <Target className="h-4 w-4 mr-2 text-primary/40" />
                               <span className="uppercase tracking-widest">{job.application_count?.[0]?.count || 0} Apps</span>
                             </div>
-                            <div className="flex items-center text-xs font-bold text-muted-foreground mr-4">
+                            {/* <div className="flex items-center text-xs font-bold text-muted-foreground mr-4">
                               <Users className="h-4 w-4 mr-2 text-primary/40" />
                               <span className="uppercase tracking-widest">{job.referral_count?.[0]?.count || 0} Referrals</span>
-                            </div>
+                            </div> */}
                             <div className="flex items-center text-xs font-bold text-muted-foreground">
                               <Briefcase className="h-4 w-4 mr-2 text-primary/40" />
                               <span className="uppercase tracking-widest">{job.job_type}</span>
@@ -1808,7 +1808,7 @@ const EmployerDashboard = () => {
                     })()}
                   </div>
                 </TabsContent>
-                <TabsContent value="referrals" className="flex-1 overflow-hidden bg-background mt-0 p-8 data-[state=active]:flex data-[state=inactive]:hidden flex-col min-h-0">
+                {/* <TabsContent value="referrals" className="flex-1 overflow-hidden bg-background mt-0 p-8 data-[state=active]:flex data-[state=inactive]:hidden flex-col min-h-0">
                   <div className="h-full flex flex-col min-h-0">
                     <div className="flex items-center justify-between mb-2 shrink-0">
                       <h3 className="text-xl font-black uppercase tracking-tighter">Talent Referrals</h3>
@@ -1874,7 +1874,7 @@ const EmployerDashboard = () => {
                       )}
                     </div>
                   </div>
-                </TabsContent>
+                </TabsContent> */}
                 <TabsContent value="notes" className="flex-1 overflow-hidden bg-background mt-0 p-8 data-[state=active]:flex data-[state=inactive]:hidden flex-col min-h-0">
                   <div className="h-full flex flex-col min-h-0">
                     <h3 className="text-xl font-black uppercase tracking-tighter mb-4 shrink-0">Internal Recruiter Notes</h3>

@@ -430,7 +430,7 @@ const JobDetail = () => {
                     </DialogContent>
                   </Dialog>
 
-                  <Dialog open={isReferralDialogOpen} onOpenChange={setIsReferralDialogOpen}>
+                  {/* <Dialog open={isReferralDialogOpen} onOpenChange={setIsReferralDialogOpen}>
                     <DialogTrigger asChild>
                       <Button variant="outline" className="flex-1 h-12 gap-2 font-black uppercase tracking-widest text-[10px] border-primary/20 hover:bg-primary/5">
                         <Users className="h-4 w-4" /> {userRole === 'employer' ? "Submit Candidate" : "Refer Talent"}
@@ -496,7 +496,7 @@ const JobDetail = () => {
                         </Button>
                       </div>
                     </DialogContent>
-                  </Dialog>
+                  </Dialog> */}
               </div>
 
               {(job.salary_min || job.salary_max) && (
@@ -577,7 +577,7 @@ const JobDetail = () => {
                 </div>
               ) : userRole === 'employer' ? (
                  // 1b. Support for Employers submitting candidates
-                 <div className="w-full space-y-3">
+                 {/* <div className="w-full space-y-3">
                    <Button 
                      size="lg" 
                      className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg text-lg h-14 font-black uppercase tracking-widest"
@@ -588,7 +588,7 @@ const JobDetail = () => {
                    <p className="text-[9px] text-center text-muted-foreground font-black uppercase tracking-widest">
                      As an employer/representative, you can submit talent profiles directly to this hiring partner
                    </p>
-                 </div>
+                 </div> */}
               ) : hasApplied ? (
                 // 2. Already Applied State
                 <div className="w-full">
