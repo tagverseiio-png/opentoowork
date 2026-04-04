@@ -122,6 +122,7 @@ const EmployerDashboard = () => {
   const [talentExp, setTalentExp] = useState("All");
   const [pipelineView, setPipelineView] = useState("active");
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
+  const [showMobileList, setShowMobileList] = useState(true);
   const [noteChanges, setNoteChanges] = useState<Record<string, string>>({});
 
   // Profile Form States
@@ -617,6 +618,7 @@ const EmployerDashboard = () => {
 
   const handleViewApplications = (job: any) => {
     setSelectedJob(job);
+    setShowMobileList(true);
     fetchApplications(job.id);
   };
 
@@ -1389,7 +1391,7 @@ const EmployerDashboard = () => {
 
       {/* Applications Dialog */}
       {selectedJob && (
-        <Dialog open={!!selectedJob} onOpenChange={() => { setSelectedJob(null); setSelectedApplicationId(null); }}>
+        <Dialog open={!!selectedJob} onOpenChange={() => { setSelectedJob(null); setSelectedApplicationId(null); setShowMobileList(true); }}>
           <DialogContent className="w-[96vw] lg:max-w-7xl h-[90dvh] lg:h-auto lg:max-h-[92vh] flex flex-col p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
             <DialogHeader className="sr-only">
               <DialogTitle>Job Applications Pipeline</DialogTitle>
@@ -1479,7 +1481,7 @@ const EmployerDashboard = () => {
                       return (
                         <>
                           {/* Sidebar: Candidate List */}
-                          <div className="w-full lg:w-[340px] border-b lg:border-b-0 lg:border-r bg-muted/5 flex flex-col shrink-0 overflow-hidden max-h-[30vh] lg:max-h-none">
+                          <div className={`w-full lg:w-[340px] border-b lg:border-b-0 lg:border-r bg-muted/5 flex-col shrink-0 overflow-hidden ${showMobileList ? "flex h-full" : "hidden lg:flex"}`}>
                             <div className="p-4 border-b flex flex-col gap-3">
                               <div className="flex gap-2">
                                 <Button 
@@ -1505,7 +1507,10 @@ const EmployerDashboard = () => {
                                 {filteredApps.map((app) => (
                                   <div
                                     key={app.id}
-                                    onClick={() => setSelectedApplicationId(app.id)}
+                                    onClick={() => {
+                                      setSelectedApplicationId(app.id);
+                                      setShowMobileList(false);
+                                    }}
                                     className={`p-4 rounded-xl cursor-pointer transition-all border-2 ${
                                       selectedApplicationId === app.id
                                         ? "bg-primary/10 border-primary shadow-sm"
@@ -1547,13 +1552,22 @@ const EmployerDashboard = () => {
                           </div>
 
                           {/* Detail Pane: Unified Review View */}
-                          <div className="flex-1 flex flex-col bg-background min-w-0 min-h-0 overflow-hidden">
+                          <div className={`flex-1 flex-col bg-background min-w-0 min-h-0 overflow-hidden ${!showMobileList ? "flex" : "hidden lg:flex"}`}>
                             {selectedApp ? (
                               <>
                                 {/* Floating Navigation Header */}
                                 <div className="h-auto min-h-14 w-full px-4 sm:px-8 py-3 sm:py-0 border-b flex flex-wrap gap-2 items-center justify-between sticky top-0 bg-background/95 backdrop-blur-md z-20 shrink-0">
                                   <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground w-full sm:w-auto">
-                                    <Users className="h-3.5 w-3.5 shrink-0" /> 
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      onClick={() => setShowMobileList(true)}
+                                      className="lg:hidden h-8 px-2 -ml-2 mr-1"
+                                    >
+                                      <ChevronLeft className="h-4 w-4 mr-1" />
+                                      Back
+                                    </Button>
+                                    <Users className="h-3.5 w-3.5 shrink-0 hidden lg:block" /> 
                                     <span className="truncate">Candidate {selectedAppIndex + 1} of {filteredApps.length}</span>
                                   </div>
                                   <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-start sm:justify-end pb-1 sm:pb-0">

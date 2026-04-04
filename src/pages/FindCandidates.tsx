@@ -124,10 +124,11 @@ const FindCandidates = () => {
   const filteredCandidates = candidates.filter((candidate) => {
     const term = searchTerm.toLowerCase();
     
-    // Search profile or skills
+    // Search profile, title, location, or skills
     const matchesSearch =
       !term ||
       candidate.profiles?.full_name?.toLowerCase().includes(term) ||
+      candidate.desired_job_title?.toLowerCase().includes(term) ||
       candidate.location?.toLowerCase().includes(term) ||
       candidate.candidate_skills?.some((s: any) => s.skill_name.toLowerCase().includes(term));
 
@@ -172,7 +173,7 @@ const FindCandidates = () => {
             <div className="relative w-full sm:w-80">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by name, skill, or location"
+                placeholder="Search by name, title, skill, or location"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 bg-background h-12 shadow-sm border-muted-foreground/20 focus:ring-primary/20"
@@ -307,7 +308,12 @@ const FindCandidates = () => {
                    <div className="flex justify-between items-start pt-2">
                       <div className="space-y-1">
                          <h3 className="text-xl font-black leading-none uppercase tracking-tighter group-hover:text-primary transition-colors">{candidate.profiles?.full_name}</h3>
-                         <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
+                         {candidate.desired_job_title && (
+                            <div className="text-sm font-bold text-foreground">
+                               {candidate.desired_job_title}
+                            </div>
+                         )}
+                         <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground mt-1">
                             <MapPin className="h-3 w-3" />
                             <span>{candidate.location || "Remote / Global"}</span>
                          </div>
