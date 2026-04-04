@@ -209,7 +209,7 @@ const UsersTab = () => {
                 <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] py-5 text-muted-foreground whitespace-nowrap">
                    <FilterHeader label="Visa Type" filterValue={filterVisa} setFilterValue={setFilterVisa} />
                 </TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] py-5 text-muted-foreground whitespace-nowrap">Links</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] py-5 text-muted-foreground whitespace-nowrap">LinkedIn</TableHead>
                 <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] py-5 text-muted-foreground whitespace-nowrap">Access Layer</TableHead>
                 <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.2em] px-6 py-5 text-muted-foreground whitespace-nowrap">Governance</TableHead>
               </TableRow>
