@@ -1745,9 +1745,9 @@ const EmployerDashboard = () => {
                                                     Parsed Resume Text
                                                     <div className="flex items-center gap-2">
                                                         <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-5 w-5 text-zinc-500 hover:text-white"
+                                                            variant="secondary"
+                                                            size="sm"
+                                                            className="h-6 px-3 bg-white/10 text-white hover:bg-white/20 font-bold uppercase tracking-widest text-[9px] -mr-1"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 const text = selectedApp.candidate?.resume_text || "";
@@ -1757,9 +1757,9 @@ const EmployerDashboard = () => {
                                                                 }
                                                             }}
                                                         >
-                                                            <Copy className="h-3 w-3" />
+                                                            <Copy className="mr-1 h-3 w-3" /> Copy Text
                                                         </Button>
-                                                        <Terminal className="h-3 w-3" />
+                                                        <Terminal className="hidden sm:block h-3 w-3" />
                                                     </div>
                                                 </h4>
                                                 <div className="max-h-[200px] overflow-hidden text-[10px] font-mono text-zinc-400 leading-relaxed relative z-10 whitespace-pre-wrap break-words w-full">
@@ -1778,6 +1778,21 @@ const EmployerDashboard = () => {
                                                         </DialogHeader>
                                                         <div className="p-6 border-b bg-muted/5 flex items-center justify-between">
                                                             <h4 className="font-black text-xl uppercase tracking-tighter">Raw Data Stream</h4>
+                                                            <Button
+                                                                variant="secondary"
+                                                                size="sm"
+                                                                className="h-8 px-4 font-bold uppercase tracking-widest text-[10px] bg-primary/10 text-primary hover:bg-primary/20"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    const text = selectedApp.candidate?.resume_text || "";
+                                                                    if (text) {
+                                                                        navigator.clipboard.writeText(text);
+                                                                        toast({ title: "Copied!", description: "Parsed text copied to clipboard." });
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <Copy className="mr-2 h-4 w-4" /> Copy Text
+                                                            </Button>
                                                         </div>
                                                         <ScrollArea className="h-[70vh] p-8 bg-zinc-950 text-zinc-400 font-mono text-xs leading-relaxed whitespace-pre-wrap break-words">
                                                             {selectedApp.candidate.resume_text}
@@ -1940,7 +1955,7 @@ const EmployerDashboard = () => {
           <div className="flex flex-col md:flex-row gap-3 bg-muted/20 p-4 rounded-xl border border-dashed border-border/60 shadow-inner">
             <Input
               placeholder="Search Role or Name..."
-              className="flex-1 bg-background h-11"
+              className="w-full md:flex-1 bg-background h-11"
               value={talentSearch}
               onChange={(e) => setTalentSearch(e.target.value)}
             />
@@ -1974,7 +1989,7 @@ const EmployerDashboard = () => {
                 <SelectItem value="10">10+ Years</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={fetchTalent} className="h-11 px-8 font-black uppercase text-xs tracking-widest shadow-lg">Scan Database</Button>
+            <Button onClick={fetchTalent} className="w-full md:w-auto h-11 px-8 font-black uppercase text-xs tracking-widest shadow-lg">Scan Database</Button>
           </div>
 
           {talentLoading ? (
