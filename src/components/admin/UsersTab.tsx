@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Search, Loader2, User, Shield, Briefcase, Mail, Phone, Calendar, MapPin, ExternalLink, FileText } from "lucide-react";
+import { Trash2, Search, Loader2, User, Shield, Briefcase, Mail, Phone, Calendar, MapPin, ExternalLink, FileText, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -144,6 +144,50 @@ const UsersTab = () => {
     return matchesName && matchesRole && matchesTitle && matchesContact && matchesLoc && matchesVisa;
   });
 
+  const handleDownloadCSV = () => {
+    const headers = [
+      "Name",
+      "Email",
+      "Role",
+      "Title / Role",
+      "Contact Info",
+      "Location",
+      "Visa Type",
+      "LinkedIn"
+    ];
+
+    const csvData = filteredUsers.map(user => {
+      const userTitle = (user.role === 'candidate' ? user.details?.desired_job_title : (user.details?.job_title || user.details?.recruiter_job_title)) || '';
+      const userVisa = user.details?.work_authorization || user.details?.visa_type || '';
+      const userContactInfo = user.details?.phone || user.phone || '';
+      const { city, state } = splitLocation(user.details?.location);
+      const userLocation = city !== '-' || state !== '-' ? `${city}, ${state}` : '';
+      const linkedin = user.details?.linkedin_url || '';
+
+      const escapeField = (field: string) => `"${field.replace(/"/g, '""')}"`;
+
+      return [
+        escapeField(user.full_name || ''),
+        escapeField(user.email || ''),
+        escapeField(user.role || ''),
+        escapeField(userTitle),
+        escapeField(userContactInfo),
+        escapeField(userLocation),
+        escapeField(userVisa),
+        escapeField(linkedin)
+      ].join(',');
+    });
+
+    const csvContent = [headers.join(','), ...csvData].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `users_export_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="space-y-6">
@@ -192,6 +236,9 @@ const UsersTab = () => {
                         <SelectItem value="admin" className="font-bold text-xs uppercase tracking-widest">Administrators</SelectItem>
                       </SelectContent>
                     </Select>
+                    <Button onClick={handleDownloadCSV} variant="outline" className="h-11 font-bold text-xs uppercase tracking-widest bg-muted/20 border-border/40 hover:bg-primary/20">
+                      <Download className="mr-2 h-4 w-4" /> Export CSV
+                    </Button>
                   </div>
                 </TableHead>
               </TableRow>

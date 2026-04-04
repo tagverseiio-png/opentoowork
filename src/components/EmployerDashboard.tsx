@@ -1433,10 +1433,12 @@ const EmployerDashboard = () => {
                 <div className="px-4 sm:px-8 border-b bg-muted/5 overflow-x-auto shrink-0 max-w-full">
                   <TabsList className="bg-transparent h-12 gap-4 sm:gap-6 p-0 min-w-max">
                     <TabsTrigger value="list" className="h-12 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none font-black uppercase tracking-widest text-[10px]">Applicants Pipeline</TabsTrigger>
+                    {/* Referrals feature intentionally hidden
                     <TabsTrigger value="referrals" className="h-12 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none font-black uppercase tracking-widest text-[10px] relative">
                       Referrals
                       {referrals.length > 0 && <span className="absolute -top-1 -right-2 bg-primary text-primary-foreground text-[8px] h-4 w-4 flex items-center justify-center rounded-full font-bold">{referrals.length}</span>}
                     </TabsTrigger>
+                    */}
                     <TabsTrigger value="notes" className="h-12 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none font-black uppercase tracking-widest text-[10px]">Recruiter Notes</TabsTrigger>
                   </TabsList>
                 </div>
@@ -1741,7 +1743,24 @@ const EmployerDashboard = () => {
                                                 <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                 <h4 className="text-zinc-500 text-[10px] font-black uppercase tracking-widest mb-3 flex justify-between items-center relative z-10">
                                                     Parsed Resume Text
-                                                    <Terminal className="h-3 w-3" />
+                                                    <div className="flex items-center gap-2">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-5 w-5 text-zinc-500 hover:text-white"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                const text = selectedApp.candidate?.resume_text || "";
+                                                                if (text) {
+                                                                    navigator.clipboard.writeText(text);
+                                                                    toast({ title: "Copied!", description: "Parsed text copied to clipboard." });
+                                                                }
+                                                            }}
+                                                        >
+                                                            <Copy className="h-3 w-3" />
+                                                        </Button>
+                                                        <Terminal className="h-3 w-3" />
+                                                    </div>
                                                 </h4>
                                                 <div className="max-h-[200px] overflow-hidden text-[10px] font-mono text-zinc-400 leading-relaxed relative z-10 whitespace-pre-wrap break-words w-full">
                                                     {selectedApp.candidate.resume_text.substring(0, 300)}...
