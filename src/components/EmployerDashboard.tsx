@@ -653,8 +653,7 @@ const EmployerDashboard = () => {
       let candidateIdsFilter: string[] | null = null;
       
       if (talentSearch.trim()) {
-        const exactTerm = talentSearch.trim();
-        const term = `%${exactTerm}%`;
+        const term = `%${talentSearch.trim()}%`;
         
         // 1. Search in profiles for full_name
         const { data: matchedProfiles } = await supabase
@@ -662,15 +661,8 @@ const EmployerDashboard = () => {
           .select("id")
           .eq("role", "candidate")
           .ilike("full_name", term);
-          
-        // 2. Search in candidate_skills for exact skill_name case-insensitively
-        // This prevents searching "java" from mistakenly returning candidates who only have "javascript"
-        const { data: matchedSkills } = await supabase
-          .from("candidate_skills")
-          .select("candidate_id")
-          .ilike("skill_name", exactTerm);
 
-        // 3. Search in candidate_profiles for desired_job_title
+        // 2. Search in candidate_profiles for desired_job_title (Role based search)
         const { data: matchedTitles } = await supabase
           .from("candidate_profiles")
           .select("id")
@@ -678,7 +670,6 @@ const EmployerDashboard = () => {
 
         const ids = new Set([
           ...(matchedProfiles?.map(p => p.id) || []),
-          ...(matchedSkills?.map(s => s.candidate_id) || []),
           ...(matchedTitles?.map(t => t.id) || [])
         ]);
         
@@ -1929,7 +1920,7 @@ const EmployerDashboard = () => {
 
           <div className="flex flex-col md:flex-row gap-3 bg-muted/20 p-4 rounded-xl border border-dashed border-border/60 shadow-inner">
             <Input
-              placeholder="Search Skill or Name..."
+              placeholder="Search Role or Name..."
               className="flex-1 bg-background h-11"
               value={talentSearch}
               onChange={(e) => setTalentSearch(e.target.value)}
