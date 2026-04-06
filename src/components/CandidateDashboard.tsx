@@ -536,10 +536,10 @@ const CandidateDashboard = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 min-h-[90px]">
+      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
            <h1 className="text-4xl font-black tracking-tighter text-foreground uppercase leading-none">Your Command Center</h1>
-           <p className="text-muted-foreground mt-2 font-bold uppercase text-[10px] tracking-widest min-h-[16px]">Active session for {profile.profiles?.full_name}</p>
+           <p className="text-muted-foreground mt-2 font-bold uppercase text-[10px] tracking-widest">Active session for {profile.profiles?.full_name}</p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
            {/* LinkedIn Sync button removed as requested */}
@@ -968,27 +968,25 @@ const CandidateDashboard = () => {
             </div>
             
             <div className="space-y-6">
-              <div className="flex items-center gap-4 min-h-[64px]">
+              <div className="flex items-center gap-4">
                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 font-black text-primary text-xl border-2 border-primary/20">
                     {profile.profiles?.full_name?.charAt(0)}
                  </div>
-                 <div className="min-w-0 flex-1 flex flex-col justify-center min-h-[64px]">
+                 <div className="min-w-0 flex-1 flex flex-col justify-center">
                     <h3 className="font-black text-xl text-foreground uppercase tracking-tight truncate">{profile.profiles?.full_name}</h3>
-                    {profile.desired_job_title ? (
-                      <div className="text-xs font-black text-primary uppercase tracking-widest mt-0.5 truncate min-h-[16px]">
+                    {profile.desired_job_title && (
+                      <div className="text-xs font-black text-primary uppercase tracking-widest mt-0.5 truncate">
                         {profile.desired_job_title}
                       </div>
-                    ) : (
-                      <div className="min-h-[16px] mt-0.5" />
                     )}
-                    <div className="text-xs text-muted-foreground font-medium flex items-center gap-1.5 mt-1 truncate min-h-[16px]">
+                    <div className="text-xs text-muted-foreground font-medium flex items-center gap-1.5 mt-1 truncate">
                        <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)] shrink-0" />
                        <span className="truncate">{profile.profiles?.email}</span>
                     </div>
                  </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 min-h-[64px]">
+              <div className="grid grid-cols-2 gap-3">
                   <div className="bg-muted/5 border p-3 rounded-xl flex flex-col justify-center min-w-0">
                     <span className="text-[9px] text-muted-foreground uppercase font-black mb-1">Location</span>
                     <span className="text-xs font-bold truncate break-words">{formatLocation(profile.location) || "Not specified"}</span>
@@ -999,9 +997,9 @@ const CandidateDashboard = () => {
                   </div>
               </div>
 
-              <div className="space-y-3 min-h-[126px]">
-                <Label className="text-[10px] text-muted-foreground uppercase font-black tracking-widest block h-[14px]">Connective Services</Label>
-                <div className="grid grid-cols-[1fr,auto] gap-2 min-h-[44px]">
+              <div className="space-y-3">
+                <Label className="text-[10px] text-muted-foreground uppercase font-black tracking-widest block">Connective Services</Label>
+                <div className="grid grid-cols-[1fr,auto] gap-2">
                   {profile.resume_url ? (
                     <>
                       <Button 
