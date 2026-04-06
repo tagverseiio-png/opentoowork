@@ -999,9 +999,9 @@ const CandidateDashboard = () => {
                   </div>
               </div>
 
-              <div className="space-y-3 min-h-[96px]">
+              <div className="space-y-3 min-h-[126px]">
                 <Label className="text-[10px] text-muted-foreground uppercase font-black tracking-widest block h-[14px]">Connective Services</Label>
-                <div className="flex flex-col sm:grid sm:grid-cols-[1fr,auto] gap-2 min-h-[44px]">
+                <div className="grid grid-cols-[1fr,auto] gap-2 min-h-[44px]">
                   {profile.resume_url ? (
                     <>
                       <Button 
@@ -1014,7 +1014,7 @@ const CandidateDashboard = () => {
                       <Button 
                         variant="outline" 
                         size="icon" 
-                        className="h-11 w-full sm:w-11 border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm shrink-0"
+                        className="h-11 w-11 border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm shrink-0"
                         onClick={() => handleViewResume(
                           getResumePublicUrl(profile.resume_url), 
                           true, 
@@ -1025,7 +1025,7 @@ const CandidateDashboard = () => {
                       </Button>
                     </>
                   ) : (
-                    <div className="col-span-1 sm:col-span-2 text-[9px] text-orange-600 bg-orange-50/50 p-3 rounded-xl border border-orange-100 font-bold flex items-center gap-2 italic">
+                    <div className="col-span-2 text-[9px] text-orange-600 bg-orange-50/50 px-3 py-0 h-11 rounded-xl border border-orange-100 font-bold flex items-center gap-2 italic">
                        Missing Resume Link
                     </div>
                   )}
@@ -1038,7 +1038,7 @@ const CandidateDashboard = () => {
                     </Button>
                   </a>
                 ) : (
-                  <Button variant="ghost" onClick={() => setIsEditing(true)} className="h-11 text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100">
+                  <Button variant="ghost" onClick={() => setIsEditing(true)} className="h-11 w-full text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100">
                      Link Profile
                   </Button>
                 )}
