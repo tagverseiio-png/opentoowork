@@ -1040,7 +1040,7 @@ const CandidateDashboard = () => {
             </div>
             
             <div className="space-y-6">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 min-h-[64px]">
                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 font-black text-primary text-xl border-2 border-primary/20">
                     {profile.profiles?.full_name?.charAt(0)}
                  </div>
@@ -1058,7 +1058,7 @@ const CandidateDashboard = () => {
                  </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3 min-h-[64px]">
                   <div className="bg-muted/5 border p-3 rounded-xl flex flex-col justify-center min-w-0">
                     <span className="text-[9px] text-muted-foreground uppercase font-black mb-1">Location</span>
                     <span className="text-xs font-bold truncate break-words">{formatLocation(profile.location) || "Not specified"}</span>
@@ -1069,9 +1069,9 @@ const CandidateDashboard = () => {
                   </div>
               </div>
 
-              <div className="space-y-3">
-                <Label className="text-[10px] text-muted-foreground uppercase font-black tracking-widest block">Connective Services</Label>
-                <div className="grid grid-cols-[1fr,auto] gap-2">
+              <div className="space-y-3 min-h-[126px]">
+                <Label className="text-[10px] text-muted-foreground uppercase font-black tracking-widest block h-[14px]">Connective Services</Label>
+                <div className="grid grid-cols-[1fr,auto] gap-2 min-h-[44px]">
                   {profile.resume_url ? (
                     <>
                       <Button 
