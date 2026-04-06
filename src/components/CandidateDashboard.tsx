@@ -9,7 +9,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, CheckCircle, Clock, XCircle, MapPin, Building2, Calendar, Briefcase, Pencil, Plus, Trash2, ExternalLink, Linkedin, Globe, Bell, Target, Settings, LayoutDashboard, Share2, UserCircle, Mail, ChevronsUpDown, Check, Download, Edit } from "lucide-react";
+import { FileText, CheckCircle, Clock, XCircle, MapPin, Building2, Calendar, Briefcase, Pencil, Plus, Trash2, ExternalLink, Linkedin, Globe, Bell, Target, Settings, LayoutDashboard, Share2, UserCircle, Mail, ChevronsUpDown, Check, Download, Edit, Award } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Textarea } from "./ui/textarea";
 import { Separator } from "./ui/separator";
@@ -1186,7 +1186,7 @@ const CandidateDashboard = () => {
                       <TableRow className="bg-muted/10 hover:bg-muted/10 border-b border-border/50">
                         <TableHead className="h-7 text-[10px] font-black uppercase tracking-widest w-[40%]">Skill</TableHead>
                         <TableHead className="h-7 text-[10px] font-black uppercase tracking-widest text-center">Experience</TableHead>
-                        <TableHead className="h-7 text-[10px] font-black uppercase tracking-widest text-center">Level</TableHead>
+                        <TableHead className="h-7 text-[10px] font-black uppercase tracking-widest text-center flex items-center justify-center gap-1"><Award className="h-3 w-3" /></TableHead>
                         <TableHead className="h-7 w-[50px]"></TableHead>
                       </TableRow>
                     </TableHeader>
