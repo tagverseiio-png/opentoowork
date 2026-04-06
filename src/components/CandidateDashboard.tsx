@@ -1060,23 +1060,23 @@ const CandidateDashboard = () => {
 
               <div className="grid grid-cols-2 gap-1 sm:gap-3 min-h-[64px]">
                   <div className="bg-muted/5 border p-1.5 sm:p-3 rounded-lg sm:rounded-xl flex flex-col justify-center min-w-0">
-                    <span className="text-[7px] sm:text-[9px] text-muted-foreground uppercase font-black mb-0.5">Location</span>
-                    <span className="text-[7px] sm:text-xs font-bold truncate break-words">{formatLocation(profile.location) || "Not specified"}</span>
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground uppercase font-black mb-0.5">Location</span>
+                    <span className="text-[9px] sm:text-xs font-bold truncate break-words">{formatLocation(profile.location) || "Not specified"}</span>
                   </div>
                   <div className="bg-muted/5 border p-1.5 sm:p-3 rounded-lg sm:rounded-xl flex flex-col justify-center min-w-0">
-                    <span className="text-[7px] sm:text-[9px] text-muted-foreground uppercase font-black mb-0.5">Experience</span>
-                    <span className="text-[7px] sm:text-xs font-bold truncate">{profile.experience_years || 0} Years</span>
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground uppercase font-black mb-0.5">Experience</span>
+                    <span className="text-[9px] sm:text-xs font-bold truncate">{profile.experience_years || 0} Years</span>
                   </div>
               </div>
 
               <div className="space-y-2 sm:space-y-3 min-h-[126px]">
-                <Label className="text-[9px] sm:text-[10px] text-muted-foreground uppercase font-black tracking-widest block h-[12px]">Connective Services</Label>
+                <Label className="text-[10px] sm:text-[11px] text-muted-foreground uppercase font-black tracking-widest block h-[12px]">Connective Services</Label>
                 <div className="grid grid-cols-[1fr,auto] gap-1.5 min-h-[44px]">
                   {profile.resume_url ? (
                     <>
                       <Button 
                         variant="outline" 
-                        className="w-full h-10 sm:h-11 gap-2 sm:gap-3 text-[9px] sm:text-[10px] font-black uppercase tracking-widest border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm min-w-0"
+                        className="w-full h-10 sm:h-11 gap-2 sm:gap-3 text-[10px] sm:text-[11px] font-black uppercase tracking-widest border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm min-w-0"
                         onClick={() => handleViewResume(getResumePublicUrl(profile.resume_url))}
                       >
                         <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-primary shrink-0" /> <span className="truncate">View Dossier</span>
@@ -1095,7 +1095,7 @@ const CandidateDashboard = () => {
                       </Button>
                     </>
                   ) : (
-                    <div className="col-span-2 text-[9px] text-orange-600 bg-orange-50/50 px-2 sm:px-3 py-0 h-10 sm:h-11 rounded-xl border border-orange-100 font-bold flex items-center gap-2 italic">
+                    <div className="col-span-2 text-[10px] text-orange-600 bg-orange-50/50 px-2 sm:px-3 py-0 h-10 sm:h-11 rounded-xl border border-orange-100 font-bold flex items-center gap-2 italic">
                        Missing Resume Link
                     </div>
                   )}
@@ -1103,7 +1103,7 @@ const CandidateDashboard = () => {
 
                 {profile.linkedin_url ? (
                   <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="block w-full">
-                    <Button variant="outline" className="w-full h-10 sm:h-11 gap-2 sm:gap-3 text-[9px] sm:text-[10px] font-black uppercase tracking-widest border-[#0A66C2]/20 text-[#0A66C2] hover:bg-[#0A66C2]/5 shadow-sm min-w-0">
+                    <Button variant="outline" className="w-full h-10 sm:h-11 gap-2 sm:gap-3 text-[10px] sm:text-[11px] font-black uppercase tracking-widest border-[#0A66C2]/20 text-[#0A66C2] hover:bg-[#0A66C2]/5 shadow-sm min-w-0">
                       <Linkedin className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" /> <span className="truncate">LinkedIn Bridge</span>
                     </Button>
                   </a>
@@ -1282,20 +1282,20 @@ const CandidateDashboard = () => {
                                       <h3 className="font-black text-base sm:text-xl tracking-tighter uppercase leading-tight group-hover:text-primary transition-colors break-words w-full sm:w-auto">
                                         {app.jobs?.title}
                                       </h3>
-                                      <Badge variant="outline" className="h-4 sm:h-5 text-[7px] sm:text-[8px] font-black uppercase tracking-[0.1em] border-primary/20 px-1.5 sm:px-2">{app.jobs?.job_mode}</Badge>
+                                      <Badge variant="outline" className="h-4 sm:h-5 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] border-primary/20 px-1.5 sm:px-2">{app.jobs?.job_mode}</Badge>
                                    </div>
                                    <div className="flex items-center text-[10px] sm:text-xs font-bold text-muted-foreground tracking-widest uppercase break-words whitespace-normal">
                                       {app.jobs?.employer?.company_name}
                                    </div>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
-                                   <div className="flex items-center bg-muted/30 px-2 sm:px-3 py-1.5 rounded-lg text-[8px] sm:text-[9px] font-black tracking-widest uppercase text-muted-foreground italic border border-muted-foreground/5">
+                                   <div className="flex items-center bg-muted/30 px-2 sm:px-3 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-black tracking-widest uppercase text-muted-foreground italic border border-muted-foreground/5">
                                       Applied: {new Date(app.applied_at).toLocaleDateString()}
                                    </div>
                                 </div>
                              </div>
                              <div className="md:w-[180px] sm:bg-muted/20 border-t sm:border-t-0 sm:border-l border-dashed flex flex-col items-center justify-center p-3 sm:p-6 group-hover:bg-primary/5 transition-colors min-h-[100px] sm:min-h-auto">
-                                <span className="text-[8px] font-black text-muted-foreground/40 mb-2 uppercase tracking-widest">Global Status</span>
+                                <span className="text-[9px] font-black text-muted-foreground/40 mb-2 uppercase tracking-widest">Global Status</span>
                                 {getStatusBadge(app.status)}
                              </div>
                           </div>
@@ -1327,7 +1327,7 @@ const CandidateDashboard = () => {
                         <Card key={job.id} className="p-5 sm:p-6 border border-muted-foreground/10 hover:shadow-2xl transition-all group relative overflow-hidden bg-muted/5 rounded-2xl sm:rounded-3xl">
                            <Badge
                              variant="outline"
-                             className={`absolute top-4 right-4 z-10 text-[8px] sm:text-[9px] font-black uppercase tracking-widest border-transparent ${applications.some((app) => (app.job_id || app.jobs?.id) === job.id) ? "bg-green-500/10 text-green-600" : "bg-muted text-muted-foreground"}`}
+                             className={`absolute top-4 right-4 z-10 text-[9px] sm:text-[10px] font-black uppercase tracking-widest border-transparent ${applications.some((app) => (app.job_id || app.jobs?.id) === job.id) ? "bg-green-500/10 text-green-600" : "bg-muted text-muted-foreground"}`}
                            >
                              {applications.some((app) => (app.job_id || app.jobs?.id) === job.id) ? "Applied" : "Not Applied"}
                            </Badge>
@@ -1337,15 +1337,15 @@ const CandidateDashboard = () => {
                                  <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1.5 break-words">{job.employer?.company_name}</p>
                               </div>
                               <div className="flex flex-wrap gap-2">
-                                 <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-background border-primary/20 h-auto py-1 px-2 text-center whitespace-normal break-words">{formatLocation(job.location)}</Badge>
-                                 <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-primary/10 text-primary border-transparent h-auto py-1 px-2 text-center whitespace-normal break-words">{job.job_type}</Badge>
+                                 <Badge variant="outline" className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest bg-background border-primary/20 h-auto py-1 px-2 text-center whitespace-normal break-words">{formatLocation(job.location)}</Badge>
+                                 <Badge variant="outline" className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary border-transparent h-auto py-1 px-2 text-center whitespace-normal break-words">{job.job_type}</Badge>
                                  {job.salary_min && (
-                                    <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-green-500/10 text-green-600 border-transparent h-auto py-1 px-2 text-center whitespace-normal break-words">
+                                    <Badge variant="outline" className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest bg-green-500/10 text-green-600 border-transparent h-auto py-1 px-2 text-center whitespace-normal break-words">
                                       ${job.salary_min.toLocaleString()} - {job.salary_max?.toLocaleString()} <span className="ml-1 opacity-60 block sm:inline">{job.salary_period || 'Annually'}</span>
                                     </Badge>
                                   )}
                                  {(job as any).score > 0 && (
-                                   <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-green-500/10 text-green-600 border-transparent h-auto py-1 px-2 text-center whitespace-normal break-words">
+                                   <Badge variant="outline" className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest bg-green-500/10 text-green-600 border-transparent h-auto py-1 px-2 text-center whitespace-normal break-words">
                                      {(job as any).score}% Match
                                    </Badge>
                                  )}
