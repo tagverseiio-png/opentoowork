@@ -1184,10 +1184,10 @@ const CandidateDashboard = () => {
                   <Table className="w-full text-left border-collapse">
                     <TableHeader>
                       <TableRow className="bg-muted/10 hover:bg-muted/10 border-b border-border/50">
-                        <TableHead className="h-10 text-[10px] font-black uppercase tracking-widest w-[40%]">Skill</TableHead>
-                        <TableHead className="h-10 text-[10px] font-black uppercase tracking-widest text-center">Experience</TableHead>
-                        <TableHead className="h-10 text-[10px] font-black uppercase tracking-widest text-center">Level</TableHead>
-                        <TableHead className="h-10 w-[50px]"></TableHead>
+                        <TableHead className="h-7 text-[10px] font-black uppercase tracking-widest w-[40%]">Skill</TableHead>
+                        <TableHead className="h-7 text-[10px] font-black uppercase tracking-widest text-center">Experience</TableHead>
+                        <TableHead className="h-7 text-[10px] font-black uppercase tracking-widest text-center">Level</TableHead>
+                        <TableHead className="h-7 w-[50px]"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
