@@ -13,6 +13,7 @@ import { FileText, CheckCircle, Clock, XCircle, MapPin, Building2, Calendar, Bri
 import { ScrollArea } from "./ui/scroll-area";
 import { Textarea } from "./ui/textarea";
 import { Separator } from "./ui/separator";
+import { Skeleton } from "./ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -532,7 +533,78 @@ const CandidateDashboard = () => {
     }
   };
 
-  if (!profile) return <div className="min-h-[50vh] flex items-center justify-center text-muted-foreground">Loading profile...</div>;
+  if (!profile) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-6xl animate-pulse">
+        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-4">
+             <Skeleton className="h-10 w-[280px] sm:w-[400px]" />
+             <Skeleton className="h-4 w-[180px] sm:w-[250px]" />
+          </div>
+          <Skeleton className="h-12 w-[160px] rounded-xl" />
+        </div>
+
+        <div className="grid lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-4 space-y-6">
+            <Card className="p-6 border shadow-sm bg-card overflow-hidden">
+              <div className="flex items-center justify-between mb-6">
+                <Skeleton className="h-6 w-[140px]" />
+                <Skeleton className="h-8 w-8 rounded-md" />
+              </div>
+              <div className="space-y-6">
+                <div className="flex items-center gap-4 min-h-[64px]">
+                   <Skeleton className="w-16 h-16 rounded-2xl shrink-0" />
+                   <div className="min-w-0 flex-1 space-y-2 flex flex-col justify-center">
+                      <Skeleton className="h-5 w-[160px] mb-1" />
+                      <Skeleton className="h-3 w-[120px]" />
+                      <Skeleton className="h-3 w-[140px]" />
+                   </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 min-h-[64px]">
+                    <Skeleton className="h-[64px] rounded-xl" />
+                    <Skeleton className="h-[64px] rounded-xl" />
+                </div>
+                <div className="space-y-3 min-h-[126px]">
+                  <Skeleton className="h-[14px] w-[140px]" />
+                  <div className="grid grid-cols-[1fr,auto] gap-2 min-h-[44px]">
+                    <Skeleton className="h-11 w-full rounded-xl" />
+                    <Skeleton className="h-11 w-11 rounded-xl shrink-0" />
+                  </div>
+                  <Skeleton className="h-11 w-full rounded-xl" />
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 border shadow-sm bg-card overflow-hidden">
+               <div className="flex items-center justify-between mb-6">
+                  <Skeleton className="h-6 w-[120px]" />
+                  <Skeleton className="h-8 w-[80px] rounded-md" />
+               </div>
+               <Skeleton className="h-[280px] w-full rounded-xl" />
+            </Card>
+          </div>
+
+          <div className="lg:col-span-8 min-w-0 w-full">
+            <Skeleton className="h-16 w-full rounded-[2rem] mb-8" />
+            <Card className="p-4 sm:p-8 border shadow-sm min-h-[600px] bg-card rounded-2xl sm:rounded-[2.5rem] w-full overflow-hidden">
+               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 sm:mb-10 w-full">
+                 <div className="space-y-3 w-full">
+                   <Skeleton className="h-8 w-[200px]" />
+                   <Skeleton className="h-3 w-[250px]" />
+                 </div>
+                 <Skeleton className="h-8 w-[140px] rounded-full shrink-0" />
+               </div>
+               <div className="space-y-5">
+                 <Skeleton className="h-[140px] w-full rounded-3xl sm:rounded-[2rem]" />
+                 <Skeleton className="h-[140px] w-full rounded-3xl sm:rounded-[2rem]" />
+                 <Skeleton className="h-[140px] w-full rounded-3xl sm:rounded-[2rem]" />
+               </div>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
