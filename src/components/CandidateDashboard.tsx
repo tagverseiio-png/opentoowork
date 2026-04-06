@@ -986,33 +986,33 @@ const CandidateDashboard = () => {
                  </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-muted/5 border p-3 rounded-xl flex flex-col">
+              <div className="grid grid-cols-2 gap-3 min-h-[64px]">
+                  <div className="bg-muted/5 border p-3 rounded-xl flex flex-col justify-center min-w-0">
                     <span className="text-[9px] text-muted-foreground uppercase font-black mb-1">Location</span>
-                    <span className="text-xs font-bold truncate">{formatLocation(profile.location) || "Not specified"}</span>
+                    <span className="text-xs font-bold truncate break-words">{formatLocation(profile.location) || "Not specified"}</span>
                   </div>
-                  <div className="bg-muted/5 border p-3 rounded-xl flex flex-col">
+                  <div className="bg-muted/5 border p-3 rounded-xl flex flex-col justify-center min-w-0">
                     <span className="text-[9px] text-muted-foreground uppercase font-black mb-1">Experience</span>
-                    <span className="text-xs font-bold">{profile.experience_years || 0} Years</span>
+                    <span className="text-xs font-bold truncate">{profile.experience_years || 0} Years</span>
                   </div>
               </div>
 
-              <div className="space-y-3">
-                <Label className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Connective Services</Label>
-                <div className="grid grid-cols-[1fr,auto] gap-2">
+              <div className="space-y-3 min-h-[96px]">
+                <Label className="text-[10px] text-muted-foreground uppercase font-black tracking-widest block h-3">Connective Services</Label>
+                <div className="flex flex-col sm:grid sm:grid-cols-[1fr,auto] gap-2">
                   {profile.resume_url ? (
                     <>
                       <Button 
                         variant="outline" 
-                        className="w-full h-11 gap-3 text-[10px] font-black uppercase tracking-widest border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm"
+                        className="w-full h-11 gap-3 text-[10px] font-black uppercase tracking-widest border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm min-w-0"
                         onClick={() => handleViewResume(getResumePublicUrl(profile.resume_url))}
                       >
-                        <FileText className="h-4 w-4 text-primary" /> View Dossier
+                        <FileText className="h-4 w-4 text-primary shrink-0" /> <span className="truncate">View Dossier</span>
                       </Button>
                       <Button 
                         variant="outline" 
                         size="icon" 
-                        className="h-11 w-11 border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm"
+                        className="h-11 w-full sm:w-11 border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm shrink-0"
                         onClick={() => handleViewResume(
                           getResumePublicUrl(profile.resume_url), 
                           true, 
@@ -1023,16 +1023,16 @@ const CandidateDashboard = () => {
                       </Button>
                     </>
                   ) : (
-                    <div className="col-span-2 text-[9px] text-orange-600 bg-orange-50/50 p-3 rounded-xl border border-orange-100 font-bold flex items-center gap-2 italic">
+                    <div className="col-span-1 sm:col-span-2 text-[9px] text-orange-600 bg-orange-50/50 p-3 rounded-xl border border-orange-100 font-bold flex items-center gap-2 italic">
                        Missing Resume Link
                     </div>
                   )}
                 </div>
 
                 {profile.linkedin_url ? (
-                  <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" className="w-full h-11 gap-3 text-[10px] font-black uppercase tracking-widest border-[#0A66C2]/20 text-[#0A66C2] hover:bg-[#0A66C2]/5 shadow-sm">
-                      <Linkedin className="h-4 w-4" /> LinkedIn Bridge
+                  <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="block w-full">
+                    <Button variant="outline" className="w-full h-11 gap-3 text-[10px] font-black uppercase tracking-widest border-[#0A66C2]/20 text-[#0A66C2] hover:bg-[#0A66C2]/5 shadow-sm min-w-0">
+                      <Linkedin className="h-4 w-4 shrink-0" /> <span className="truncate">LinkedIn Bridge</span>
                     </Button>
                   </a>
                 ) : (
