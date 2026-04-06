@@ -1166,27 +1166,27 @@ const CandidateDashboard = () => {
         </div>
 
         {/* Main Content */}
-        <div className="lg:col-span-8">
+        <div className="lg:col-span-8 min-w-0 w-full">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-2 w-full bg-muted/30 p-1.5 h-16 rounded-[2rem] gap-3">
-              <TabsTrigger value="applications" className="data-[state=active]:bg-background data-[state=active]:shadow-2xl rounded-[1.5rem] h-full font-black uppercase text-[10px] tracking-widest gap-2.5">
-                <Briefcase className="h-4 w-4" /> Journey
+            <TabsList className="grid grid-cols-2 w-full bg-muted/30 p-1.5 h-auto min-h-16 rounded-[2rem] gap-1 sm:gap-3">
+              <TabsTrigger value="applications" className="data-[state=active]:bg-background data-[state=active]:shadow-2xl rounded-[1.5rem] h-full py-3 sm:py-0 font-black uppercase text-[9px] sm:text-[10px] tracking-widest gap-1.5 sm:gap-2.5 whitespace-normal break-words text-center leading-tight">
+                <Briefcase className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" /> <span className="truncate">Journey</span>
               </TabsTrigger>
-              <TabsTrigger value="recommendations" className="data-[state=active]:bg-background data-[state=active]:shadow-2xl rounded-[1.5rem] h-full font-black uppercase text-[10px] tracking-widest gap-2.5">
-                <Target className="h-4 w-4" /> Best Fits
+              <TabsTrigger value="recommendations" className="data-[state=active]:bg-background data-[state=active]:shadow-2xl rounded-[1.5rem] h-full py-3 sm:py-0 font-black uppercase text-[9px] sm:text-[10px] tracking-widest gap-1.5 sm:gap-2.5 whitespace-normal break-words text-center leading-tight">
+                <Target className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" /> <span className="truncate">Best Fits</span>
               </TabsTrigger>
 
             </TabsList>
 
             <div className="mt-8">
-              <TabsContent value="applications" className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-                <Card className="p-4 sm:p-8 border shadow-sm min-h-[600px] bg-card rounded-2xl sm:rounded-[2.5rem]">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 sm:mb-10">
-                    <div className="max-w-full">
-                      <h2 className="text-3xl font-black uppercase tracking-tighter leading-none italic">Active Pipeline</h2>
+              <TabsContent value="applications" className="animate-in fade-in slide-in-from-bottom-2 duration-500 min-w-0 w-full">
+                <Card className="p-4 sm:p-8 border shadow-sm min-h-[600px] bg-card rounded-2xl sm:rounded-[2.5rem] w-full relative overflow-hidden">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 sm:mb-10 w-full min-w-0">
+                    <div className="max-w-full min-w-0 flex-1">
+                      <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tighter leading-none italic break-words">Active Pipeline</h2>
                       <p className="text-[10px] text-muted-foreground mt-3 font-black uppercase tracking-[0.3em] opacity-40 break-words whitespace-normal leading-relaxed">Tracking your global career progress</p>
                     </div>
-                    <Badge variant="outline" className="h-8 px-5 font-black text-[10px] tracking-widest border-primary/20 bg-primary/5 text-primary shrink-0 self-end sm:self-auto">
+                    <Badge variant="outline" className="h-auto py-1.5 px-3 sm:px-5 font-black text-[9px] sm:text-[10px] tracking-widest border-primary/20 bg-primary/5 text-primary shrink-0 self-start sm:self-auto text-center whitespace-normal break-words">
                       {applications.length} ENGAGEMENTS
                     </Badge>
                   </div>
@@ -1234,12 +1234,12 @@ const CandidateDashboard = () => {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="recommendations" className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-                <Card className="p-8 border shadow-sm min-h-[600px] bg-card rounded-[2.5rem]">
-                  <div className="flex items-center justify-between mb-10">
-                    <div>
-                      <h2 className="text-3xl font-black uppercase tracking-tighter leading-none italic">Targeted Matches</h2>
-                      <p className="text-[10px] text-muted-foreground mt-3 font-black uppercase tracking-[0.3em] opacity-40">Filtered by your {profile.work_authorization} status</p>
+              <TabsContent value="recommendations" className="animate-in fade-in slide-in-from-bottom-4 duration-700 min-w-0 w-full">
+                <Card className="p-4 sm:p-8 border shadow-sm min-h-[600px] bg-card rounded-2xl sm:rounded-[2.5rem] w-full overflow-hidden">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 sm:mb-10 w-full min-w-0">
+                    <div className="max-w-full min-w-0 flex-1">
+                      <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tighter leading-none italic break-words">Targeted Matches</h2>
+                      <p className="text-[10px] text-muted-foreground mt-3 font-black uppercase tracking-[0.3em] opacity-40 break-words whitespace-normal leading-relaxed">Filtered by your {profile.work_authorization} status</p>
                     </div>
                   </div>
 
@@ -1265,15 +1265,15 @@ const CandidateDashboard = () => {
                                  <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1.5 break-words">{job.employer?.company_name}</p>
                               </div>
                               <div className="flex flex-wrap gap-2">
-                                 <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-background border-primary/20">{formatLocation(job.location)}</Badge>
-                                 <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-primary/10 text-primary border-transparent">{job.job_type}</Badge>
+                                 <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-background border-primary/20 h-auto py-1 px-2 text-center whitespace-normal break-words">{formatLocation(job.location)}</Badge>
+                                 <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-primary/10 text-primary border-transparent h-auto py-1 px-2 text-center whitespace-normal break-words">{job.job_type}</Badge>
                                  {job.salary_min && (
-                                    <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-green-500/10 text-green-600 border-transparent">
-                                      ${job.salary_min.toLocaleString()} - {job.salary_max?.toLocaleString()} <span className="ml-1 opacity-60">{job.salary_period || 'Annually'}</span>
+                                    <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-green-500/10 text-green-600 border-transparent h-auto py-1 px-2 text-center whitespace-normal break-words">
+                                      ${job.salary_min.toLocaleString()} - {job.salary_max?.toLocaleString()} <span className="ml-1 opacity-60 block sm:inline">{job.salary_period || 'Annually'}</span>
                                     </Badge>
                                   )}
                                  {(job as any).score > 0 && (
-                                   <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-green-500/10 text-green-600 border-transparent">
+                                   <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-green-500/10 text-green-600 border-transparent h-auto py-1 px-2 text-center whitespace-normal break-words">
                                      {(job as any).score}% Match
                                    </Badge>
                                  )}
