@@ -544,7 +544,7 @@ const CandidateDashboard = () => {
           <Skeleton className="h-12 w-[160px] rounded-xl" />
         </div>
 
-        <div className="grid lg:grid-cols-12 gap-8">
+        <div className="grid lg:grid-cols-12 gap-3 sm:gap-4 lg:gap-6">
           <div className="lg:col-span-4 space-y-6">
             <Card className="p-6 border shadow-sm bg-card overflow-hidden">
               <div className="flex items-center justify-between mb-6">
@@ -621,7 +621,7 @@ const CandidateDashboard = () => {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-12 gap-8">
+      <div className="grid lg:grid-cols-12 gap-3 sm:gap-4 lg:gap-6">
         {/* Profile Card */}
         <div className="lg:col-span-4 space-y-3 sm:space-y-4">
           <Card className="p-4 sm:p-6 border shadow-sm bg-card overflow-hidden">
