@@ -9,7 +9,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, CheckCircle, Clock, XCircle, MapPin, Building2, Calendar, Briefcase, Pencil, Plus, Trash2, ExternalLink, Linkedin, Globe, Bell, Target, Settings, LayoutDashboard, Share2, UserCircle, Mail, ChevronsUpDown, Check, Download, Edit, Award } from "lucide-react";
+import { FileText, CheckCircle, Clock, XCircle, MapPin, Building2, Calendar, Briefcase, Pencil, Plus, Trash2, ExternalLink, Linkedin, Globe, Bell, Target, Settings, LayoutDashboard, Share2, UserCircle, Mail, ChevronsUpDown, Check, Download, Edit, Award, Star } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Textarea } from "./ui/textarea";
 import { Separator } from "./ui/separator";
@@ -1200,7 +1200,7 @@ const CandidateDashboard = () => {
                             <span className="text-[10px] font-bold text-primary">{skill.years_experience} Yrs</span>
                           </TableCell>
                           <TableCell className="py-3 text-center">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{skill.skill_level}</span>
+                            {getSkillLevelStars(skill.skill_level)}
                           </TableCell>
                           <TableCell className="py-3 text-right">
                             <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
@@ -1368,6 +1368,30 @@ const CandidateDashboard = () => {
           </Tabs>
         </div>
       </div>
+    </div>
+  );
+};
+
+const getSkillLevelStars = (level: string | undefined) => {
+  const levelMap: Record<string, number> = {
+    'Junior': 1,
+    'Intermediate': 2,
+    'Senior': 3,
+    'Lead': 4,
+    'Architect': 5
+  };
+  
+  const stars = levelMap[level || 'Intermediate'] || 2;
+  const totalStars = 5;
+  
+  return (
+    <div className="flex items-center justify-center gap-0.5">
+      {Array.from({ length: totalStars }).map((_, i) => (
+        <Star
+          key={i}
+          className={`h-3 w-3 ${i < stars ? 'fill-primary text-primary' : 'text-muted-foreground/30'}`}
+        />
+      ))}
     </div>
   );
 };
