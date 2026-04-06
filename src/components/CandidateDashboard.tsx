@@ -1272,8 +1272,8 @@ const CandidateDashboard = () => {
                        <Button onClick={() => window.location.href = "/jobs"} className="mt-8 h-12 px-12 font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-2xl shadow-primary/20">Manifest Opportunity</Button>
                     </div>
                   ) : (
-                    <div className="space-y-5">
                     <div className="space-y-3 sm:space-y-4">
+                      {applications.map((app) => (
                         <Card key={app.id} className="p-0 border border-muted-foreground/10 hover:border-primary/40 transition-all hover:shadow-2xl group overflow-hidden bg-card rounded-3xl sm:rounded-[2rem]">
                           <div className="flex flex-col md:flex-row min-h-[140px]">
                              <div className="flex-1 p-5 sm:p-8 space-y-4 sm:space-y-6 min-w-0">
