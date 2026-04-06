@@ -1180,13 +1180,13 @@ const CandidateDashboard = () => {
 
             <div className="mt-8">
               <TabsContent value="applications" className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-                <Card className="p-8 border shadow-sm min-h-[600px] bg-card rounded-[2.5rem]">
-                  <div className="flex items-center justify-between mb-10">
-                    <div>
+                <Card className="p-4 sm:p-8 border shadow-sm min-h-[600px] bg-card rounded-2xl sm:rounded-[2.5rem]">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 sm:mb-10">
+                    <div className="max-w-full">
                       <h2 className="text-3xl font-black uppercase tracking-tighter leading-none italic">Active Pipeline</h2>
-                      <p className="text-[10px] text-muted-foreground mt-3 font-black uppercase tracking-[0.3em] opacity-40">Tracking your global career progress</p>
+                      <p className="text-[10px] text-muted-foreground mt-3 font-black uppercase tracking-[0.3em] opacity-40 break-words whitespace-normal leading-relaxed">Tracking your global career progress</p>
                     </div>
-                    <Badge variant="outline" className="h-8 px-5 font-black text-[10px] tracking-widest border-primary/20 bg-primary/5 text-primary">
+                    <Badge variant="outline" className="h-8 px-5 font-black text-[10px] tracking-widest border-primary/20 bg-primary/5 text-primary shrink-0 self-end sm:self-auto">
                       {applications.length} ENGAGEMENTS
                     </Badge>
                   </div>
