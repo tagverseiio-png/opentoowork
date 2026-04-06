@@ -1447,8 +1447,8 @@ const EmployerDashboard = () => {
 
             <div className="flex-1 bg-background min-h-0 flex flex-col overflow-hidden">
               <Tabs defaultValue="list" className="flex-1 flex flex-col min-h-0 overflow-hidden">
-                <div className="px-4 sm:px-8 border-b bg-muted/5 overflow-x-auto shrink-0 max-w-full">
-                  <TabsList className="bg-transparent h-12 gap-4 sm:gap-6 p-0 min-w-max">
+                <div className="px-4 sm:px-8 border-b bg-muted/5 overflow-x-auto shrink-0 max-w-full custom-scrollbar">
+                  <TabsList className="bg-transparent h-12 gap-4 sm:gap-6 p-0 min-w-max justify-start flex w-full">
                     <TabsTrigger value="list" className="h-12 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none font-black uppercase tracking-widest text-[10px]">Applicants Pipeline</TabsTrigger>
                     {/* Referrals feature intentionally hidden
                     <TabsTrigger value="referrals" className="h-12 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none font-black uppercase tracking-widest text-[10px] relative">
@@ -1478,20 +1478,20 @@ const EmployerDashboard = () => {
 
                       if (filteredApps.length === 0) {
                         return (
-                          <div className="flex-1 flex flex-col items-center justify-center p-24 text-center bg-background">
-                            <div className="w-24 h-24 bg-muted/30 rounded-full flex items-center justify-center mb-6">
+                          <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-24 text-center bg-background min-h-0 overflow-y-auto custom-scrollbar">
+                            <div className="w-24 h-24 bg-muted/30 rounded-full flex items-center justify-center mb-6 shrink-0">
                               <Users className="h-10 w-10 text-muted-foreground/30" />
                             </div>
                             <h3 className="text-2xl font-bold">No {pipelineView === 'archive' ? 'rejected' : 'active'} candidates</h3>
-                            <p className="text-muted-foreground max-w-xs mt-2 font-medium">
+                            <p className="text-muted-foreground max-w-xs mt-2 font-medium text-sm sm:text-base">
                               {pipelineView === 'archive' ? 'Successfully rejected candidates will appear here for historical reference.' : 'As soon as candidates apply to this role, they will appear in this pipeline.'}
                             </p>
-                            <div className="flex gap-4 mt-8">
+                            <div className="flex flex-col sm:flex-row gap-3 mt-8 w-full max-w-xs px-4">
                                 <Button 
                                     variant={pipelineView === "active" ? "secondary" : "ghost"} 
                                     size="sm"
                                     onClick={() => setPipelineView("active")}
-                                    className={`text-[9px] font-black uppercase tracking-widest h-8 px-4 ${pipelineView === 'active' ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
+                                    className={`text-[9px] font-black uppercase tracking-widest h-10 sm:h-8 w-full ${pipelineView === 'active' ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'border border-border/60'}`}
                                 >
                                     Active Pipeline
                                 </Button>
@@ -1499,7 +1499,7 @@ const EmployerDashboard = () => {
                                     variant={pipelineView === "archive" ? "secondary" : "ghost"} 
                                     size="sm"
                                     onClick={() => setPipelineView("archive")}
-                                    className={`text-[9px] font-black uppercase tracking-widest h-8 px-4 ${pipelineView === 'archive' ? 'bg-muted-foreground text-white' : ''}`}
+                                    className={`text-[9px] font-black uppercase tracking-widest h-10 sm:h-8 w-full ${pipelineView === 'archive' ? 'bg-muted-foreground text-white' : 'border border-border/60'}`}
                                 >
                                     Archive ({applications.filter(a => a.status === 'rejected').length})
                                 </Button>
