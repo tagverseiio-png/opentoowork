@@ -623,8 +623,8 @@ const CandidateDashboard = () => {
 
       <div className="grid lg:grid-cols-12 gap-3 sm:gap-4 lg:gap-6">
         {/* Profile Card */}
-        <div className="lg:col-span-4 space-y-3 sm:space-y-4">
-          <Card className="p-4 sm:p-6 border shadow-sm bg-card overflow-hidden">
+        <div className="lg:col-span-4 space-y-2 sm:space-y-4">
+          <Card className="p-3 sm:p-6 border shadow-sm bg-card overflow-hidden">
             <div className="flex items-center justify-between mb-4 sm:mb-6">
               <h2 className="text-lg sm:text-xl font-black uppercase tracking-tighter flex items-center gap-2 truncate">
                 <Linkedin className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" /> <span className="truncate">Identity Vault</span>
@@ -1039,9 +1039,9 @@ const CandidateDashboard = () => {
               </Dialog>
             </div>
             
-            <div className="space-y-3 sm:space-y-4">
-              <div className="flex items-center gap-3 sm:gap-4 min-h-[64px]">
-                 <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 font-black text-primary text-lg sm:text-xl border-2 border-primary/20">
+            <div className="space-y-2 sm:space-y-4">
+              <div className="flex items-center gap-2 sm:gap-4 min-h-[64px]">
+                 <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 font-black text-primary text-sm sm:text-xl border-2 border-primary/20">
                     {profile.profiles?.full_name?.charAt(0)}
                  </div>
                  <div className="min-w-0 flex-1 flex flex-col justify-center">
@@ -1058,14 +1058,14 @@ const CandidateDashboard = () => {
                  </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-1.5 sm:gap-2 min-h-[64px]">
-                  <div className="bg-muted/5 border p-2 sm:p-3 rounded-xl flex flex-col justify-center min-w-0">
-                    <span className="text-[8px] sm:text-[9px] text-muted-foreground uppercase font-black mb-0.5">Location</span>
-                    <span className="text-[10px] sm:text-xs font-bold truncate break-words">{formatLocation(profile.location) || "Not specified"}</span>
+              <div className="grid grid-cols-2 gap-1 sm:gap-3 min-h-[64px]">
+                  <div className="bg-muted/5 border p-1.5 sm:p-3 rounded-lg sm:rounded-xl flex flex-col justify-center min-w-0">
+                    <span className="text-[7px] sm:text-[9px] text-muted-foreground uppercase font-black mb-0.5">Location</span>
+                    <span className="text-[7px] sm:text-xs font-bold truncate break-words">{formatLocation(profile.location) || "Not specified"}</span>
                   </div>
-                  <div className="bg-muted/5 border p-2 sm:p-3 rounded-xl flex flex-col justify-center min-w-0">
-                    <span className="text-[8px] sm:text-[9px] text-muted-foreground uppercase font-black mb-0.5">Experience</span>
-                    <span className="text-[10px] sm:text-xs font-bold truncate">{profile.experience_years || 0} Years</span>
+                  <div className="bg-muted/5 border p-1.5 sm:p-3 rounded-lg sm:rounded-xl flex flex-col justify-center min-w-0">
+                    <span className="text-[7px] sm:text-[9px] text-muted-foreground uppercase font-black mb-0.5">Experience</span>
+                    <span className="text-[7px] sm:text-xs font-bold truncate">{profile.experience_years || 0} Years</span>
                   </div>
               </div>
 
@@ -1117,9 +1117,9 @@ const CandidateDashboard = () => {
           </Card>
 
           {/* Skill Matrix Card */}
-          <Card className="p-4 sm:p-6 border shadow-sm bg-card overflow-hidden">
-             <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <h2 className="text-lg sm:text-xl font-black uppercase tracking-tighter flex items-center gap-2 truncate">
+          <Card className="p-3 sm:p-6 border shadow-sm bg-card overflow-hidden">
+             <div className="flex items-center justify-between mb-2 sm:mb-4">
+                <h2 className="text-base sm:text-xl font-black uppercase tracking-tighter flex items-center gap-2 truncate">
                   <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" /> <span className="truncate">Skill Graph</span>
                 </h2>
                 
@@ -1252,8 +1252,8 @@ const CandidateDashboard = () => {
 
             <div className="mt-8">
               <TabsContent value="applications" className="animate-in fade-in slide-in-from-bottom-2 duration-500 min-w-0 w-full">
-                <Card className="p-4 sm:p-8 border shadow-sm min-h-[600px] bg-card rounded-2xl sm:rounded-[2.5rem] w-full relative overflow-hidden">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 sm:mb-10 w-full min-w-0">
+                <Card className="p-3 sm:p-8 border shadow-sm min-h-[600px] bg-card rounded-2xl sm:rounded-[2.5rem] w-full relative overflow-hidden">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8 w-full min-w-0">
                     <div className="max-w-full min-w-0 flex-1">
                       <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tighter leading-none italic break-words">Active Pipeline</h2>
                       <p className="text-[10px] text-muted-foreground mt-3 font-black uppercase tracking-[0.3em] opacity-40 break-words whitespace-normal leading-relaxed">Tracking your global career progress</p>
@@ -1272,11 +1272,11 @@ const CandidateDashboard = () => {
                        <Button onClick={() => window.location.href = "/jobs"} className="mt-8 h-12 px-12 font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-2xl shadow-primary/20">Manifest Opportunity</Button>
                     </div>
                   ) : (
-                    <div className="space-y-3 sm:space-y-4">
+                    <div className="space-y-2 sm:space-y-4">
                       {applications.map((app) => (
                         <Card key={app.id} className="p-0 border border-muted-foreground/10 hover:border-primary/40 transition-all hover:shadow-2xl group overflow-hidden bg-card rounded-3xl sm:rounded-[2rem]">
                           <div className="flex flex-col md:flex-row min-h-[140px]">
-                             <div className="flex-1 p-5 sm:p-8 space-y-4 sm:space-y-6 min-w-0">
+                             <div className="flex-1 p-3 sm:p-8 space-y-2 sm:space-y-4 min-w-0">
                                 <div className="space-y-1.5">
                                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                                       <h3 className="font-black text-base sm:text-xl tracking-tighter uppercase leading-tight group-hover:text-primary transition-colors break-words w-full sm:w-auto">
@@ -1307,8 +1307,8 @@ const CandidateDashboard = () => {
               </TabsContent>
 
               <TabsContent value="recommendations" className="animate-in fade-in slide-in-from-bottom-4 duration-700 min-w-0 w-full">
-                <Card className="p-4 sm:p-8 border shadow-sm min-h-[600px] bg-card rounded-2xl sm:rounded-[2.5rem] w-full overflow-hidden">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 sm:mb-10 w-full min-w-0">
+                <Card className="p-3 sm:p-8 border shadow-sm min-h-[600px] bg-card rounded-2xl sm:rounded-[2.5rem] w-full overflow-hidden">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 w-full min-w-0">
                     <div className="max-w-full min-w-0 flex-1">
                       <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tighter leading-none italic break-words">Targeted Matches</h2>
                       <p className="text-[10px] text-muted-foreground mt-3 font-black uppercase tracking-[0.3em] opacity-40 break-words whitespace-normal leading-relaxed">Filtered by your {profile.work_authorization} status</p>
