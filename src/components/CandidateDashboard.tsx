@@ -623,11 +623,11 @@ const CandidateDashboard = () => {
 
       <div className="grid lg:grid-cols-12 gap-8">
         {/* Profile Card */}
-        <div className="lg:col-span-4 space-y-6">
-          <Card className="p-6 border shadow-sm bg-card overflow-hidden">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-black uppercase tracking-tighter flex items-center gap-2">
-                <Linkedin className="h-5 w-5 text-primary" /> Identity Vault
+        <div className="lg:col-span-4 space-y-4 sm:space-y-6">
+          <Card className="p-4 sm:p-6 border shadow-sm bg-card overflow-hidden">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-black uppercase tracking-tighter flex items-center gap-2 truncate">
+                <Linkedin className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" /> <span className="truncate">Identity Vault</span>
               </h2>
               
               <Dialog open={isEditing} onOpenChange={setIsEditing}>
@@ -1039,59 +1039,59 @@ const CandidateDashboard = () => {
               </Dialog>
             </div>
             
-            <div className="space-y-6">
-              <div className="flex items-center gap-4 min-h-[64px]">
-                 <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 font-black text-primary text-xl border-2 border-primary/20">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="flex items-center gap-3 sm:gap-4 min-h-[64px]">
+                 <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 font-black text-primary text-lg sm:text-xl border-2 border-primary/20">
                     {profile.profiles?.full_name?.charAt(0)}
                  </div>
                  <div className="min-w-0 flex-1 flex flex-col justify-center">
-                    <h3 className="font-black text-xl text-foreground uppercase tracking-tight truncate">{profile.profiles?.full_name}</h3>
+                    <h3 className="font-black text-base sm:text-xl text-foreground uppercase tracking-tight truncate">{profile.profiles?.full_name}</h3>
                     {profile.desired_job_title && (
-                      <div className="text-xs font-black text-primary uppercase tracking-widest mt-0.5 truncate">
+                      <div className="text-[10px] sm:text-xs font-black text-primary uppercase tracking-widest mt-0.5 truncate">
                         {profile.desired_job_title}
                       </div>
                     )}
-                    <div className="text-xs text-muted-foreground font-medium flex items-center gap-1.5 mt-1 truncate">
-                       <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)] shrink-0" />
+                    <div className="text-[10px] sm:text-xs text-muted-foreground font-medium flex items-center gap-1.5 mt-1 truncate">
+                       <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)] shrink-0" />
                        <span className="truncate">{profile.profiles?.email}</span>
                     </div>
                  </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 min-h-[64px]">
-                  <div className="bg-muted/5 border p-3 rounded-xl flex flex-col justify-center min-w-0">
-                    <span className="text-[9px] text-muted-foreground uppercase font-black mb-1">Location</span>
-                    <span className="text-xs font-bold truncate break-words">{formatLocation(profile.location) || "Not specified"}</span>
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 min-h-[64px]">
+                  <div className="bg-muted/5 border p-2 sm:p-3 rounded-xl flex flex-col justify-center min-w-0">
+                    <span className="text-[8px] sm:text-[9px] text-muted-foreground uppercase font-black mb-0.5 sm:mb-1">Location</span>
+                    <span className="text-[10px] sm:text-xs font-bold truncate break-words">{formatLocation(profile.location) || "Not specified"}</span>
                   </div>
-                  <div className="bg-muted/5 border p-3 rounded-xl flex flex-col justify-center min-w-0">
-                    <span className="text-[9px] text-muted-foreground uppercase font-black mb-1">Experience</span>
-                    <span className="text-xs font-bold truncate">{profile.experience_years || 0} Years</span>
+                  <div className="bg-muted/5 border p-2 sm:p-3 rounded-xl flex flex-col justify-center min-w-0">
+                    <span className="text-[8px] sm:text-[9px] text-muted-foreground uppercase font-black mb-0.5 sm:mb-1">Experience</span>
+                    <span className="text-[10px] sm:text-xs font-bold truncate">{profile.experience_years || 0} Years</span>
                   </div>
               </div>
 
-              <div className="space-y-3 min-h-[126px]">
-                <Label className="text-[10px] text-muted-foreground uppercase font-black tracking-widest block h-[14px]">Connective Services</Label>
+              <div className="space-y-2 sm:space-y-3 min-h-[126px]">
+                <Label className="text-[9px] sm:text-[10px] text-muted-foreground uppercase font-black tracking-widest block h-[14px]">Connective Services</Label>
                 <div className="grid grid-cols-[1fr,auto] gap-2 min-h-[44px]">
                   {profile.resume_url ? (
                     <>
                       <Button 
                         variant="outline" 
-                        className="w-full h-11 gap-3 text-[10px] font-black uppercase tracking-widest border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm min-w-0"
+                        className="w-full h-10 sm:h-11 gap-2 sm:gap-3 text-[9px] sm:text-[10px] font-black uppercase tracking-widest border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm min-w-0"
                         onClick={() => handleViewResume(getResumePublicUrl(profile.resume_url))}
                       >
-                        <FileText className="h-4 w-4 text-primary shrink-0" /> <span className="truncate">View Dossier</span>
+                        <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-primary shrink-0" /> <span className="truncate">View Dossier</span>
                       </Button>
                       <Button 
                         variant="outline" 
                         size="icon" 
-                        className="h-11 w-11 border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm shrink-0"
+                        className="h-10 sm:h-11 w-10 sm:w-11 border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm shrink-0"
                         onClick={() => handleViewResume(
                           getResumePublicUrl(profile.resume_url), 
                           true, 
                           `${profile.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.pdf`
                         )}
                       >
-                        <Download className="h-4 w-4 text-primary" />
+                        <Download className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
                       </Button>
                     </>
                   ) : (
@@ -1103,8 +1103,8 @@ const CandidateDashboard = () => {
 
                 {profile.linkedin_url ? (
                   <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="block w-full">
-                    <Button variant="outline" className="w-full h-11 gap-3 text-[10px] font-black uppercase tracking-widest border-[#0A66C2]/20 text-[#0A66C2] hover:bg-[#0A66C2]/5 shadow-sm min-w-0">
-                      <Linkedin className="h-4 w-4 shrink-0" /> <span className="truncate">LinkedIn Bridge</span>
+                    <Button variant="outline" className="w-full h-10 sm:h-11 gap-2 sm:gap-3 text-[9px] sm:text-[10px] font-black uppercase tracking-widest border-[#0A66C2]/20 text-[#0A66C2] hover:bg-[#0A66C2]/5 shadow-sm min-w-0">
+                      <Linkedin className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" /> <span className="truncate">LinkedIn Bridge</span>
                     </Button>
                   </a>
                 ) : (
@@ -1117,10 +1117,10 @@ const CandidateDashboard = () => {
           </Card>
 
           {/* Skill Matrix Card */}
-          <Card className="p-6 border shadow-sm bg-card overflow-hidden">
-             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-black uppercase tracking-tighter flex items-center gap-2">
-                  <Globe className="h-5 w-5 text-primary" /> Skill Graph
+          <Card className="p-4 sm:p-6 border shadow-sm bg-card overflow-hidden">
+             <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl font-black uppercase tracking-tighter flex items-center gap-2 truncate">
+                  <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" /> <span className="truncate">Skill Graph</span>
                 </h2>
                 
                 <Dialog open={addingSkill} onOpenChange={(open) => {
