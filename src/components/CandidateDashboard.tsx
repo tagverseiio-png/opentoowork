@@ -1202,27 +1202,27 @@ const CandidateDashboard = () => {
                   ) : (
                     <div className="space-y-5">
                       {applications.map((app) => (
-                        <Card key={app.id} className="p-0 border border-muted-foreground/10 hover:border-primary/40 transition-all hover:shadow-2xl group overflow-hidden bg-card rounded-[2rem]">
+                        <Card key={app.id} className="p-0 border border-muted-foreground/10 hover:border-primary/40 transition-all hover:shadow-2xl group overflow-hidden bg-card rounded-3xl sm:rounded-[2rem]">
                           <div className="flex flex-col md:flex-row min-h-[140px]">
-                             <div className="flex-1 p-8 space-y-6">
+                             <div className="flex-1 p-5 sm:p-8 space-y-4 sm:space-y-6 min-w-0">
                                 <div className="space-y-2">
-                                   <div className="flex items-center gap-3">
-                                      <h3 className="font-black text-2xl tracking-tighter uppercase leading-tight group-hover:text-primary transition-colors">
+                                   <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                                      <h3 className="font-black text-xl sm:text-2xl tracking-tighter uppercase leading-tight group-hover:text-primary transition-colors break-words w-full sm:w-auto">
                                         {app.jobs?.title}
                                       </h3>
                                       <Badge variant="outline" className="h-5 text-[8px] font-black uppercase tracking-[0.2em] border-primary/20">{app.jobs?.job_mode}</Badge>
                                    </div>
-                                   <div className="flex items-center text-xs font-bold text-muted-foreground tracking-widest uppercase">
+                                   <div className="flex items-center text-xs font-bold text-muted-foreground tracking-widest uppercase break-words whitespace-normal">
                                       {app.jobs?.employer?.company_name}
                                    </div>
                                 </div>
                                 <div className="flex flex-wrap gap-3">
-                                   <div className="flex items-center bg-muted/30 px-4 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase text-muted-foreground italic border border-muted-foreground/5">
+                                   <div className="flex items-center bg-muted/30 px-3 sm:px-4 py-2 rounded-xl text-[9px] sm:text-[10px] font-black tracking-widest uppercase text-muted-foreground italic border border-muted-foreground/5">
                                       Applied: {new Date(app.applied_at).toLocaleDateString()}
                                    </div>
                                 </div>
                              </div>
-                             <div className="md:w-[220px] bg-muted/20 border-l border-dashed flex flex-col items-center justify-center p-8 group-hover:bg-primary/5 transition-colors">
+                             <div className="md:w-[220px] sm:bg-muted/20 border-t sm:border-t-0 sm:border-l border-dashed flex flex-col items-center justify-center p-5 sm:p-8 group-hover:bg-primary/5 transition-colors">
                                 <span className="text-[9px] font-black text-muted-foreground/40 mb-3 uppercase tracking-widest">Global Status</span>
                                 {getStatusBadge(app.status)}
                              </div>
@@ -1244,41 +1244,41 @@ const CandidateDashboard = () => {
                   </div>
 
                   {recommendations.length === 0 ? (
-                    <div className="text-center py-32 opacity-20 hover:opacity-100 transition-opacity">
-                      <Target className="h-16 w-16 mx-auto mb-6 text-primary" />
-                      <h3 className="text-xl font-black uppercase tracking-[0.5em] mb-4">Neural Matching</h3>
-                      <p className="max-w-xs mx-auto text-xs font-bold leading-relaxed uppercase tracking-widest">Scanning {skills.length} expert competencies against global vacancies...</p>
+                    <div className="text-center py-20 sm:py-32 opacity-20 hover:opacity-100 transition-opacity">
+                      <Target className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4 sm:mb-6 text-primary" />
+                      <h3 className="text-lg sm:text-xl font-black uppercase tracking-[0.5em] mb-2 sm:mb-4">Neural Matching</h3>
+                      <p className="max-w-[250px] sm:max-w-xs mx-auto text-[10px] sm:text-xs font-bold leading-relaxed uppercase tracking-widest">Scanning {skills.length} expert competencies against global vacancies...</p>
                     </div>
                   ) : (
-                    <div className="grid md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                       {recommendations.map(job => (
-                        <Card key={job.id} className="p-6 border border-muted-foreground/10 hover:shadow-2xl transition-all group relative overflow-hidden bg-muted/5 rounded-3xl">
+                        <Card key={job.id} className="p-5 sm:p-6 border border-muted-foreground/10 hover:shadow-2xl transition-all group relative overflow-hidden bg-muted/5 rounded-2xl sm:rounded-3xl">
                            <Badge
                              variant="outline"
-                             className={`absolute top-4 right-4 z-10 text-[9px] font-black uppercase tracking-widest border-transparent ${applications.some((app) => (app.job_id || app.jobs?.id) === job.id) ? "bg-green-500/10 text-green-600" : "bg-muted text-muted-foreground"}`}
+                             className={`absolute top-4 right-4 z-10 text-[8px] sm:text-[9px] font-black uppercase tracking-widest border-transparent ${applications.some((app) => (app.job_id || app.jobs?.id) === job.id) ? "bg-green-500/10 text-green-600" : "bg-muted text-muted-foreground"}`}
                            >
                              {applications.some((app) => (app.job_id || app.jobs?.id) === job.id) ? "Applied" : "Not Applied"}
                            </Badge>
-                           <div className="space-y-4">
-                              <div>
-                                 <h4 className="text-lg font-black uppercase tracking-tighter leading-none group-hover:text-primary transition-colors">{job.title}</h4>
-                                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1.5">{job.employer?.company_name}</p>
+                           <div className="space-y-4 pt-6 sm:pt-0">
+                              <div className="pr-0 sm:pr-20">
+                                 <h4 className="text-base sm:text-lg font-black uppercase tracking-tighter leading-tight group-hover:text-primary transition-colors break-words w-full">{job.title}</h4>
+                                 <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1.5 break-words">{job.employer?.company_name}</p>
                               </div>
                               <div className="flex flex-wrap gap-2">
-                                 <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-background border-primary/20">{formatLocation(job.location)}</Badge>
-                                 <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-primary/10 text-primary border-transparent">{job.job_type}</Badge>
+                                 <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-background border-primary/20">{formatLocation(job.location)}</Badge>
+                                 <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-primary/10 text-primary border-transparent">{job.job_type}</Badge>
                                  {job.salary_min && (
-                                    <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-green-500/10 text-green-600 border-transparent">
+                                    <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-green-500/10 text-green-600 border-transparent">
                                       ${job.salary_min.toLocaleString()} - {job.salary_max?.toLocaleString()} <span className="ml-1 opacity-60">{job.salary_period || 'Annually'}</span>
                                     </Badge>
                                   )}
                                  {(job as any).score > 0 && (
-                                   <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-green-500/10 text-green-600 border-transparent">
+                                   <Badge variant="outline" className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-green-500/10 text-green-600 border-transparent">
                                      {(job as any).score}% Match
                                    </Badge>
                                  )}
                               </div>
-                              <Button className="w-full h-11 font-black uppercase text-[10px] shadow-lg rounded-2xl" asChild>
+                              <Button className="w-full h-10 sm:h-11 font-black uppercase text-[9px] sm:text-[10px] shadow-lg rounded-xl sm:rounded-2xl mt-2" asChild>
                                  <Link to={`/jobs/${job.id}`}>Engagement Review</Link>
                               </Button>
                            </div>
