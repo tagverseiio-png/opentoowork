@@ -623,7 +623,7 @@ const CandidateDashboard = () => {
 
       <div className="grid lg:grid-cols-12 gap-8">
         {/* Profile Card */}
-        <div className="lg:col-span-4 space-y-4 sm:space-y-6">
+        <div className="lg:col-span-4 space-y-3 sm:space-y-4">
           <Card className="p-4 sm:p-6 border shadow-sm bg-card overflow-hidden">
             <div className="flex items-center justify-between mb-4 sm:mb-6">
               <h2 className="text-lg sm:text-xl font-black uppercase tracking-tighter flex items-center gap-2 truncate">
@@ -1039,7 +1039,7 @@ const CandidateDashboard = () => {
               </Dialog>
             </div>
             
-            <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-3 sm:space-y-4">
               <div className="flex items-center gap-3 sm:gap-4 min-h-[64px]">
                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 font-black text-primary text-lg sm:text-xl border-2 border-primary/20">
                     {profile.profiles?.full_name?.charAt(0)}
@@ -1058,20 +1058,20 @@ const CandidateDashboard = () => {
                  </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 sm:gap-3 min-h-[64px]">
+              <div className="grid grid-cols-2 gap-1.5 sm:gap-2 min-h-[64px]">
                   <div className="bg-muted/5 border p-2 sm:p-3 rounded-xl flex flex-col justify-center min-w-0">
-                    <span className="text-[8px] sm:text-[9px] text-muted-foreground uppercase font-black mb-0.5 sm:mb-1">Location</span>
+                    <span className="text-[8px] sm:text-[9px] text-muted-foreground uppercase font-black mb-0.5">Location</span>
                     <span className="text-[10px] sm:text-xs font-bold truncate break-words">{formatLocation(profile.location) || "Not specified"}</span>
                   </div>
                   <div className="bg-muted/5 border p-2 sm:p-3 rounded-xl flex flex-col justify-center min-w-0">
-                    <span className="text-[8px] sm:text-[9px] text-muted-foreground uppercase font-black mb-0.5 sm:mb-1">Experience</span>
+                    <span className="text-[8px] sm:text-[9px] text-muted-foreground uppercase font-black mb-0.5">Experience</span>
                     <span className="text-[10px] sm:text-xs font-bold truncate">{profile.experience_years || 0} Years</span>
                   </div>
               </div>
 
               <div className="space-y-2 sm:space-y-3 min-h-[126px]">
-                <Label className="text-[9px] sm:text-[10px] text-muted-foreground uppercase font-black tracking-widest block h-[14px]">Connective Services</Label>
-                <div className="grid grid-cols-[1fr,auto] gap-2 min-h-[44px]">
+                <Label className="text-[9px] sm:text-[10px] text-muted-foreground uppercase font-black tracking-widest block h-[12px]">Connective Services</Label>
+                <div className="grid grid-cols-[1fr,auto] gap-1.5 min-h-[44px]">
                   {profile.resume_url ? (
                     <>
                       <Button 
@@ -1095,7 +1095,7 @@ const CandidateDashboard = () => {
                       </Button>
                     </>
                   ) : (
-                    <div className="col-span-2 text-[9px] text-orange-600 bg-orange-50/50 px-3 py-0 h-11 rounded-xl border border-orange-100 font-bold flex items-center gap-2 italic">
+                    <div className="col-span-2 text-[9px] text-orange-600 bg-orange-50/50 px-2 sm:px-3 py-0 h-10 sm:h-11 rounded-xl border border-orange-100 font-bold flex items-center gap-2 italic">
                        Missing Resume Link
                     </div>
                   )}
@@ -1118,7 +1118,7 @@ const CandidateDashboard = () => {
 
           {/* Skill Matrix Card */}
           <Card className="p-4 sm:p-6 border shadow-sm bg-card overflow-hidden">
-             <div className="flex items-center justify-between mb-4 sm:mb-6">
+             <div className="flex items-center justify-between mb-3 sm:mb-4">
                 <h2 className="text-lg sm:text-xl font-black uppercase tracking-tighter flex items-center gap-2 truncate">
                   <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" /> <span className="truncate">Skill Graph</span>
                 </h2>
@@ -1174,7 +1174,7 @@ const CandidateDashboard = () => {
                 </Dialog>
              </div>
 
-             <ScrollArea className="h-[280px]">
+             <ScrollArea className="h-[220px] sm:h-[280px]">
                 {skills.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <Globe className="h-12 w-12 text-muted/20 mb-3" />
@@ -1273,29 +1273,29 @@ const CandidateDashboard = () => {
                     </div>
                   ) : (
                     <div className="space-y-5">
-                      {applications.map((app) => (
+                    <div className="space-y-3 sm:space-y-4">
                         <Card key={app.id} className="p-0 border border-muted-foreground/10 hover:border-primary/40 transition-all hover:shadow-2xl group overflow-hidden bg-card rounded-3xl sm:rounded-[2rem]">
                           <div className="flex flex-col md:flex-row min-h-[140px]">
                              <div className="flex-1 p-5 sm:p-8 space-y-4 sm:space-y-6 min-w-0">
-                                <div className="space-y-2">
-                                   <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                                      <h3 className="font-black text-xl sm:text-2xl tracking-tighter uppercase leading-tight group-hover:text-primary transition-colors break-words w-full sm:w-auto">
+                                <div className="space-y-1.5">
+                                   <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                                      <h3 className="font-black text-base sm:text-xl tracking-tighter uppercase leading-tight group-hover:text-primary transition-colors break-words w-full sm:w-auto">
                                         {app.jobs?.title}
                                       </h3>
-                                      <Badge variant="outline" className="h-5 text-[8px] font-black uppercase tracking-[0.2em] border-primary/20">{app.jobs?.job_mode}</Badge>
+                                      <Badge variant="outline" className="h-4 sm:h-5 text-[7px] sm:text-[8px] font-black uppercase tracking-[0.1em] border-primary/20 px-1.5 sm:px-2">{app.jobs?.job_mode}</Badge>
                                    </div>
-                                   <div className="flex items-center text-xs font-bold text-muted-foreground tracking-widest uppercase break-words whitespace-normal">
+                                   <div className="flex items-center text-[10px] sm:text-xs font-bold text-muted-foreground tracking-widest uppercase break-words whitespace-normal">
                                       {app.jobs?.employer?.company_name}
                                    </div>
                                 </div>
-                                <div className="flex flex-wrap gap-3">
-                                   <div className="flex items-center bg-muted/30 px-3 sm:px-4 py-2 rounded-xl text-[9px] sm:text-[10px] font-black tracking-widest uppercase text-muted-foreground italic border border-muted-foreground/5">
+                                <div className="flex flex-wrap gap-2">
+                                   <div className="flex items-center bg-muted/30 px-2 sm:px-3 py-1.5 rounded-lg text-[8px] sm:text-[9px] font-black tracking-widest uppercase text-muted-foreground italic border border-muted-foreground/5">
                                       Applied: {new Date(app.applied_at).toLocaleDateString()}
                                    </div>
                                 </div>
                              </div>
-                             <div className="md:w-[220px] sm:bg-muted/20 border-t sm:border-t-0 sm:border-l border-dashed flex flex-col items-center justify-center p-5 sm:p-8 group-hover:bg-primary/5 transition-colors">
-                                <span className="text-[9px] font-black text-muted-foreground/40 mb-3 uppercase tracking-widest">Global Status</span>
+                             <div className="md:w-[180px] sm:bg-muted/20 border-t sm:border-t-0 sm:border-l border-dashed flex flex-col items-center justify-center p-3 sm:p-6 group-hover:bg-primary/5 transition-colors min-h-[100px] sm:min-h-auto">
+                                <span className="text-[8px] font-black text-muted-foreground/40 mb-2 uppercase tracking-widest">Global Status</span>
                                 {getStatusBadge(app.status)}
                              </div>
                           </div>
