@@ -41,7 +41,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "./ui/separator";
-import { sendStatusChangeNotification, sendJobAlertEmail, calculateJobTitleMatchScore, calculateMatchScore } from "@/lib/email";
+import { sendStatusChangeNotification, sendJobAlertEmail, calculateMatchScore } from "@/lib/email";
 import { formatLocation } from "@/lib/utils";
 
 const WORK_AUTH_OPTIONS = [
@@ -151,6 +151,7 @@ const EmployerDashboard = () => {
   const [jobType, setJobType] = useState("Full time");
   const [taxTerm, setTaxTerm] = useState("");
   const [jobMode, setJobMode] = useState("On-Site");
+  const [postingDate, setPostingDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [expiresAt, setExpiresAt] = useState("");
   const [experienceRequired, setExperienceRequired] = useState("");
   const [benefits, setBenefits] = useState("");
@@ -363,6 +364,7 @@ const EmployerDashboard = () => {
       job_type: taxTerm ? `${jobType} - ${taxTerm}` : jobType,
       job_mode: jobMode,
       expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
+      created_at: postingDate ? new Date(postingDate).toISOString() : new Date().toISOString(),
       experience_required: experienceRequired ? parseInt(experienceRequired) : 0,
       work_authorization: selectedWorkAuth,
       is_active: true
@@ -445,10 +447,9 @@ const EmployerDashboard = () => {
       let notifiedCount = 0;
 
       for (const candidate of candidates) {
-        if (!candidate.candidate_skills?.length) continue;
-        if (!candidate.profiles?.email) continue;
+        if (!candidate.candidate_skills?.length || !candidate.profiles?.email) continue;
 
-        const score = calculateJobTitleMatchScore(candidate.desired_job_title, job.title);
+        const score = calculateMatchScore(candidate.candidate_skills || [], job.job_skills || [], candidate.desired_job_title, job.title);
 
         // Only notify candidates with >= 50% match
         if (score >= 50) {
@@ -475,6 +476,7 @@ const EmployerDashboard = () => {
 
   const resetJobForm = () => {
     setEditingJobId(null);
+    setPostingDate(new Date().toISOString().split('T')[0]);
     setJobIdField("");
     setTitle("");
     setDescription("");
@@ -494,6 +496,7 @@ const EmployerDashboard = () => {
 
   const handleEditJob = (job: any) => {
     setEditingJobId(job.id);
+    setPostingDate(job.created_at ? new Date(job.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
     setJobIdField(job.job_id || "");
     setTitle(job.title || "");
     setDescription(job.description || "");
@@ -710,15 +713,25 @@ const EmployerDashboard = () => {
 
       const { data } = await query.limit(50);
       
-      let finalData = data || [];
-      if (talentSearch.trim() && finalData.length > 0) {
-        const searchLower = talentSearch.trim().toLowerCase();
-        finalData.sort((a, b) => {
-          const aTitleMatch = a.desired_job_title?.toLowerCase().includes(searchLower) ? 1 : 0;
-          const bTitleMatch = b.desired_job_title?.toLowerCase().includes(searchLower) ? 1 : 0;
-          return bTitleMatch - aTitleMatch;
-        });
-      }
+      let finalData: any[] = data || [];
+      const activeJobsWithSkills = jobs.filter(j => j.is_active && j.job_skills?.length > 0);
+      
+      finalData = finalData.map(talent => {
+          let maxScore = 0;
+          if (activeJobsWithSkills.length > 0 && talent.candidate_skills?.length) {
+              maxScore = Math.max(...activeJobsWithSkills.map(job => 
+                  calculateMatchScore(
+                      talent.candidate_skills || [], 
+                      job.job_skills || [], 
+                      talent.desired_job_title, 
+                      job.title
+                  )
+              ));
+          }
+          return { ...talent, maxScore };
+      });
+      
+      finalData.sort((a, b) => b.maxScore - a.maxScore);
 
       setTalentPool(finalData);
     } catch (e) {
@@ -731,7 +744,7 @@ const EmployerDashboard = () => {
 
   useEffect(() => {
     if (activeTab === "talent") fetchTalent();
-  }, [activeTab]);
+  }, [activeTab, jobs.length]);
 
   const toggleWorkAuth = (auth: string) => {
     setSelectedWorkAuth(prev =>
@@ -1137,10 +1150,14 @@ const EmployerDashboard = () => {
 
                       <div className="space-y-4">
                         <Label className="text-xs font-bold text-foreground">Target Experience & Timeline</Label>
-                        <div className="grid grid-cols-2 gap-4 text-xs">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                           <div className="space-y-1.5">
                             <span className="text-muted-foreground">General Years Experience</span>
                             <Input type="number" min="0" placeholder="e.g. 5" value={experienceRequired} onChange={(e) => setExperienceRequired(e.target.value)} className="bg-background" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <span className="text-muted-foreground">Posting Date</span>
+                            <Input type="date" value={postingDate} onChange={(e) => setPostingDate(e.target.value)} className="bg-background cursor-pointer" />
                           </div>
                           <div className="space-y-1.5">
                             <span className="text-muted-foreground">Listing Expiry Date</span>
@@ -1494,7 +1511,7 @@ const EmployerDashboard = () => {
                       return (
                         <>
                           {/* Sidebar: Candidate List */}
-                          <div className={`w-full lg:w-[340px] border-b lg:border-b-0 lg:border-r bg-muted/5 flex-col shrink-0 overflow-hidden ${showMobileList ? "flex h-full" : "hidden lg:flex"}`}>
+                          <div className={`w-full lg:w-[340px] border-b lg:border-b-0 lg:border-r bg-muted/5 flex-col flex-1 min-h-0 shrink-0 overflow-hidden ${showMobileList ? "flex h-full" : "hidden lg:flex"}`}>
                             <div className="p-4 border-b flex flex-col gap-3">
                               <div className="flex gap-2">
                                 <Button 
@@ -2004,21 +2021,7 @@ const EmployerDashboard = () => {
                       <div className="flex items-center gap-3 mb-1">
                         <h3 className="font-black text-lg leading-tight uppercase tracking-tighter">{talent.profiles?.full_name}</h3>
                         <Badge className="bg-primary/10 text-primary border-transparent tabular-nums text-[10px] font-black w-fit">
-                          {(() => {
-                            const activeJobsWithSkills = jobs.filter(j => j.is_active && j.job_skills?.length > 0);
-                            if (activeJobsWithSkills.length === 0 || !talent.candidate_skills?.length) return '— MATCH';
-                            
-                            const maxScore = Math.max(...activeJobsWithSkills.map(job => 
-                              calculateMatchScore(
-                                talent.candidate_skills, 
-                                job.job_skills, 
-                                talent.desired_job_title, 
-                                job.title
-                              )
-                            ));
-                            
-                            return maxScore > 0 ? `${Math.round(maxScore)}% MATCH` : '0% MATCH';
-                          })()}
+                          {talent.maxScore !== undefined && talent.maxScore > 0 ? `${Math.round(talent.maxScore)}% MATCH` : '— MATCH'}
                         </Badge>
                       </div>
                       

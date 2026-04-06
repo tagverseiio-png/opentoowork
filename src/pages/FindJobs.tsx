@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { calculateJobTitleMatchScore } from "@/lib/email";
+import { calculateMatchScore } from "@/lib/email";
 
 const FindJobs = () => {
   const [jobs, setJobs] = useState<any[]>([]);
@@ -81,8 +81,8 @@ const FindJobs = () => {
   };
 
   const getMatchScore = (job: any) => {
-    if (!candidateProfile?.desired_job_title) return 0;
-    return calculateJobTitleMatchScore(candidateProfile.desired_job_title, job.title);
+    if (!candidateProfile) return 0;
+    return calculateMatchScore(candidateProfile.candidate_skills || [], job.job_skills || [], candidateProfile.desired_job_title, job.title);
   };
 
   // Filter jobs

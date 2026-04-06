@@ -17,7 +17,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
-import { calculateJobTitleMatchScore } from "@/lib/email";
+import { calculateMatchScore } from "@/lib/email";
 
 const FindCandidates = () => {
   const { toast } = useToast();
@@ -95,7 +95,7 @@ const FindCandidates = () => {
     if (matchingJobId === "none") return 0;
     const job = employerJobs.find(j => j.id === matchingJobId);
     if (!job) return 0;
-    return calculateJobTitleMatchScore(candidate.desired_job_title, job.title);
+    return calculateMatchScore(candidate.candidate_skills || [], job.job_skills || [], candidate.desired_job_title, job.title);
   };
 
   const handleShortlist = async (candidateId: string) => {

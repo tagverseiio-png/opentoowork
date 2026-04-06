@@ -33,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { calculateJobTitleMatchScore, normalizeSkillName, sendEmail } from "@/lib/email";
+import { calculateMatchScore, normalizeSkillName, sendEmail } from "@/lib/email";
 
 const WORK_AUTH_OPTIONS = [
   "H1B", "CPT-EAD", "OPT-EAD", "GC", "GC-EAD", "USC", "TN"
@@ -282,7 +282,7 @@ const CandidateDashboard = () => {
     const scoredJobs = jobs
       .map(job => ({
         ...job,
-        score: calculateJobTitleMatchScore(candidateProfile.desired_job_title, job.title),
+        score: calculateMatchScore(candidateProfile.candidate_skills || [], job.job_skills || [], candidateProfile.desired_job_title, job.title),
         hasSpecificOverlap: hasSpecificTitleOverlap(candidateProfile.desired_job_title, job.title),
       }))
       .sort((a: any, b: any) => b.score - a.score);
@@ -412,7 +412,7 @@ const CandidateDashboard = () => {
       const matchedJobs = jobs
         .map(job => ({
           ...job,
-          score: calculateJobTitleMatchScore(candidateProfile.desired_job_title, job.title)
+          score: calculateMatchScore(candidateProfile.candidate_skills || [], job.job_skills || [], candidateProfile.desired_job_title, job.title)
         }))
         .filter(job => job.score >= 50)
         .sort((a, b) => b.score - a.score)

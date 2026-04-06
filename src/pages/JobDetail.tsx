@@ -12,7 +12,7 @@ import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Building2, DollarSign, Briefcase, Calendar, Lock, CheckCircle2, Globe, Target, Share2, Users } from "lucide-react";
 import { ToastAction } from "@/components/ui/toast";
-import { sendApplicationConfirmation, sendEmployerNewApplicantAlert, calculateJobTitleMatchScore, sendReferralEmail } from "@/lib/email";
+import { sendApplicationConfirmation, sendEmployerNewApplicantAlert, calculateMatchScore, sendReferralEmail } from "@/lib/email";
 import { formatLocation } from "@/lib/utils";
 
 const JobDetail = () => {
@@ -142,8 +142,8 @@ const JobDetail = () => {
   };
 
   const getMatchScore = () => {
-    if (!job || !candidateProfile?.desired_job_title) return 0;
-    return calculateJobTitleMatchScore(candidateProfile.desired_job_title, job.title);
+    if (!job || !candidateProfile) return 0;
+    return calculateMatchScore(candidateProfile.candidate_skills || [], job.job_skills || [], candidateProfile.desired_job_title, job.title);
   };
 
   const matchScore = getMatchScore();
