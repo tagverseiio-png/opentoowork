@@ -293,7 +293,9 @@ const CandidateDashboard = () => {
       }))
       .sort((a: any, b: any) => b.score - a.score);
 
-    const highMatches = scoredJobs.filter((job: any) => job.score >= 50 || job.hasSpecificOverlap);
+    const highMatches = scoredJobs.filter((job: any) => {
+      return job.score >= 50 || job.hasSpecificOverlap;
+    });
     setRecommendations(highMatches.slice(0, 10));
   };
 
@@ -1325,10 +1327,12 @@ const CandidateDashboard = () => {
                   </div>
 
                   {recommendations.length === 0 ? (
-                    <div className="text-center py-20 sm:py-32 opacity-20 hover:opacity-100 transition-opacity">
-                      <Target className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4 sm:mb-6 text-primary" />
-                      <h3 className="text-lg sm:text-xl font-black uppercase tracking-[0.5em] mb-2 sm:mb-4">Neural Matching</h3>
-                      <p className="max-w-[250px] sm:max-w-xs mx-auto text-[10px] sm:text-xs font-bold leading-relaxed uppercase tracking-widest">Scanning {skills.length} expert competencies against global vacancies...</p>
+                    <div className="flex flex-col items-center justify-center py-20 sm:py-32 text-center text-muted-foreground opacity-70">
+                      <Target className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4 sm:mb-6 text-primary/50" />
+                      <h3 className="text-lg sm:text-xl font-black uppercase tracking-[0.2em] mb-2">No Verified Matches</h3>
+                      <p className="max-w-[250px] sm:max-w-xs mx-auto text-[10px] sm:text-xs font-bold leading-relaxed uppercase tracking-widest">
+                        We couldn't find roles aligning precisely with your specific parameters right now. Try expanding your search or adding more skills.
+                      </p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">

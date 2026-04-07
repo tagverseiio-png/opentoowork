@@ -265,14 +265,29 @@ export function calculateMatchScore(
 ): number {
   let score = 0;
 
+  let matchesTitle = false;
+  if (candidateTitle && jobTitle) {
+    const cWords: string[] = candidateTitle.toLowerCase().match(/\b(\w+)\b/g) || [];
+    const jWords: string[] = jobTitle.toLowerCase().match(/\b(\w+)\b/g) || [];
+    matchesTitle = cWords.some(w => jWords.includes(w));
+  }
+
+  // Fallback: If candidate specifies no skills, evaluate strictly on Title match
+  if (!candidateSkills || candidateSkills.length === 0) {
+    return matchesTitle ? 50 : 0;
+  }
+
+  // If job has no specific skills required, any candidate matching title gets a baseline 50, and 100 if Title also matches well.
+  if (!jobSkills || jobSkills.length === 0) {
+    return matchesTitle ? 100 : 50;
+  }
+
   const reqSkills = jobSkills.filter(s => s.is_required !== false);
   const optSkills = jobSkills.filter(s => s.is_required === false);
 
   const W_REQ = 0.8;
   const W_OPT = 0.2;
   const EXP_CAP = 1.2;
-
-  if (jobSkills.length > 0 && candidateSkills.length > 0) {
 
   // ── Required Skills (weighted 80%) ──
   if (reqSkills.length > 0) {
@@ -306,24 +321,19 @@ export function calculateMatchScore(
       if (match) optScore += 1;
     }
     score += (optScore / optSkills.length) * W_OPT * 100;
-  }
-  }
-
-  // ── Job Title Alignment (Multiplier) ──
-  // Matches by Job Title first, then aligns it with skill sets.
-  if (candidateTitle && jobTitle) {
-    const cWords: string[] = candidateTitle.toLowerCase().match(/\b(\w+)\b/g) || [];
-    const jWords: string[] = jobTitle.toLowerCase().match(/\b(\w+)\b/g) || [];
-    const matchesTitle = cWords.some(w => jWords.includes(w));
-    
-    // If they have title overlap, heavily weight it combined with skills.
-    // If no match, penalize score to prioritize those who actually match the title.
-    if (matchesTitle) {
-      score = (score * 0.5) + 50; // Boost to 50-100 range if skills are good
-    } else {
-      score = score * 0.5; // Cap at 50% if titles don't match at all
-    }
+  } else {
+    score += W_OPT * 100;
   }
 
-  return Math.min(Math.round(score), 100);
+  // Final Composite Score Calculation
+  // Title alignment is weighted at 30%, explicitly verified skills at 70%
+  const SKILL_WEIGHT = 0.70;
+  const TITLE_WEIGHT = 0.30;
+  
+  let finalScore = score * SKILL_WEIGHT;
+  if (matchesTitle) {
+    finalScore += (100 * TITLE_WEIGHT);
+  }
+
+  return Math.min(Math.round(finalScore), 100);
 }
