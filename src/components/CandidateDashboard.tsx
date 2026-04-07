@@ -281,19 +281,24 @@ const CandidateDashboard = () => {
       return;
     }
 
-    const validJobs = candidateProfile.work_authorization
-      ? jobs.filter((job: any) => !job.work_authorization || job.work_authorization.length === 0 || job.work_authorization.includes(candidateProfile.work_authorization))
-      : jobs;
-
-    const scoredJobs = validJobs
-      .map(job => ({
-        ...job,
-        score: calculateMatchScore(candidateSkills || [], job.job_skills || [], candidateProfile.desired_job_title, job.title),
-        hasSpecificOverlap: hasSpecificTitleOverlap(candidateProfile.desired_job_title, job.title),
-      }))
+    // Score ALL jobs — don't filter by visa upfront. Instead, flag visa compatibility.
+    const scoredJobs = jobs
+      .map((job: any) => {
+        const visaMatch = !candidateProfile.work_authorization
+          || !job.work_authorization
+          || job.work_authorization.length === 0
+          || job.work_authorization.includes(candidateProfile.work_authorization);
+        return {
+          ...job,
+          score: calculateMatchScore(candidateSkills || [], job.job_skills || [], candidateProfile.desired_job_title, job.title),
+          hasSpecificOverlap: hasSpecificTitleOverlap(candidateProfile.desired_job_title, job.title),
+          visaMatch,
+        };
+      })
       .sort((a: any, b: any) => b.score - a.score);
 
     const highMatches = scoredJobs.filter((job: any) => {
+      // Include if it's a generally high match (50%+) OR if the title specifically overlaps with desired role
       return job.score >= 50 || job.hasSpecificOverlap;
     });
     setRecommendations(highMatches.slice(0, 10));
@@ -1322,7 +1327,7 @@ const CandidateDashboard = () => {
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 w-full min-w-0">
                     <div className="max-w-full min-w-0 flex-1">
                       <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tighter leading-none italic break-words">Targeted Matches</h2>
-                      <p className="text-[10px] text-muted-foreground mt-3 font-black uppercase tracking-[0.3em] opacity-40 break-words whitespace-normal leading-relaxed">Filtered by your {profile.work_authorization} status</p>
+                      <p className="text-[10px] text-muted-foreground mt-3 font-black uppercase tracking-[0.3em] opacity-40 break-words whitespace-normal leading-relaxed">Matched by your title &amp; skill graph</p>
                     </div>
                   </div>
 

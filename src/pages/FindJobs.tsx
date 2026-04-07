@@ -49,7 +49,11 @@ const FindJobs = () => {
         .maybeSingle();
         
       if (profile) {
-        setCandidateProfile(profile);
+        const { data: skills } = await supabase
+          .from("candidate_skills")
+          .select("*")
+          .eq("candidate_id", profile.id);
+        setCandidateProfile({ ...profile, candidate_skills: skills || [] });
       }
     }
 

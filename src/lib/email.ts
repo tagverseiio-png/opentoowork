@@ -290,8 +290,8 @@ export function calculateMatchScore(
   const EXP_CAP = 1.2;
 
   // ── Required Skills (weighted 80%) ──
+  let reqScore = 0;
   if (reqSkills.length > 0) {
-    let reqScore = 0;
     for (const js of reqSkills) {
       const normalizedJobSkill = normalizeSkillName(js.skill_name);
       const match = candidateSkills.find(
@@ -311,8 +311,8 @@ export function calculateMatchScore(
   }
 
   // ── Optional Skills (weighted 20%) ──
+  let optScore = 0;
   if (optSkills.length > 0) {
-    let optScore = 0;
     for (const js of optSkills) {
       const normalizedJobSkill = normalizeSkillName(js.skill_name);
       const match = candidateSkills.find(
@@ -324,6 +324,8 @@ export function calculateMatchScore(
   } else {
     score += W_OPT * 100;
   }
+
+
 
   // Final Composite Score Calculation
   // Title alignment is weighted at 30%, explicitly verified skills at 70%
