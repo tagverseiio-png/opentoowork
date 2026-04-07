@@ -260,6 +260,11 @@ const CandidateDashboard = () => {
       return;
     }
 
+    const { data: candidateSkills } = await supabase
+      .from("candidate_skills")
+      .select("*")
+      .eq("candidate_id", candidateProfile.id);
+
     let query = supabase
       .from("jobs")
       .select(`
@@ -269,10 +274,6 @@ const CandidateDashboard = () => {
       `)
       .eq("is_active", true);
 
-    if (candidateProfile.work_authorization) {
-      query = query.contains("work_authorization", [candidateProfile.work_authorization]);
-    }
-
     const { data: jobs } = await query
       .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
     if (!jobs?.length) {
@@ -280,15 +281,19 @@ const CandidateDashboard = () => {
       return;
     }
 
-    const scoredJobs = jobs
+    const validJobs = candidateProfile.work_authorization
+      ? jobs.filter((job: any) => !job.work_authorization || job.work_authorization.length === 0 || job.work_authorization.includes(candidateProfile.work_authorization))
+      : jobs;
+
+    const scoredJobs = validJobs
       .map(job => ({
         ...job,
-        score: calculateMatchScore(candidateProfile.candidate_skills || [], job.job_skills || [], candidateProfile.desired_job_title, job.title),
+        score: calculateMatchScore(candidateSkills || [], job.job_skills || [], candidateProfile.desired_job_title, job.title),
         hasSpecificOverlap: hasSpecificTitleOverlap(candidateProfile.desired_job_title, job.title),
       }))
       .sort((a: any, b: any) => b.score - a.score);
 
-    const highMatches = scoredJobs.filter((job: any) => job.score >= 50 && job.hasSpecificOverlap);
+    const highMatches = scoredJobs.filter((job: any) => job.score >= 50 || job.hasSpecificOverlap);
     setRecommendations(highMatches.slice(0, 10));
   };
 
@@ -360,6 +365,7 @@ const CandidateDashboard = () => {
       toast({ title: "Profile updated successfully!" });
       setIsEditing(false);
       fetchProfile();
+      fetchRecommendations();
 
       // Fire match-based email with matching jobs (fire & forget)
       notifyCandidateOfMatchingJobs(session.user.id);
@@ -401,16 +407,16 @@ const CandidateDashboard = () => {
         .select("*, employer:employer_profiles(company_name), job_skills(*)")
         .eq("is_active", true);
 
-      if (candidateProfile.work_authorization) {
-        query.contains("work_authorization", [candidateProfile.work_authorization]);
-      }
-
       const { data: jobs } = await query
         .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
       if (!jobs?.length) return;
 
+      const validJobs = candidateProfile.work_authorization
+        ? jobs.filter((job: any) => !job.work_authorization || job.work_authorization.length === 0 || job.work_authorization.includes(candidateProfile.work_authorization))
+        : jobs;
+
       // Calculate scores and filter >= 50%
-      const matchedJobs = jobs
+      const matchedJobs = validJobs
         .map(job => ({
           ...job,
           score: calculateMatchScore(candidateProfile.candidate_skills || [], job.job_skills || [], candidateProfile.desired_job_title, job.title)
@@ -513,6 +519,7 @@ const CandidateDashboard = () => {
       setNewSkillName("");
       setNewSkillExp("");
       fetchSkills();
+      fetchRecommendations();
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
@@ -528,6 +535,7 @@ const CandidateDashboard = () => {
       if (error) throw error;
       toast({ title: "Skill removed" });
       fetchSkills();
+      fetchRecommendations();
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
@@ -1008,6 +1016,7 @@ const CandidateDashboard = () => {
                                 }
 
                                 await fetchSkills();
+                                fetchRecommendations();
                                 toast({ 
                                   title: `Extracted ${foundSkills.length} Skills`, 
                                   description: addedCount > 0 

@@ -263,18 +263,16 @@ export function calculateMatchScore(
   candidateTitle?: string | null,
   jobTitle?: string | null,
 ): number {
-  if (!candidateSkills.length || !jobSkills.length) return 0;
+  let score = 0;
 
   const reqSkills = jobSkills.filter(s => s.is_required !== false);
   const optSkills = jobSkills.filter(s => s.is_required === false);
-
-  if (reqSkills.length === 0 && optSkills.length === 0) return 0;
 
   const W_REQ = 0.8;
   const W_OPT = 0.2;
   const EXP_CAP = 1.2;
 
-  let score = 0;
+  if (jobSkills.length > 0 && candidateSkills.length > 0) {
 
   // ── Required Skills (weighted 80%) ──
   if (reqSkills.length > 0) {
@@ -308,6 +306,7 @@ export function calculateMatchScore(
       if (match) optScore += 1;
     }
     score += (optScore / optSkills.length) * W_OPT * 100;
+  }
   }
 
   // ── Job Title Alignment (Multiplier) ──
