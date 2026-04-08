@@ -850,16 +850,17 @@ const EmployerDashboard = () => {
             >
               <Users className="h-3 w-3" /> Talent Pool
             </Button>
-            {/* Subscription tab hidden — not yet implemented
-            <Button
-              variant={activeTab === "subscription" ? "default" : "ghost"}
-              onClick={() => setActiveTab("subscription")}
-              className="h-8 text-[10px] font-black uppercase tracking-widest px-4 gap-2"
-            >
-              <DollarSign className="h-3 w-3" /> Subscription
-            </Button>
-            */}
           </div>
+
+          <Button
+            asChild
+            variant="ghost"
+            className="h-8 text-[10px] font-black uppercase tracking-widest px-4 gap-2 text-muted-foreground hover:text-primary"
+          >
+            <a href="mailto:support@opentoowork.tech">
+              <MessageSquare className="h-3 w-3" /> Support
+            </a>
+          </Button>
 
           <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
             <DialogTrigger asChild>
@@ -1156,12 +1157,10 @@ const EmployerDashboard = () => {
                             <Input type="number" min="0" placeholder="e.g. 5" value={experienceRequired} onChange={(e) => setExperienceRequired(e.target.value)} className="bg-background" />
                           </div>
                           <div className="space-y-1.5">
-                            <span className="text-muted-foreground">Posting Date</span>
-                            <Input type="date" value={postingDate} onChange={(e) => setPostingDate(e.target.value)} className="bg-background cursor-pointer" />
+                            <Input type="date" value={postingDate} onChange={(e) => setPostingDate(e.target.value)} onClick={(e) => (e.target as any).showPicker?.()} className="bg-background cursor-pointer" />
                           </div>
                           <div className="space-y-1.5">
-                            <span className="text-muted-foreground">Listing Expiry Date</span>
-                            <Input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} className="bg-background cursor-pointer" />
+                            <Input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} onClick={(e) => (e.target as any).showPicker?.()} className="bg-background cursor-pointer" />
                           </div>
                         </div>
                       </div>

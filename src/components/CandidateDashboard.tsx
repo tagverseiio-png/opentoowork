@@ -9,7 +9,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, CheckCircle, Clock, XCircle, MapPin, Building2, Calendar, Briefcase, Pencil, Plus, Trash2, ExternalLink, Linkedin, Globe, Bell, Target, Settings, LayoutDashboard, Share2, UserCircle, Mail, ChevronsUpDown, Check, Download, Edit, Award, Star } from "lucide-react";
+import { FileText, CheckCircle, Clock, XCircle, MapPin, Building2, Calendar, Briefcase, Pencil, Plus, Trash2, ExternalLink, Linkedin, Globe, Bell, Target, Settings, LayoutDashboard, Share2, UserCircle, Mail, ChevronsUpDown, Check, Download, Edit, Award, Star, MessageSquare } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Textarea } from "./ui/textarea";
 import { Separator } from "./ui/separator";
@@ -630,6 +630,11 @@ const CandidateDashboard = () => {
         </div>
         <div className="flex items-center gap-3 flex-wrap">
            {/* LinkedIn Sync button removed as requested */}
+           <Button asChild variant="outline" className="h-12 px-6 font-black uppercase tracking-widest text-[10px] shadow-sm bg-background hover:bg-muted text-muted-foreground hover:text-primary">
+              <a href="mailto:support@opentoowork.tech">
+                <MessageSquare className="h-4 w-4 mr-2" /> Support
+              </a>
+           </Button>
            <Button onClick={() => setIsEditing(true)} className="h-12 px-6 font-black uppercase tracking-widest text-[10px] shadow-xl">
               <Settings className="h-4 w-4 mr-2" /> Global Prefs
            </Button>
@@ -1219,7 +1224,7 @@ const CandidateDashboard = () => {
                             {getSkillLevelStars(skill.skill_level)}
                           </TableCell>
                           <TableCell className="py-3 text-right">
-                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                            <div className="flex items-center justify-end gap-1 transition-all">
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
@@ -1237,7 +1242,7 @@ const CandidateDashboard = () => {
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="h-6 w-6 text-destructive/40 hover:text-destructive hover:bg-destructive/10 rounded"
+                                className="h-6 w-6 text-destructive/60 hover:text-destructive hover:bg-destructive/10 rounded"
                                 onClick={() => handleDeleteSkill(skill.id)}
                               >
                                 <Trash2 className="h-3 w-3" />

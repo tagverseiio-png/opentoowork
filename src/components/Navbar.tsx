@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { LogOut, Menu } from "lucide-react";
+import { LogOut, Menu, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
@@ -203,6 +203,12 @@ const Navbar = () => {
                       <p className="text-xs text-muted-foreground">Signed in as</p>
                       <p className="text-sm font-medium truncate">{userEmail}</p>
                     </div>
+                    <DropdownMenuItem asChild>
+                      <a href="mailto:support@opentoowork.tech" className="cursor-pointer">
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Help & Support
+                      </a>
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive cursor-pointer">
                       <LogOut className="h-4 w-4 mr-2" />
                       Sign Out
@@ -230,6 +236,16 @@ const Navbar = () => {
                          <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-1">Signed in as</p>
                          <p className="text-xs font-bold truncate text-primary/80">{userEmail}</p>
                        </div>
+                       <Button 
+                         asChild
+                         variant="ghost" 
+                         className="w-full justify-start text-foreground hover:bg-primary/5 font-black uppercase tracking-widest text-[10px] h-11 rounded-xl"
+                       >
+                         <a href="mailto:support@opentoowork.tech">
+                           <MessageSquare className="h-4 w-4 mr-2" />
+                           Help & Support
+                         </a>
+                       </Button>
                        <Button 
                          onClick={handleSignOut} 
                          variant="ghost" 

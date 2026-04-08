@@ -205,7 +205,8 @@ export function normalizeSkillName(name: string): string {
 
 const TITLE_STOP_WORDS = new Set([
   "a", "an", "and", "for", "in", "of", "on", "the", "to", "with",
-  "jr", "junior", "sr", "senior", "lead", "principal", "staff"
+  "jr", "junior", "sr", "senior", "lead", "principal", "staff",
+  "engineer", "developer", "specialist", "manager", "architect", "analyst"
 ]);
 
 const normalizeTitleToken = (value: string) =>
@@ -267,9 +268,13 @@ export function calculateMatchScore(
 
   let matchesTitle = false;
   if (candidateTitle && jobTitle) {
-    const cWords: string[] = candidateTitle.toLowerCase().match(/\b(\w+)\b/g) || [];
-    const jWords: string[] = jobTitle.toLowerCase().match(/\b(\w+)\b/g) || [];
-    matchesTitle = cWords.some(w => jWords.includes(w));
+    const candidateTokens = tokenizeTitle(candidateTitle);
+    const jobTokens = tokenizeTitle(jobTitle);
+    
+    if (candidateTokens.length > 0 && jobTokens.length > 0) {
+      const jobSet = new Set(jobTokens);
+      matchesTitle = candidateTokens.some(token => jobSet.has(token));
+    }
   }
 
   // Fallback: If candidate specifies no skills, evaluate strictly on Title match
