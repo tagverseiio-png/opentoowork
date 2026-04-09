@@ -6,8 +6,8 @@ const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 const BREVO_API_KEY = import.meta.env.VITE_BREVO_API_KEY || '';
 
 const SENDER = {
-  name: 'OpenToWork',
-  email: 'verify@opentoowork.tech',
+  name: 'opentoowork',
+  email: 'support@opentoowork.tech',
 };
 
 export interface EmailParams {
@@ -34,7 +34,7 @@ export async function sendEmail({ to, subject, html, text }: EmailParams) {
         to: [{ email: to }],
         subject,
         htmlContent: html,
-        textContent: text || subject || 'OpenToWork Notification',
+        textContent: text || subject || 'opentoowork Notification',
       }),
     });
 
@@ -70,9 +70,9 @@ const wrap = (body: string) => `
 </style>
 </head><body>
 <div class="container">
-  <div class="header"><h1>OpenToWork</h1></div>
+  <div class="header"><h1>opentoowork</h1></div>
   <div class="body">${body}</div>
-  <div class="footer"><p>Sent from verify@opentoowork.tech &bull; OpenToWork Platform</p></div>
+  <div class="footer"><p>Sent from support@opentoowork.tech &bull; opentoowork Platform</p></div>
 </div>
 </body></html>`;
 
@@ -94,7 +94,7 @@ export function sendApplicationConfirmation(
       <p>Your application for <strong>${jobTitle}</strong> at <strong>${companyName}</strong> has been received.
          The employer will review your profile and you'll be notified about any status updates.</p>
       <p><span class="badge">Status: Applied</span></p>
-      <p style="margin-top:24px;font-size:12px;color:#71717a;">Keep your profile and resume up-to-date to improve your match score.</p>
+      <p style="margin-top:24px;font-size:12px;color:#71717a;">Keep your profile and resume up-to-date to improve your match score on opentoowork.</p>
     `),
   });
 }
@@ -114,7 +114,7 @@ export function sendEmployerNewApplicantAlert(
       <h2>New Application Received</h2>
       <p><strong>${candidateName}</strong> has applied for your job posting: <strong>${jobTitle}</strong>.</p>
       <p>Log in to your Employer Dashboard to review the candidate's profile, resume, and skill alignment.</p>
-      <p style="margin-top:24px;font-size:12px;color:#71717a;">Tip: Use the ATS pipeline to shortlist or schedule interviews.</p>
+      <p style="margin-top:24px;font-size:12px;color:#71717a;">Tip: Use the opentoowork ATS pipeline to shortlist or schedule interviews.</p>
     `),
   });
 }
@@ -186,7 +186,7 @@ export function sendReferralEmail(
       <p><strong>${referrerName}</strong> thought you'd be a great fit for the <strong>${jobTitle}</strong> position at <strong>${companyName}</strong>.</p>
       <p>Click the link below to view the job details and apply directly:</p>
       <p><a href="https://opentoowork.tech/jobs/${jobId}" style="display:inline-block;background:#18181b;color:#fff;padding:12px 28px;border-radius:8px;font-size:12px;font-weight:800;text-decoration:none;text-transform:uppercase;letter-spacing:1px;margin-top:8px;">View Job &amp; Apply</a></p>
-      <p style="margin-top:24px;font-size:12px;color:#71717a;">Join OpenToWork to find more opportunities matching your skills.</p>
+      <p style="margin-top:24px;font-size:12px;color:#71717a;">Join opentoowork to find more opportunities matching your skills.</p>
     `),
   });
 }
