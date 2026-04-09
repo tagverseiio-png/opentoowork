@@ -35,54 +35,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { calculateMatchScore, normalizeSkillName, sendEmail } from "@/lib/email";
+import { getResumeActionUrl, isWordResume, resolveResumeUrl } from "@/lib/resume";
 
 const WORK_AUTH_OPTIONS = [
   "H1B", "CPT-EAD", "OPT-EAD", "GC", "GC-EAD", "USC", "TN"
 ];
 
-// Helper to get full public URL for resume
-const getResumePublicUrl = (resumePath: string | null | undefined): string => {
-  if (!resumePath) return "";
-  // If already a full URL, return as-is (files are uploaded via FTP to Hostinger or Supabase Storage)
-  if (resumePath.startsWith("http://") || resumePath.startsWith("https://")) {
-    return resumePath;
-  }
-  // If it's a relative Supabase storage path, construct the public URL
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const cleanPath = resumePath.startsWith("/") ? resumePath.slice(1) : resumePath;
-  return `${supabaseUrl}/storage/v1/object/public/${cleanPath}`;
-};
 
-// Safe resume open — view or download
-const handleViewResume = async (url: string, download?: boolean, downloadName?: string) => {
-  if (!url) return;
-
-  // Backwards compatibility for old resumes stored directly pointing to opentoowork.tech domain
-  let targetUrl = url;
-  if (url.includes("/resumes/resume_")) {
-    const fileName = url.split("/resumes/")[1].split("?")[0];
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    targetUrl = `${supabaseUrl}/functions/v1/serve-resume?file=${fileName}`;
-  }
-
-  const isDocx = targetUrl.toLowerCase().includes(".doc");
-  
-  if (download || isDocx) {
-    // Download mode or DOCX file — trigger file download (browser view for docx via proxy can be problematic)
-    const link = document.createElement("a");
-    link.href = targetUrl.replace("&view=true", "").replace("?view=true", "");
-    link.download = downloadName || "Resume";
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  } else {
-    // View mode — append &view=true for inline PDF
-    const viewUrl = targetUrl.includes("?") ? `${targetUrl}&view=true` : `${targetUrl}?view=true`;
-    window.open(viewUrl, "_blank", "noopener,noreferrer");
-  }
-};
 
 const ALL_LOCATIONS = [
   "Remote (US)",
@@ -126,6 +85,7 @@ const CandidateDashboard = () => {
   const [applications, setApplications] = useState<any[]>([]);
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("applications");
+  const [loadingResume, setLoadingResume] = useState(false);
   
   const [isEditing, setIsEditing] = useState(false);
   const [editFullName, setEditFullName] = useState("");
@@ -197,6 +157,56 @@ const CandidateDashboard = () => {
     fetchSkills();
     fetchRecommendations();
   }, []);
+
+  // Safe resume open — view or download
+  const handleViewResume = async (url: string, download?: boolean, downloadName?: string) => {
+    if (!url || loadingResume) return;
+    setLoadingResume(true);
+
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    try {
+      if (url.includes("/functions/v1/serve-resume")) {
+        const headers: HeadersInit = {
+          "Authorization": `Bearer ${anonKey}`,
+          "apikey": anonKey,
+        };
+        
+        const response = await fetch(url, { headers });
+        if (!response.ok) throw new Error(`Failed to fetch resume: ${response.status} ${response.statusText}`);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = downloadName || "Resume";
+        link.target = download ? "_self" : "_blank";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+      } else {
+        const targetUrl = getResumeActionUrl(url, download ? "download" : "view");
+        const isDocx = isWordResume(url);
+        if (download || isDocx) {
+          const link = document.createElement("a");
+          link.href = getResumeActionUrl(url, "download");
+          link.download = downloadName || "Resume";
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } else {
+          window.open(targetUrl, "_blank", "noopener,noreferrer");
+        }
+      }
+    } catch (error: any) {
+      console.error("Error fetching resume:", error);
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setLoadingResume(false);
+    }
+  };
 
   const fetchProfile = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -298,8 +308,9 @@ const CandidateDashboard = () => {
       .sort((a: any, b: any) => b.score - a.score);
 
     const highMatches = scoredJobs.filter((job: any) => {
-      // Include if it's a generally high match (50%+) OR if the title specifically overlaps with desired role
-      return job.score >= 50 || job.hasSpecificOverlap;
+      // Require at least 60% match score (stricter than 50%)
+      // OR if there's a specific title overlap with desired role
+      return job.score >= 60 || (job.hasSpecificOverlap && job.score >= 40);
     });
     setRecommendations(highMatches.slice(0, 10));
   };
@@ -1098,16 +1109,18 @@ const CandidateDashboard = () => {
                       <Button 
                         variant="outline" 
                         className="w-full h-10 sm:h-11 gap-2 sm:gap-3 text-[10px] sm:text-[11px] font-black uppercase tracking-widest border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm min-w-0"
-                        onClick={() => handleViewResume(getResumePublicUrl(profile.resume_url))}
+                        disabled={loadingResume}
+                        onClick={() => void handleViewResume(resolveResumeUrl(profile.resume_url))}
                       >
-                        <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-primary shrink-0" /> <span className="truncate">View Dossier</span>
+                        <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-primary shrink-0" /> <span className="truncate">{loadingResume ? "Loading..." : "View Dossier"}</span>
                       </Button>
                       <Button 
                         variant="outline" 
                         size="icon" 
                         className="h-10 sm:h-11 w-10 sm:w-11 border-primary/20 hover:border-primary/50 hover:bg-primary/5 shadow-sm shrink-0"
-                        onClick={() => handleViewResume(
-                          getResumePublicUrl(profile.resume_url), 
+                        disabled={loadingResume}
+                        onClick={() => void handleViewResume(
+                          resolveResumeUrl(profile.resume_url), 
                           true, 
                           `${profile.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.pdf`
                         )}
@@ -1202,34 +1215,39 @@ const CandidateDashboard = () => {
                     <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest opacity-50">No data points mapped</p>
                   </div>
                 ) : (
-                  <Table className="w-full text-left border-collapse">
+                  <Table className="w-full text-left border-collapse table-fixed">
                     <TableHeader>
                       <TableRow className="bg-muted/10 hover:bg-muted/10 border-b border-border/50">
-                        <TableHead className="h-7 text-[10px] font-black uppercase tracking-widest w-[40%]">Skill</TableHead>
-                        <TableHead className="h-7 text-[10px] font-black uppercase tracking-widest text-center">Experience</TableHead>
-                        <TableHead className="h-7 text-[10px] font-black uppercase tracking-widest text-center flex items-center justify-center gap-1"><Award className="h-3 w-3" /></TableHead>
-                        <TableHead className="h-7 w-[50px]"></TableHead>
+                        <TableHead className="h-7 text-[10px] font-black uppercase tracking-widest w-[25%]">Skill</TableHead>
+                        <TableHead className="h-7 text-[10px] font-black uppercase tracking-widest text-center w-[20%]">Exp</TableHead>
+                        <TableHead className="h-7 text-[10px] font-black uppercase tracking-widest text-center flex items-center justify-center gap-1 w-[35%]"><Award className="h-3 w-3" /></TableHead>
+                        <TableHead className="h-7 w-[20%] text-right pr-4 text-[10px] font-black uppercase tracking-widest">Act</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {skills.map((skill) => (
-                        <TableRow key={skill.id} className="group hover:bg-muted/5 transition-colors border-b border-border/50 last:border-0">
-                          <TableCell className="py-3">
-                            <span className="text-xs font-black uppercase tracking-tight text-foreground">{skill.skill_name}</span>
+                        <TableRow key={skill.id} className="group hover:bg-muted/10 transition-colors border-b border-border/50 last:border-0 h-12">
+                          <TableCell className="py-2 overflow-hidden">
+                            <span className="text-xs font-black uppercase tracking-tight text-foreground line-clamp-1">{skill.skill_name}</span>
                           </TableCell>
-                          <TableCell className="py-3 text-center">
-                            <span className="text-[10px] font-bold text-primary">{skill.years_experience} Yrs</span>
+                          <TableCell className="py-2 text-center overflow-hidden">
+                            <span className="text-[10px] font-bold text-primary whitespace-nowrap">{skill.years_experience} Yrs</span>
                           </TableCell>
-                          <TableCell className="py-3 text-center">
-                            {getSkillLevelStars(skill.skill_level)}
+                          <TableCell className="py-2 text-center overflow-hidden">
+                            <div className="flex justify-center scale-90 sm:scale-100">
+                              {getSkillLevelStars(skill.skill_level)}
+                            </div>
                           </TableCell>
-                          <TableCell className="py-3 text-right">
-                            <div className="flex items-center justify-end gap-1 transition-all">
+                          <TableCell className="py-2 text-right pr-2">
+                            <div className="flex items-center justify-end gap-1">
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="h-6 w-6 text-primary hover:text-primary hover:bg-primary/10 rounded"
-                                onClick={() => {
+                                type="button"
+                                className="h-7 w-7 text-primary hover:bg-primary/20 rounded-md shrink-0 flex items-center justify-center"
+                                onClick={(event) => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
                                   setEditingSkillId(skill.id);
                                   setNewSkillName(skill.skill_name);
                                   setNewSkillExp(skill.years_experience.toString());
@@ -1237,15 +1255,20 @@ const CandidateDashboard = () => {
                                   setAddingSkill(true);
                                 }}
                               >
-                                <Edit className="h-3 w-3" />
+                                <Edit className="h-3.5 w-3.5" />
                               </Button>
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="h-6 w-6 text-destructive/60 hover:text-destructive hover:bg-destructive/10 rounded"
-                                onClick={() => handleDeleteSkill(skill.id)}
+                                type="button"
+                                className="h-7 w-7 text-destructive hover:bg-destructive/20 rounded-md shrink-0 flex items-center justify-center"
+                                onClick={(event) => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                  void handleDeleteSkill(skill.id);
+                                }}
                               >
-                                <Trash2 className="h-3 w-3" />
+                                <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </div>
                           </TableCell>

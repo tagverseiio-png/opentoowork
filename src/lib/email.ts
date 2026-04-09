@@ -282,9 +282,20 @@ export function calculateMatchScore(
     return matchesTitle ? 50 : 0;
   }
 
-  // If job has no specific skills required, any candidate matching title gets a baseline 50, and 100 if Title also matches well.
+  // Check for any skill overlap between candidate and job skills
+  let hasSkillOverlap = false;
+  if (jobSkills && jobSkills.length > 0) {
+    hasSkillOverlap = jobSkills.some(js => 
+      candidateSkills.some(cs => 
+        normalizeSkillName(cs.skill_name) === normalizeSkillName(js.skill_name)
+      )
+    );
+  }
+
+  // If job has no specific skills required: only give a baseline score if title matches
+  // Otherwise, require skill overlap or return 0
   if (!jobSkills || jobSkills.length === 0) {
-    return matchesTitle ? 100 : 50;
+    return matchesTitle ? 50 : 0;
   }
 
   const reqSkills = jobSkills.filter(s => s.is_required !== false);
@@ -329,8 +340,6 @@ export function calculateMatchScore(
   } else {
     score += W_OPT * 100;
   }
-
-
 
   // Final Composite Score Calculation
   // Title alignment is weighted at 30%, explicitly verified skills at 70%

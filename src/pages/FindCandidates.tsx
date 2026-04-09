@@ -18,12 +18,51 @@ import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { calculateMatchScore } from "@/lib/email";
+import { getResumeActionUrl } from "@/lib/resume";
 
 const FindCandidates = () => {
   const { toast } = useToast();
   const [candidates, setCandidates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEmployer, setIsEmployer] = useState(false);
+  const [isLoadingResume, setIsLoadingResume] = useState(false);
+  
+  // Helper to view resume with proper auth
+  const handleViewResume = async (url: string) => {
+    if (!url || isLoadingResume) return;
+    setIsLoadingResume(true);
+    
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    try {
+      if (url.includes("/functions/v1/serve-resume")) {
+        const headers: HeadersInit = {
+          "Authorization": `Bearer ${anonKey}`,
+          "apikey": anonKey,
+        };
+        
+        const response = await fetch(url, { headers });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch resume: ${response.status} ${response.statusText}`);
+        }
+
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        
+        window.open(blobUrl, "_blank", "noopener,noreferrer");
+        
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+      } else {
+        window.open(url, "_blank", "noopener,noreferrer");
+      }
+    } catch (error: any) {
+      console.error("Error fetching resume:", error);
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setIsLoadingResume(false);
+    }
+  };
   
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState("");
@@ -352,8 +391,13 @@ const FindCandidates = () => {
                 <div className="mt-auto p-4 bg-muted/5 border-t flex flex-col gap-3 group-hover:bg-primary/5 transition-colors duration-500">
                   <div className="grid grid-cols-2 gap-3">
                      {candidate.resume_url ? (
-                        <Button variant="outline" className="h-9 gap-2 text-[10px] font-black uppercase tracking-widest border-muted-foreground/20 hover:bg-background" onClick={() => window.open(candidate.resume_url, "_blank")}>
-                          <FileText className="h-3.5 w-3.5" /> Resume
+                        <Button
+                          variant="outline"
+                          className="h-9 gap-2 text-[10px] font-black uppercase tracking-widest border-muted-foreground/20 hover:bg-background"
+                          disabled={isLoadingResume}
+                          onClick={() => void handleViewResume(getResumeActionUrl(candidate.resume_url, "view"))}
+                        >
+                          <FileText className="h-3.5 w-3.5" /> {isLoadingResume ? "Loading..." : "Resume"}
                         </Button>
                      ) : (
                         <Button variant="outline" disabled className="h-9 gap-2 text-[10px] font-black uppercase tracking-widest opacity-30">

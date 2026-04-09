@@ -43,6 +43,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "./ui/separator";
 import { sendStatusChangeNotification, sendJobAlertEmail, calculateMatchScore } from "@/lib/email";
 import { formatLocation } from "@/lib/utils";
+import { getResumeActionUrl, isWordResume } from "@/lib/resume";
 
 const WORK_AUTH_OPTIONS = [
   "H1B", "CPT-EAD", "OPT-EAD", "GC", "GC-EAD", "USC", "TN"
@@ -75,33 +76,6 @@ const PLANS = [
   { name: "Enterprise", price: 299, jobs: 999, resumes: "Full", features: ["Unlimited Posts", "Dedicated Support", "Full Analytics"] },
 ];
 
-const handleViewResume = (url: string, downloadName?: string) => {
-  if (!url) return;
-  // Backwards compatibility for old resumes stored pointing to opentoowork.tech domain
-  let targetUrl = url;
-  if (url.includes("/resumes/resume_")) {
-    const fileName = url.split("/resumes/")[1].split("?")[0];
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    targetUrl = `${supabaseUrl}/functions/v1/serve-resume?file=${fileName}`;
-  }
-
-  const isDocx = targetUrl.toLowerCase().includes(".doc");
-
-  if (isDocx || downloadName) {
-    const link = document.createElement("a");
-    link.href = targetUrl.replace("&view=true", "").replace("?view=true", "");
-    link.download = downloadName || "Resume";
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  } else {
-    const viewUrl = targetUrl.includes("?") ? `${targetUrl}&view=true` : `${targetUrl}?view=true`;
-    window.open(viewUrl, "_blank", "noopener,noreferrer");
-  }
-};
-
 const EmployerDashboard = () => {
   const { toast } = useToast();
   const [profile, setProfile] = useState<any>(null);
@@ -119,6 +93,63 @@ const EmployerDashboard = () => {
   const [talentLocation, setTalentLocation] = useState("");
   const [talentState, setTalentState] = useState("All");
   const [talentVisa, setTalentVisa] = useState("All");
+  const [isLoadingResume, setIsLoadingResume] = useState(false);
+
+  // Safe resume open — view or download
+  const handleViewResume = async (url: string, downloadName?: string) => {
+    if (!url || isLoadingResume) return;
+    setIsLoadingResume(true);
+    
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    try {
+      if (url.includes("/functions/v1/serve-resume")) {
+        const headers: HeadersInit = {
+          "Authorization": `Bearer ${anonKey}`,
+          "apikey": anonKey,
+        };
+        
+        const response = await fetch(url, { headers });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch resume: ${response.status} ${response.statusText}`);
+        }
+
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = downloadName || "Resume";
+        link.target = downloadName ? "_self" : "_blank";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+      } else {
+        const targetUrl = getResumeActionUrl(url, downloadName ? "download" : "view");
+        const isDocx = isWordResume(url);
+
+        if (isDocx || downloadName) {
+          const link = document.createElement("a");
+          link.href = getResumeActionUrl(url, "download");
+          link.download = downloadName || "Resume";
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } else {
+          window.open(targetUrl, "_blank", "noopener,noreferrer");
+        }
+      }
+    } catch (error: any) {
+      console.error("Error fetching resume:", error);
+    } finally {
+      setIsLoadingResume(false);
+    }
+  };
   const [talentExp, setTalentExp] = useState("All");
   const [pipelineView, setPipelineView] = useState("active");
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
@@ -1136,7 +1167,15 @@ const EmployerDashboard = () => {
                               <Badge key={idx} variant={s.isRequired ? 'default' : 'secondary'} className="h-8 pl-3 pr-1 gap-1.5 font-bold text-[10px] items-center border-transparent shadow-sm">
                                 <span className="uppercase">{s.name}</span>
                                 <span className="opacity-60 tabular-nums">{s.exp}Y+</span>
-                                <button type="button" onClick={() => handleRemoveJobSkill(idx)} className="h-6 w-6 rounded-md hover:bg-black/10 flex items-center justify-center transition-colors">
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    handleRemoveJobSkill(idx);
+                                  }}
+                                  className="h-6 w-6 rounded-md hover:bg-black/10 flex items-center justify-center transition-colors"
+                                >
                                   <X className="h-3 w-3" />
                                 </button>
                               </Badge>
@@ -1733,14 +1772,16 @@ const EmployerDashboard = () => {
                                                     <>
                                                         <Button 
                                                             className="h-12 w-full font-black uppercase tracking-widest text-[11px] gap-2 shadow-lg shadow-primary/20" 
-                                                            onClick={() => handleViewResume(selectedApp.candidate.resume_url)}
+                                                            disabled={isLoadingResume}
+                                                            onClick={() => void handleViewResume(selectedApp.candidate.resume_url)}
                                                         >
-                                                            <FileText className="h-4 w-4" /> Open Resume View
+                                                            <FileText className="h-4 w-4" /> {isLoadingResume ? "Loading..." : "Open Resume View"}
                                                         </Button>
                                                         <Button 
                                                             variant="outline" 
                                                             className="h-10 w-full font-black uppercase tracking-widest text-[10px] gap-2 border-border/60"
-                                                            onClick={() => handleViewResume(selectedApp.candidate.resume_url, `${selectedApp.candidate.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.doc`)}
+                                                            disabled={isLoadingResume}
+                                                            onClick={() => void handleViewResume(selectedApp.candidate.resume_url, `${selectedApp.candidate.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.doc`)}
                                                         >
                                                             <Download className="h-3.5 w-3.5" /> Download Doc
                                                         </Button>
@@ -1920,8 +1961,8 @@ const EmployerDashboard = () => {
                               </div>
                               <div className="font-black text-sm uppercase tracking-tight">{app.candidate?.profiles?.full_name}</div>
                               {app.candidate?.resume_url && (
-                                <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-[9px] font-black uppercase tracking-widest text-primary bg-primary/5 hover:bg-primary/10 ml-auto" onClick={() => handleViewResume(app.candidate.resume_url)}>
-                                  <FileText className="h-3 w-3" /> Dossier
+                                <Button variant="ghost" size="sm" disabled={isLoadingResume} className="h-7 px-2 gap-1.5 text-[9px] font-black uppercase tracking-widest text-primary bg-primary/5 hover:bg-primary/10 ml-auto" onClick={() => void handleViewResume(app.candidate.resume_url)}>
+                                  <FileText className="h-3 w-3" /> {isLoadingResume ? "Loading..." : "Dossier"}
                                 </Button>
                               )}
                             </div>
@@ -2049,10 +2090,10 @@ const EmployerDashboard = () => {
                     <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-dashed">
                       {talent.resume_url ? (
                         <div className="flex gap-2 flex-1 md:flex-initial">
-                          <Button variant="outline" className="flex-1 h-10 font-black uppercase text-[10px] tracking-widest gap-2" onClick={() => handleViewResume(talent.resume_url)}>
-                            <FileText className="h-3.5 w-3.5" /> View
+                          <Button variant="outline" disabled={isLoadingResume} className="flex-1 h-10 font-black uppercase text-[10px] tracking-widest gap-2" onClick={() => void handleViewResume(talent.resume_url)}>
+                            <FileText className="h-3.5 w-3.5" /> {isLoadingResume ? "Loading..." : "View"}
                           </Button>
-                          <Button variant="outline" size="icon" className="h-10 w-10 flex-none" onClick={() => handleViewResume(talent.resume_url, `${talent.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.doc`)}>
+                          <Button variant="outline" size="icon" disabled={isLoadingResume} className="h-10 w-10 flex-none" onClick={() => void handleViewResume(talent.resume_url, `${talent.profiles?.full_name?.replace(/\s+/g, '_')}_Resume.doc`)}>
                             <Download className="h-3.5 w-3.5" />
                           </Button>
                         </div>
