@@ -90,7 +90,6 @@ const EmployerDashboard = () => {
   const [talentPool, setTalentPool] = useState<any[]>([]);
   const [talentLoading, setTalentLoading] = useState(false);
   const [talentSearch, setTalentSearch] = useState("");
-  const [talentLocation, setTalentLocation] = useState("");
   const [talentState, setTalentState] = useState("All");
   const [talentVisa, setTalentVisa] = useState("All");
   const [isLoadingResume, setIsLoadingResume] = useState(false);
@@ -725,9 +724,6 @@ const EmployerDashboard = () => {
         query = query.in("id", candidateIdsFilter);
       }
 
-      if (talentLocation) {
-        query = query.ilike("location", `%${talentLocation}%`);
-      }
       if (talentState !== "All") {
         const stateCode = talentState.split(" - ")[1];
         if (stateCode) {
@@ -2015,12 +2011,6 @@ const EmployerDashboard = () => {
               className="w-full md:flex-1 bg-background h-11"
               value={talentSearch}
               onChange={(e) => setTalentSearch(e.target.value)}
-            />
-            <Input
-              placeholder="Search Location..."
-              className="w-full md:w-48 bg-background h-11"
-              value={talentLocation}
-              onChange={(e) => setTalentLocation(e.target.value)}
             />
             <Select value={talentState} onValueChange={setTalentState}>
               <SelectTrigger className="w-full md:w-48 bg-background h-11"><SelectValue placeholder="State" /></SelectTrigger>

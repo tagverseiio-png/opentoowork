@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, MapPin, ChevronsUpDown, Check } from "lucide-react";
@@ -10,8 +10,16 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 const HERO_LOCATIONS = [
   "all",
   "Remote (US)",
-  ...usaCities.slice(0, 200).map((c) => (c.state_code ? `${c.city}, ${c.state_code}` : c.city)),
+  ...usaCities.map((c) => (c.state_code ? `${c.city}, ${c.state_code}` : c.city)),
 ];
+
+// Helper to abbreviate location display
+const getDisplayLocation = (location: string): string => {
+  if (!location || location === "all") return "Any Location";
+  // Extract just the city name (before the comma)
+  const parts = location.split(",");
+  return parts[0].trim();
+};
 
 interface HeroSectionProps {
   searchTerm: string;
@@ -36,6 +44,18 @@ const HeroSection = ({
 }: HeroSectionProps) => {
   const [locationOpen, setLocationOpen] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const searchTimeoutRef = useRef<NodeJS.Timeout>(null);
+
+  useEffect(() => {
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearch(locationSearch);
+    }, 150);
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    };
+  }, [locationSearch]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
@@ -90,7 +110,7 @@ const HeroSection = ({
                       <div className="flex items-center gap-2 overflow-hidden">
                         <MapPin className="h-5 w-5 text-muted-foreground shrink-0" />
                         <span className={`truncate ${!locationFilter && "text-muted-foreground"}`}>
-                          {locationFilter || "Any Location"}
+                          {getDisplayLocation(locationFilter)}
                         </span>
                       </div>
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -104,24 +124,34 @@ const HeroSection = ({
                         onValueChange={setLocationSearch}
                       />
                       <CommandList className="max-h-60">
-                        <CommandEmpty>No location found.</CommandEmpty>
-                        <CommandGroup>
-                          {HERO_LOCATIONS.filter((location) =>
-                            location.toLowerCase().includes(locationSearch.toLowerCase())
-                          ).map((location) => (
-                            <CommandItem
-                              key={location}
-                              value={location}
-                              onSelect={() => {
-                                setLocationFilter(location === "all" ? "" : location);
-                                setLocationOpen(false);
-                              }}
-                            >
-                              <Check className={`mr-2 h-4 w-4 ${((location === "all" && !locationFilter) || locationFilter === location) ? "opacity-100" : "opacity-0"}`} />
-                              {location === "all" ? "Any Location" : location}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
+                        {debouncedSearch.length < 2 ? (
+                          <div className="p-2 text-center text-sm text-muted-foreground">
+                            Type to search locations...
+                          </div>
+                        ) : (
+                          <>
+                            <CommandEmpty>No location found.</CommandEmpty>
+                            <CommandGroup>
+                              {HERO_LOCATIONS.filter((location) =>
+                                location.toLowerCase().includes(debouncedSearch.toLowerCase())
+                              )
+                              .slice(0, 50)
+                              .map((location) => (
+                                <CommandItem
+                                  key={location}
+                                  value={location}
+                                  onSelect={() => {
+                                    setLocationFilter(location === "all" ? "" : location);
+                                    setLocationOpen(false);
+                                  }}
+                                >
+                                  <Check className={`mr-2 h-4 w-4 ${((location === "all" && !locationFilter) || locationFilter === location) ? "opacity-100" : "opacity-0"}`} />
+                                  {location === "all" ? "Any Location" : location}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </>
+                        )}
                       </CommandList>
                     </Command>
                   </PopoverContent>
