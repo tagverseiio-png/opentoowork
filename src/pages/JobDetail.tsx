@@ -502,7 +502,8 @@ const JobDetail = () => {
               {(job.salary_min || job.salary_max) && (
                 <div className="flex items-center gap-3 text-lg font-semibold text-success bg-success/10 rounded-xl p-4">
                   <DollarSign className="h-6 w-6" />
-                  ${job.salary_min?.toLocaleString()} - ${job.salary_max?.toLocaleString()} <span className="text-sm opacity-70 ml-1">/ {
+                  {job.salary_min?.toLocaleString()} - ${job.salary_max?.toLocaleString()}
+                  <span className="text-sm opacity-70 ml-1">/ {
                     job.salary_period === 'Hourly' ? 'hour' : 
                     job.salary_period === 'Monthly' ? 'month' : 
                     'year'
@@ -576,8 +577,10 @@ const JobDetail = () => {
                   </p>
                 </div>
               ) : userRole === 'employer' ? (
+                 null
+                 /* 
                  // 1b. Support for Employers submitting candidates
-                 {/* <div className="w-full space-y-3">
+                 <div className="w-full space-y-3">
                    <Button 
                      size="lg" 
                      className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg text-lg h-14 font-black uppercase tracking-widest"
@@ -588,7 +591,8 @@ const JobDetail = () => {
                    <p className="text-[9px] text-center text-muted-foreground font-black uppercase tracking-widest">
                      As an employer/representative, you can submit talent profiles directly to this hiring partner
                    </p>
-                 </div> */}
+                 </div>
+                 */
               ) : hasApplied ? (
                 // 2. Already Applied State
                 <div className="w-full">

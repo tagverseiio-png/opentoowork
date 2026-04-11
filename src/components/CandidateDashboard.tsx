@@ -475,14 +475,14 @@ const CandidateDashboard = () => {
 </style>
 </head><body>
 <div class="container">
-  <div class="header"><h1>OpenToWork</h1></div>
+  <div class="header"><h1>opentoowork</h1></div>
   <div class="body">
     <h2>🎯 Jobs Matching Your Profile</h2>
     <p>Hi <strong>${candidateProfile.profiles.full_name || 'there'}</strong>, we found roles that match your updated skills:</p>
     ${jobListHtml}
     <p style="margin-top:24px;"><a href="https://opentoowork.tech/jobs" style="display:inline-block;background:#18181b;color:#fff;padding:12px 28px;border-radius:8px;font-size:12px;font-weight:800;text-decoration:none;text-transform:uppercase;letter-spacing:1px;">View All Matches</a></p>
   </div>
-  <div class="footer"><p>Sent from verify@opentoowork.tech &bull; OpenToWork Platform</p></div>
+  <div class="footer"><p>Sent from verify@opentoowork.tech &bull; opentoowork Platform</p></div>
 </div>
 </body></html>`
       });
