@@ -6,6 +6,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 
 import Index from "./pages/Index";
 import About from "./pages/About";
+import Policy from "./pages/Policy";
+import Terms from "./pages/Terms";
 import CandidateAuth from "./pages/CandidateAuth";
 import EmployerAuth from "./pages/EmployerAuth";
 import AdminAuth from "./pages/AdminAuth";
@@ -73,6 +75,8 @@ const App = () => {
             <Route path="/onboard" element={<Onboard />} />
             <Route path="/jobs" element={<FindJobs />} />
             <Route path="/about" element={<About />} />
+            <Route path="/policy" element={<Policy />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="/candidate/auth" element={<CandidateAuth />} />
             <Route path="/employer/auth" element={<EmployerAuth />} />
             <Route path="/admin/auth" element={<AdminAuth />} />

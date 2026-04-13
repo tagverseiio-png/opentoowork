@@ -132,12 +132,14 @@ const AdminContentEditor = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="hero_section">Hero</TabsTrigger>
             <TabsTrigger value="why_choose_us">Features</TabsTrigger>
             <TabsTrigger value="mission_section">Mission</TabsTrigger>
             <TabsTrigger value="how_it_works">How It Works</TabsTrigger>
             <TabsTrigger value="about_page">About</TabsTrigger>
+            <TabsTrigger value="policy_page">Policy</TabsTrigger>
+            <TabsTrigger value="terms_page">Terms</TabsTrigger>
           </TabsList>
 
           {/* Hero Section */}
@@ -472,6 +474,80 @@ const AdminContentEditor = () => {
                 <Save className="h-4 w-4" />
                 Save About Page
               </Button>
+            </Card>
+          </TabsContent>
+
+          {/* Policy Page */}
+          <TabsContent value="policy_page" className="space-y-6">
+            <Card className="p-6">
+              <h2 className="text-2xl font-bold mb-4">Privacy Policy Page</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2">Page Title</label>
+                  <Input
+                    value={editingForm.policy_page?.policy_title || ""}
+                    onChange={(e) => updateNestedField("policy_page", ["policy_title"], e.target.value)}
+                    placeholder="e.g. Privacy Policy"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2">Policy Content</label>
+                  <Textarea
+                    value={editingForm.policy_page?.policy_body || ""}
+                    onChange={(e) => updateNestedField("policy_page", ["policy_body"], e.target.value)}
+                    placeholder="Enter full privacy policy content..."
+                    rows={12}
+                    className="font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Use plain text with line breaks. Start sections with "1.", "2.", etc. for numbering.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => handleSaveSection("policy_page")}
+                  className="gap-2 bg-primary"
+                >
+                  <Save className="h-4 w-4" />
+                  Save Privacy Policy
+                </Button>
+              </div>
+            </Card>
+          </TabsContent>
+
+          {/* Terms Page */}
+          <TabsContent value="terms_page" className="space-y-6">
+            <Card className="p-6">
+              <h2 className="text-2xl font-bold mb-4">Terms & Conditions Page</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2">Page Title</label>
+                  <Input
+                    value={editingForm.terms_page?.terms_title || ""}
+                    onChange={(e) => updateNestedField("terms_page", ["terms_title"], e.target.value)}
+                    placeholder="e.g. Terms & Conditions"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2">Terms Content</label>
+                  <Textarea
+                    value={editingForm.terms_page?.terms_body || ""}
+                    onChange={(e) => updateNestedField("terms_page", ["terms_body"], e.target.value)}
+                    placeholder="Enter full terms and conditions content..."
+                    rows={12}
+                    className="font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Use plain text with line breaks. Start sections with "1.", "2.", etc. for numbering.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => handleSaveSection("terms_page")}
+                  className="gap-2 bg-primary"
+                >
+                  <Save className="h-4 w-4" />
+                  Save Terms & Conditions
+                </Button>
+              </div>
             </Card>
           </TabsContent>
         </Tabs>

@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AdminContentEditor from "@/components/AdminContentEditor";
+import LegalContent from "@/components/LegalContent";
 
 const AdminContent = () => {
   const navigate = useNavigate();
@@ -52,6 +53,7 @@ const AdminContent = () => {
       <Navbar />
       <main className="flex-grow">
         <AdminContentEditor />
+        <LegalContent />
       </main>
       <Footer />
     </div>
