@@ -100,6 +100,8 @@ const CandidateDashboard = () => {
   const [savingProfile, setSavingProfile] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
   const [extractingSkills, setExtractingSkills] = useState(false);
+  const [extractDialogOpen, setExtractDialogOpen] = useState(false);
+  const [extractResumeText, setExtractResumeText] = useState("");
 
   // Skills State
   const [skills, setSkills] = useState<any[]>([]);
@@ -108,6 +110,7 @@ const CandidateDashboard = () => {
   const [newSkillLevel, setNewSkillLevel] = useState("Intermediate");
   const [addingSkill, setAddingSkill] = useState(false);
   const [editingSkillId, setEditingSkillId] = useState<string | null>(null);
+  const [skillSuggestions, setSkillSuggestions] = useState<any[]>([]);
   const [importingLinkedin, setImportingLinkedin] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
@@ -1163,6 +1166,7 @@ const CandidateDashboard = () => {
                     setEditingSkillId(null);
                     setNewSkillName("");
                     setNewSkillExp("");
+                    setSkillSuggestions([]);
                   }
                 }}>
                   <DialogTrigger asChild>
@@ -1171,14 +1175,61 @@ const CandidateDashboard = () => {
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[400px] border-none shadow-2xl rounded-2xl">
-                    <DialogHeader>
+                    <DialogHeader className="flex flex-row items-center justify-between">
                       <DialogTitle className="font-black uppercase tracking-tighter">{editingSkillId ? "Edit Competency" : "Add Competency"}</DialogTitle>
-                      <DialogDescription className="sr-only">Input your skill details including name, years of experience, and proficiency level.</DialogDescription>
+                      {!editingSkillId && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-9 gap-2 font-bold text-[9px] uppercase border-primary/30 hover:bg-primary/5 rounded-full px-4"
+                          onClick={() => setExtractDialogOpen(true)}
+                          disabled={extractingSkills}
+                        >
+                          <Target className="h-3.5 w-3.5" /> {extractingSkills ? 'Scanning...' : 'Auto-Extract'}
+                        </Button>
+                      )}
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest">Skill Key</Label>
-                        <Input placeholder="e.g. Kubernetes, React" className="h-11 rounded-xl" value={newSkillName} onChange={(e) => setNewSkillName(e.target.value)} />
+                        <div className="relative">
+                          <Input 
+                            placeholder="e.g. Kubernetes, React" 
+                            className="h-11 rounded-xl" 
+                            value={newSkillName} 
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setNewSkillName(val);
+                              
+                              if (val.trim().length > 0) {
+                                const filtered = skills
+                                  .map(s => s.skill_name)
+                                  .filter((name: string) => name.toLowerCase().includes(val.toLowerCase()))
+                                  .filter((name: string, idx: number, arr: string[]) => arr.indexOf(name) === idx);
+                                setSkillSuggestions(filtered);
+                              } else {
+                                setSkillSuggestions([]);
+                              }
+                            }}
+                          />
+                          {skillSuggestions.length > 0 && (
+                            <div className="absolute top-full mt-1 left-0 right-0 bg-card border border-border/50 rounded-lg shadow-lg z-50 max-h-40 overflow-y-auto">
+                              {skillSuggestions.map((suggestion: string) => (
+                                <button
+                                  key={suggestion}
+                                  type="button"
+                                  onClick={() => {
+                                    setNewSkillName(suggestion);
+                                    setSkillSuggestions([]);
+                                  }}
+                                  className="w-full px-3 py-2 text-left text-xs hover:bg-primary/10 border-b border-border/30 last:border-b-0 font-medium text-foreground transition-colors"
+                                >
+                                  {suggestion}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -1204,6 +1255,70 @@ const CandidateDashboard = () => {
                       <Button variant="ghost" onClick={() => setAddingSkill(false)}>Cancel</Button>
                       <Button onClick={handleAddSkill} className="font-black h-11 px-8 uppercase text-xs">Commit Skill</Button>
                     </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Extract Dialog */}
+                <Dialog open={extractDialogOpen} onOpenChange={setExtractDialogOpen}>
+                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto rounded-[1.5rem]">
+                    <DialogHeader>
+                      <DialogTitle className="text-xl font-black uppercase tracking-wider">Extract Skills From Resume</DialogTitle>
+                      <DialogDescription>Paste your resume text to automatically extract relevant skills</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest">Resume Text</Label>
+                        <Textarea
+                          placeholder="Paste your resume content here..."
+                          value={extractResumeText}
+                          onChange={(e) => setExtractResumeText(e.target.value)}
+                          className="min-h-[200px] rounded-xl text-sm"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => setExtractDialogOpen(false)}
+                          className="font-black uppercase text-xs"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={async () => {
+                            if (!extractResumeText.trim()) return;
+
+                            const KNOWN_SKILLS = ['JavaScript', 'TypeScript', 'React', 'Vue', 'Angular', 'Node.js', 'Python', 'Java', 'C#', 'C++', 'SQL', 'MongoDB', 'PostgreSQL', 'GraphQL', 'REST API', 'AWS', 'Azure', 'Docker', 'Kubernetes', 'Git', 'Agile', 'Scrum', 'HTML', 'CSS', 'Tailwind', 'Next.js', 'Express', 'Django', 'FastAPI', 'Spring Boot', 'Git', 'GitHub', 'GitLab', 'Jira', 'Linux', 'MacOS', 'Windows', 'DevOps', 'CI/CD', 'Jenkins', 'GitHub Actions', 'Terraform', 'Ansible', 'Nginx', 'Apache', 'Redis', 'Elasticsearch', 'Kafka', 'RabbitMQ', 'Firebase', 'Jest', 'Cypress', 'Webpack', 'Vite', 'Babel'];
+
+                            const extractedSkillsSet = new Set<string>();
+                            const lowerText = extractResumeText.toLowerCase();
+
+                            for (const skill of KNOWN_SKILLS) {
+                              const skillRegex = new RegExp(`\\b${skill.replace(/[+]/g, '\\+')}\\b`, 'gi');
+                              if (skillRegex.test(lowerText)) {
+                                extractedSkillsSet.add(skill);
+                              }
+                            }
+
+                            const extractedSkills = Array.from(extractedSkillsSet).slice(0, 10);
+
+                            if (extractedSkills.length > 0) {
+                              // Auto-populate the first skill into the input
+                              setNewSkillName(extractedSkills[0]);
+                              // Show remaining skills in suggestions
+                              setSkillSuggestions(extractedSkills.slice(1));
+                              // Update both extract and edit resume text
+                              setEditResumeText(extractResumeText);
+                            }
+
+                            setExtractDialogOpen(false);
+                          }}
+                          className="font-black uppercase text-xs"
+                        >
+                          <Target className="h-3 w-3 mr-2" />
+                          Auto-Extract Skills
+                        </Button>
+                      </div>
+                    </div>
                   </DialogContent>
                 </Dialog>
              </div>
@@ -1387,7 +1502,7 @@ const CandidateDashboard = () => {
                                  <Badge variant="outline" className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary border-transparent h-auto py-1 px-2 text-center whitespace-normal break-words">{job.job_type}</Badge>
                                  {job.salary_min && (
                                     <Badge variant="outline" className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest bg-green-500/10 text-green-600 border-transparent h-auto py-1 px-2 text-center whitespace-normal break-words">
-                                      ${job.salary_min.toLocaleString()} - {job.salary_max?.toLocaleString()} <span className="ml-1 opacity-60 block sm:inline">{job.salary_period || 'Annually'}</span>
+                                      ${job.salary_min.toLocaleString()} - ${job.salary_max?.toLocaleString()} <span className="ml-1 opacity-60 block sm:inline">{job.salary_period || 'Annually'}</span>
                                     </Badge>
                                   )}
                                  {(job as any).score > 0 && (
