@@ -86,16 +86,6 @@ const Footer = () => {
                   Candidates
                 </Link>
               </li>
-              <li>
-                <Link to="/dashboard" className="text-muted-foreground hover:text-primary transition-colors">
-                  Dashboard
-                </Link>
-              </li>
-              <li>
-                <Link to="/admin/auth" className="text-muted-foreground hover:text-primary transition-colors">
-                  Admin Access
-                </Link>
-              </li>
             </ul>
           </div>
 
