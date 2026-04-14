@@ -1,14 +1,23 @@
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import EditableSection from "@/components/EditableSection";
 import { supabase } from "@/lib/supabase";
-import { Loader2 } from "lucide-react";
+import { Loader2, Edit2, Save, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 
 const Terms = () => {
-  const [content, setContent] = useState<any>({});
+  const { toast } = useToast();
+  const [content, setContent] = useState<any>({
+    terms_title: "Terms & Conditions",
+    terms_body: "Terms and conditions content will appear here."
+  });
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<any>({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchContent();
@@ -36,13 +45,8 @@ const Terms = () => {
         .select("section_key, content")
         .eq("section_key", "terms_page");
 
-      if (data && data.length > 0) {
-        setContent(data[0].content || {});
-      } else {
-        setContent({
-          terms_title: "Terms & Conditions",
-          terms_body: getDefaultTermsContent()
-        });
+      if (data && data.length > 0 && data[0].content) {
+        setContent(data[0].content);
       }
     } catch (err) {
       console.error("Error fetching content:", err);
@@ -51,75 +55,39 @@ const Terms = () => {
     }
   };
 
-  const getDefaultTermsContent = () => `
-Terms & Conditions
+  const handleEdit = () => {
+    setEditForm(JSON.parse(JSON.stringify(content)));
+    setIsEditing(true);
+  };
 
-Last Updated: April 2026
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("site_content")
+        .upsert(
+          { section_key: "terms_page", content: editForm },
+          { onConflict: "section_key" }
+        );
 
-By accessing or using OpenTooWork (https://opentoowork.tech), you agree to these Terms & Conditions.
+      if (error) throw error;
 
-1. Platform Nature
-
-OpenTooWork is a job discovery and job posting platform. 
-
-We are not an employment agency, recruiter, or staffing firm, and we do not participate in hiring decisions.
-
-2. User Eligibility
-
-You must be at least 18 years old to use this platform.
-
-3. User Responsibilities
-
-You agree to:
-
-- Provide accurate and truthful information
-- Use the platform only for lawful purposes
-- Not post misleading, discriminatory, or fraudulent content
-- Not solicit payments from job seekers
-
-4. Employer Responsibilities
-
-Employers are solely responsible for:
-
-- Accuracy of job listings
-- Compliance with employment laws
-- Hiring decisions and communication with candidates
-- Equal Employment Opportunity (EEO) compliance
-
-5. Account Termination
-
-OpenTooWork reserves the right to suspend or terminate any account that violates these terms or engages in harmful activity.
-
-6. Intellectual Property
-
-All platform content, branding, and design are the property of OpenTooWork and may not be copied or reused without permission.
-
-7. Limitation of Liability
-
-OpenTooWork is not responsible for:
-
-- Employment outcomes
-- Employer or candidate conduct
-- Job offer legitimacy or compensation disputes
-- Financial or personal losses arising from platform use
-
-Use of the platform is at your own risk.
-
-8. Governing Law
-
-These Terms are governed by the laws of the United States of America. 
-
-Jurisdiction shall lie in the State of Delaware, USA.
-
-9. Changes to Terms
-
-We may update these Terms at any time. Continued use constitutes acceptance.
-
-10. Contact
-
-For questions regarding these Terms:
-
-Email: support@opentoowork.tech`;
+      setContent(editForm);
+      setIsEditing(false);
+      toast({
+        title: "Success",
+        description: "Terms & Conditions updated successfully!"
+      });
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -129,66 +97,79 @@ Email: support@opentoowork.tech`;
     );
   }
 
-  const termsTitle = content?.terms_title || "Terms & Conditions";
-  const termsBody = content?.terms_body || getDefaultTermsContent();
-
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar />
 
       <main className="flex-grow">
-        <EditableSection
-          sectionKey="terms_page"
-          content={content}
-          userRole={userRole}
-          onSave={(newContent) => setContent(newContent)}
-        >
-          <section className="py-20 bg-primary/5 border-t border-primary/10">
-            <div className="max-w-4xl mx-auto px-4">
-              <h1 className="text-4xl md:text-5xl font-bold mb-8">{termsTitle}</h1>
-              
-              <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none">
-                {termsBody?.split('\n\n').map((paragraph, idx) => (
-                  <div key={idx} className="mb-6">
-                    {paragraph.split('\n').map((line, lineIdx) => {
-                      if (line.startsWith('-')) {
-                        return (
-                          <p key={lineIdx} className="ml-4 text-foreground">
-                            • {line.substring(1).trim()}
-                          </p>
-                        );
-                      }
-                      if (line.match(/^\d+\./)) {
-                        return (
-                          <h3 key={lineIdx} className="font-semibold text-lg text-foreground mt-4 mb-2">
-                            {line}
-                          </h3>
-                        );
-                      }
-                      return (
-                        <p key={lineIdx} className="text-foreground leading-relaxed">
-                          {line || '\u00A0'}
-                        </p>
-                      );
-                    })}
-                  </div>
-                ))}
+        <div className="container mx-auto max-w-4xl py-12 px-6">
+          <div className="flex justify-between items-center gap-4 mb-8">
+            <div>
+              <h1 className="text-4xl font-black uppercase tracking-tighter mb-3">
+                {isEditing ? editForm.terms_title : content.terms_title}
+              </h1>
+              <p className="text-muted-foreground text-base">
+                Service agreement and platform terms for OpenTooWork
+              </p>
+            </div>
+            {userRole === "admin" && !isEditing && (
+              <Button onClick={handleEdit} variant="outline" className="gap-2">
+                <Edit2 className="h-4 w-4" />
+                Edit
+              </Button>
+            )}
+          </div>
+
+          {isEditing ? (
+            <div className="space-y-4 bg-card border border-border/50 rounded-2xl p-8">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Title</label>
+                <input
+                  type="text"
+                  value={editForm.terms_title || ""}
+                  onChange={(e) => setEditForm({ ...editForm, terms_title: e.target.value })}
+                  className="w-full px-4 py-2 border border-border/50 rounded-lg bg-background text-foreground"
+                  placeholder="Terms title"
+                />
               </div>
 
-              <div className="mt-12 p-6 bg-primary/10 border border-primary/20 rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  <strong>Last Updated:</strong> April 2026
-                </p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  For questions or concerns, please contact us at{" "}
-                  <a href="mailto:support@opentoowork.tech" className="text-primary hover:underline">
-                    support@opentoowork.tech
-                  </a>
-                </p>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Content</label>
+                <Textarea
+                  value={editForm.terms_body || ""}
+                  onChange={(e) => setEditForm({ ...editForm, terms_body: e.target.value })}
+                  className="w-full min-h-[400px] px-4 py-2 border border-border/50 rounded-lg bg-background text-foreground"
+                  placeholder="Terms content..."
+                />
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditing(false)}
+                  disabled={saving}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="bg-primary"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {saving ? "Saving..." : "Save Changes"}
+                </Button>
               </div>
             </div>
-          </section>
-        </EditableSection>
+          ) : (
+            <div className="prose prose-invert max-w-none bg-card border border-border/50 rounded-2xl p-8">
+              <div className="whitespace-pre-wrap text-foreground leading-relaxed">
+                {content.terms_body || "No content added yet."}
+              </div>
+            </div>
+          )}
+        </div>
       </main>
 
       <Footer />

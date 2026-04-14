@@ -1,14 +1,23 @@
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import EditableSection from "@/components/EditableSection";
 import { supabase } from "@/lib/supabase";
-import { Loader2 } from "lucide-react";
+import { Loader2, Edit2, Save, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 
 const Policy = () => {
-  const [content, setContent] = useState<any>({});
+  const { toast } = useToast();
+  const [content, setContent] = useState<any>({
+    policy_title: "Privacy Policy",
+    policy_body: "Privacy policy content will appear here."
+  });
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<any>({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchContent();
@@ -36,13 +45,8 @@ const Policy = () => {
         .select("section_key, content")
         .eq("section_key", "policy_page");
 
-      if (data && data.length > 0) {
-        setContent(data[0].content || {});
-      } else {
-        setContent({
-          policy_title: "Privacy Policy",
-          policy_body: getDefaultPolicyContent()
-        });
+      if (data && data.length > 0 && data[0].content) {
+        setContent(data[0].content);
       }
     } catch (err) {
       console.error("Error fetching content:", err);
@@ -51,70 +55,39 @@ const Policy = () => {
     }
   };
 
-  const getDefaultPolicyContent = () => `
-Privacy Policy
+  const handleEdit = () => {
+    setEditForm(JSON.parse(JSON.stringify(content)));
+    setIsEditing(true);
+  };
 
-Last Updated: April 2026
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("site_content")
+        .upsert(
+          { section_key: "policy_page", content: editForm },
+          { onConflict: "section_key" }
+        );
 
-Open Too Work ("OpenTooWork", "we", "our", or "us") respects your privacy and is committed to protecting your personal information. This Privacy Policy explains how we collect, use, store, and protect information when you use https://opentoowork.tech.
+      if (error) throw error;
 
-1. Information We Collect
-
-We may collect the following types of information:
-
-- Personal details such as name, email address, phone number
-- Job seeker profile information including skills, experience, resume, and preferences
-- Employer information such as company name and job postings
-- Technical data such as IP address, browser type, device information, and access logs
-
-2. How We Use Your Information
-
-We use your information to:
-
-- Operate and maintain the OpenTooWork platform
-- Match job seekers with relevant job opportunities
-- Allow employers to review candidate applications
-- Send job alerts, notifications, and service updates
-- Improve platform functionality and user experience
-- Prevent fraud, abuse, or unauthorized activity
-
-3. Sharing of Information
-
-We do not sell your personal data.
-
-Information may be shared only:
-
-- With employers when you apply to a job
-- With service providers who support platform operations (hosting, email, analytics)
-- When required by law or legal process
-
-4. Data Storage & Security
-
-We use reasonable administrative and technical safeguards to protect your data. However, no system can be guaranteed to be 100% secure.
-
-5. Cookies & Tracking
-
-We may use cookies or similar technologies to enhance site functionality and analyze usage trends.
-
-6. Data Retention & Deletion
-
-Users may update or delete their accounts at any time. 
-
-To request account or data deletion, please contact: support@opentoowork.tech
-
-7. Children's Privacy
-
-OpenTooWork is not intended for individuals under the age of 18. We do not knowingly collect data from minors.
-
-8. Changes to This Policy
-
-We may update this Privacy Policy from time to time. Continued use of the platform indicates acceptance of the updated policy.
-
-9. Contact
-
-For privacy-related questions, contact: 
-
-Email: support@opentoowork.tech`;
+      setContent(editForm);
+      setIsEditing(false);
+      toast({
+        title: "Success",
+        description: "Privacy policy updated successfully!"
+      });
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -124,66 +97,79 @@ Email: support@opentoowork.tech`;
     );
   }
 
-  const policyTitle = content?.policy_title || "Privacy Policy";
-  const policyBody = content?.policy_body || getDefaultPolicyContent();
-
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar />
 
       <main className="flex-grow">
-        <EditableSection
-          sectionKey="policy_page"
-          content={content}
-          userRole={userRole}
-          onSave={(newContent) => setContent(newContent)}
-        >
-          <section className="py-20 bg-primary/5 border-t border-primary/10">
-            <div className="max-w-4xl mx-auto px-4">
-              <h1 className="text-4xl md:text-5xl font-bold mb-8">{policyTitle}</h1>
-              
-              <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none">
-                {policyBody?.split('\n\n').map((paragraph, idx) => (
-                  <div key={idx} className="mb-6">
-                    {paragraph.split('\n').map((line, lineIdx) => {
-                      if (line.startsWith('-')) {
-                        return (
-                          <p key={lineIdx} className="ml-4 text-foreground">
-                            • {line.substring(1).trim()}
-                          </p>
-                        );
-                      }
-                      if (line.match(/^\d+\./)) {
-                        return (
-                          <h3 key={lineIdx} className="font-semibold text-lg text-foreground mt-4 mb-2">
-                            {line}
-                          </h3>
-                        );
-                      }
-                      return (
-                        <p key={lineIdx} className="text-foreground leading-relaxed">
-                          {line || '\u00A0'}
-                        </p>
-                      );
-                    })}
-                  </div>
-                ))}
+        <div className="container mx-auto max-w-4xl py-12 px-6">
+          <div className="flex justify-between items-center gap-4 mb-8">
+            <div>
+              <h1 className="text-4xl font-black uppercase tracking-tighter mb-3">
+                {isEditing ? editForm.policy_title : content.policy_title}
+              </h1>
+              <p className="text-muted-foreground text-base">
+                Important policies and guidelines for using OpenTooWork
+              </p>
+            </div>
+            {userRole === "admin" && !isEditing && (
+              <Button onClick={handleEdit} variant="outline" className="gap-2">
+                <Edit2 className="h-4 w-4" />
+                Edit
+              </Button>
+            )}
+          </div>
+
+          {isEditing ? (
+            <div className="space-y-4 bg-card border border-border/50 rounded-2xl p-8">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Title</label>
+                <input
+                  type="text"
+                  value={editForm.policy_title || ""}
+                  onChange={(e) => setEditForm({ ...editForm, policy_title: e.target.value })}
+                  className="w-full px-4 py-2 border border-border/50 rounded-lg bg-background text-foreground"
+                  placeholder="Policy title"
+                />
               </div>
 
-              <div className="mt-12 p-6 bg-primary/10 border border-primary/20 rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  <strong>Last Updated:</strong> April 2026
-                </p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  For questions or concerns, please contact us at{" "}
-                  <a href="mailto:support@opentoowork.tech" className="text-primary hover:underline">
-                    support@opentoowork.tech
-                  </a>
-                </p>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Content</label>
+                <Textarea
+                  value={editForm.policy_body || ""}
+                  onChange={(e) => setEditForm({ ...editForm, policy_body: e.target.value })}
+                  className="w-full min-h-[400px] px-4 py-2 border border-border/50 rounded-lg bg-background text-foreground"
+                  placeholder="Policy content..."
+                />
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditing(false)}
+                  disabled={saving}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="bg-primary"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {saving ? "Saving..." : "Save Changes"}
+                </Button>
               </div>
             </div>
-          </section>
-        </EditableSection>
+          ) : (
+            <div className="prose prose-invert max-w-none bg-card border border-border/50 rounded-2xl p-8">
+              <div className="whitespace-pre-wrap text-foreground leading-relaxed">
+                {content.policy_body || "No content added yet."}
+              </div>
+            </div>
+          )}
+        </div>
       </main>
 
       <Footer />

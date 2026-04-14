@@ -6,12 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Plus, Trash2, Upload, FileEdit, Layout, Info, Layers, Phone } from "lucide-react";
+import { Save, Plus, Trash2, Upload, FileEdit, Layout, Info, Layers, Phone, FileText, Scale, Scroll } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 
-type PageType = "homepage" | "about";
+type PageType = "homepage" | "about" | "legal" | "policy" | "terms";
 
 const ContentTab = () => {
   const { toast } = useToast();
@@ -134,6 +134,51 @@ const ContentTab = () => {
             <CardContent className="p-8 pt-0">
               <p className="text-muted-foreground font-medium leading-relaxed">
                 Manage the narrative: Mission statements, core values, and communication channels.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="group cursor-pointer border-border/50 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all duration-500 rounded-[2rem] overflow-hidden" onClick={() => setEditPage("legal")}>
+            <div className="h-2 bg-primary/10 group-hover:bg-primary transition-colors duration-500" />
+            <CardHeader className="p-8">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-500">
+                <FileText className="h-6 w-6 text-primary" />
+              </div>
+              <CardTitle className="text-2xl font-black uppercase tracking-tighter">Legal Hub</CardTitle>
+            </CardHeader>
+            <CardContent className="p-8 pt-0">
+              <p className="text-muted-foreground font-medium leading-relaxed">
+                Configure compliance documentation: Legal disclosures, privacy notices, and regulatory information.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="group cursor-pointer border-border/50 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all duration-500 rounded-[2rem] overflow-hidden" onClick={() => setEditPage("policy")}>
+            <div className="h-2 bg-primary/10 group-hover:bg-primary transition-colors duration-500" />
+            <CardHeader className="p-8">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-500">
+                <Scale className="h-6 w-6 text-primary" />
+              </div>
+              <CardTitle className="text-2xl font-black uppercase tracking-tighter">Privacy Policy</CardTitle>
+            </CardHeader>
+            <CardContent className="p-8 pt-0">
+              <p className="text-muted-foreground font-medium leading-relaxed">
+                Manage data privacy: Collection practices, user rights, and data protection protocols.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="group cursor-pointer border-border/50 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all duration-500 rounded-[2rem] overflow-hidden" onClick={() => setEditPage("terms")}>
+            <div className="h-2 bg-primary/10 group-hover:bg-primary transition-colors duration-500" />
+            <CardHeader className="p-8">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-500">
+                <Scroll className="h-6 w-6 text-primary" />
+              </div>
+              <CardTitle className="text-2xl font-black uppercase tracking-tighter">Terms & Conditions</CardTitle>
+            </CardHeader>
+            <CardContent className="p-8 pt-0">
+              <p className="text-muted-foreground font-medium leading-relaxed">
+                Service agreements: Platform terms, user obligations, and liability disclaimers.
               </p>
             </CardContent>
           </Card>
@@ -862,6 +907,174 @@ const ContentTab = () => {
             </Card>
           </TabsContent>
         </Tabs>
+      </div>
+    );
+  }
+
+  // Legal Page editing
+  if (editPage === "legal") {
+    const legalContent = content.legal_page || {
+      legal_title: "",
+      legal_body: ""
+    };
+
+    return (
+      <div className="space-y-6 max-w-6xl">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Edit Legal Page</h2>
+          <Button variant="outline" onClick={() => setEditPage(null)}>
+            Back to Page Selection
+          </Button>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Legal Page Content</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="legal-title">Page Title</Label>
+              <Input
+                id="legal-title"
+                value={legalContent.legal_title || ""}
+                onChange={(e) => handleChange("legal_page", "legal_title", e.target.value)}
+                placeholder="Legal Information"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="legal-body">Page Content</Label>
+              <Textarea
+                id="legal-body"
+                value={legalContent.legal_body || ""}
+                onChange={(e) => handleChange("legal_page", "legal_body", e.target.value)}
+                placeholder="Enter legal page content..."
+                rows={10}
+              />
+            </div>
+
+            <Button
+              onClick={() => handleSave("legal_page", legalContent)}
+              disabled={loading}
+              className="gap-2 bg-primary"
+            >
+              <Save className="h-4 w-4" />
+              {loading ? "Saving..." : "Save Legal Page"}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Policy Page editing
+  if (editPage === "policy") {
+    const policyContent = content.policy_page || {
+      policy_title: "",
+      policy_body: ""
+    };
+
+    return (
+      <div className="space-y-6 max-w-6xl">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Edit Privacy Policy</h2>
+          <Button variant="outline" onClick={() => setEditPage(null)}>
+            Back to Page Selection
+          </Button>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Privacy Policy Content</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="policy-title">Policy Title</Label>
+              <Input
+                id="policy-title"
+                value={policyContent.policy_title || ""}
+                onChange={(e) => handleChange("policy_page", "policy_title", e.target.value)}
+                placeholder="Privacy Policy"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="policy-body">Policy Content</Label>
+              <Textarea
+                id="policy-body"
+                value={policyContent.policy_body || ""}
+                onChange={(e) => handleChange("policy_page", "policy_body", e.target.value)}
+                placeholder="Enter privacy policy content..."
+                rows={10}
+              />
+            </div>
+
+            <Button
+              onClick={() => handleSave("policy_page", policyContent)}
+              disabled={loading}
+              className="gap-2 bg-primary"
+            >
+              <Save className="h-4 w-4" />
+              {loading ? "Saving..." : "Save Privacy Policy"}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Terms Page editing
+  if (editPage === "terms") {
+    const termsContent = content.terms_page || {
+      terms_title: "",
+      terms_body: ""
+    };
+
+    return (
+      <div className="space-y-6 max-w-6xl">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Edit Terms & Conditions</h2>
+          <Button variant="outline" onClick={() => setEditPage(null)}>
+            Back to Page Selection
+          </Button>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Terms & Conditions Content</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="terms-title">Terms Title</Label>
+              <Input
+                id="terms-title"
+                value={termsContent.terms_title || ""}
+                onChange={(e) => handleChange("terms_page", "terms_title", e.target.value)}
+                placeholder="Terms & Conditions"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="terms-body">Terms Content</Label>
+              <Textarea
+                id="terms-body"
+                value={termsContent.terms_body || ""}
+                onChange={(e) => handleChange("terms_page", "terms_body", e.target.value)}
+                placeholder="Enter terms and conditions content..."
+                rows={10}
+              />
+            </div>
+
+            <Button
+              onClick={() => handleSave("terms_page", termsContent)}
+              disabled={loading}
+              className="gap-2 bg-primary"
+            >
+              <Save className="h-4 w-4" />
+              {loading ? "Saving..." : "Save Terms & Conditions"}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

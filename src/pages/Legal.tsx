@@ -1,15 +1,23 @@
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import LegalContent from "@/components/LegalContent";
-import EditableSection from "@/components/EditableSection";
 import { supabase } from "@/lib/supabase";
-import { Loader2 } from "lucide-react";
+import { Loader2, Edit2, Save, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 
 const Legal = () => {
-  const [content, setContent] = useState<any>(null);
+  const { toast } = useToast();
+  const [content, setContent] = useState<any>({
+    legal_title: "Legal Information",
+    legal_body: "Important policies and disclaimers for using OpenTooWork"
+  });
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<any>({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchContent();
@@ -37,15 +45,47 @@ const Legal = () => {
         .select("section_key, content")
         .eq("section_key", "legal_page");
 
-      if (data && data.length > 0) {
-        setContent(data[0].content || {});
-      } else {
-        setContent({});
+      if (data && data.length > 0 && data[0].content) {
+        setContent(data[0].content);
       }
     } catch (err) {
       console.error("Error fetching content:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEdit = () => {
+    setEditForm(JSON.parse(JSON.stringify(content)));
+    setIsEditing(true);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("site_content")
+        .upsert(
+          { section_key: "legal_page", content: editForm },
+          { onConflict: "section_key" }
+        );
+
+      if (error) throw error;
+
+      setContent(editForm);
+      setIsEditing(false);
+      toast({
+        title: "Success",
+        description: "Legal page updated successfully!"
+      });
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -61,14 +101,74 @@ const Legal = () => {
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar />
       <main className="flex-grow">
-        <EditableSection
-          sectionKey="legal_page"
-          content={content}
-          userRole={userRole}
-          onSave={(newContent) => setContent(newContent)}
-        >
-          <LegalContent />
-        </EditableSection>
+        <div className="container mx-auto max-w-4xl py-12 px-6">
+          <div className="flex justify-between items-center gap-4 mb-8">
+            <div>
+              <h1 className="text-4xl font-black uppercase tracking-tighter mb-3">
+                {isEditing ? editForm.legal_title : content.legal_title}
+              </h1>
+              <p className="text-muted-foreground text-base">
+                Important policies and disclaimers for using OpenTooWork
+              </p>
+            </div>
+            {userRole === "admin" && !isEditing && (
+              <Button onClick={handleEdit} variant="outline" className="gap-2">
+                <Edit2 className="h-4 w-4" />
+                Edit
+              </Button>
+            )}
+          </div>
+
+          {isEditing ? (
+            <div className="space-y-4 bg-card border border-border/50 rounded-2xl p-8">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Title</label>
+                <input
+                  type="text"
+                  value={editForm.legal_title || ""}
+                  onChange={(e) => setEditForm({ ...editForm, legal_title: e.target.value })}
+                  className="w-full px-4 py-2 border border-border/50 rounded-lg bg-background text-foreground"
+                  placeholder="Legal page title"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Content</label>
+                <Textarea
+                  value={editForm.legal_body || ""}
+                  onChange={(e) => setEditForm({ ...editForm, legal_body: e.target.value })}
+                  className="w-full min-h-[400px] px-4 py-2 border border-border/50 rounded-lg bg-background text-foreground"
+                  placeholder="Legal page content..."
+                />
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditing(false)}
+                  disabled={saving}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="bg-primary"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {saving ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="prose prose-invert max-w-none bg-card border border-border/50 rounded-2xl p-8">
+              <div className="whitespace-pre-wrap text-foreground leading-relaxed">
+                {content.legal_body || "No content added yet."}
+              </div>
+            </div>
+          )}
+        </div>
       </main>
       <Footer />
     </div>
