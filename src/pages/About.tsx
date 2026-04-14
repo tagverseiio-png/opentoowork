@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import EditableSection from "@/components/EditableSection";
-import LegalContent from "@/components/LegalContent";
 import { supabase } from "@/lib/supabase";
 import { Mail, MapPin, Loader2, Edit } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -295,8 +294,6 @@ const About = () => {
 
 
       </main>
-
-      <LegalContent />
 
       <Footer />
     </div>

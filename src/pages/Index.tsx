@@ -5,7 +5,6 @@ import HeroSection from "@/components/sections/HeroSection";
 import WhyChooseUs from "@/components/sections/WhyChooseUs";
 import HowItWorks from "@/components/sections/HowItWorks";
 import EditableSection from "@/components/EditableSection";
-import LegalContent from "@/components/LegalContent";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -210,8 +209,6 @@ const Index = () => {
           )}
         </div>
       </section>
-
-      <LegalContent />
 
       <Footer />
     </div>

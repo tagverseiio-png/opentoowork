@@ -50,6 +50,11 @@ const Footer = () => {
             <h4 className="font-semibold text-foreground mb-6">Platform</h4>
             <ul className="space-y-3 text-sm">
               <li>
+                <Link to="/" className="text-muted-foreground hover:text-primary transition-colors">
+                  Home
+                </Link>
+              </li>
+              <li>
                 <Link to="/jobs" className="text-muted-foreground hover:text-primary transition-colors">
                   Browse Jobs
                 </Link>
@@ -60,13 +65,57 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/onboard" className="text-muted-foreground hover:text-primary transition-colors">
+                  Get Started
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* 2b. User Links */}
+          <div className="min-w-[140px]">
+            <h4 className="font-semibold text-foreground mb-6">For You</h4>
+            <ul className="space-y-3 text-sm">
+              <li>
                 <Link to="/employer/auth" className="text-muted-foreground hover:text-primary transition-colors">
-                  For Employers
+                  Employers
                 </Link>
               </li>
               <li>
                 <Link to="/candidate/auth" className="text-muted-foreground hover:text-primary transition-colors">
-                  For Candidates
+                  Candidates
+                </Link>
+              </li>
+              <li>
+                <Link to="/dashboard" className="text-muted-foreground hover:text-primary transition-colors">
+                  Dashboard
+                </Link>
+              </li>
+              <li>
+                <Link to="/admin/auth" className="text-muted-foreground hover:text-primary transition-colors">
+                  Admin Access
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* 2c. Legal Links */}
+          <div className="min-w-[140px]">
+            <h4 className="font-semibold text-foreground mb-6">Legal</h4>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <Link to="/legal" className="text-muted-foreground hover:text-primary transition-colors">
+                  Legal Info
+                </Link>
+              </li>
+              <li>
+                <Link to="/policy" className="text-muted-foreground hover:text-primary transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">
+                  Terms & Conditions
                 </Link>
               </li>
             </ul>

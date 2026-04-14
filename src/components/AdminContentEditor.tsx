@@ -132,12 +132,13 @@ const AdminContentEditor = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="hero_section">Hero</TabsTrigger>
             <TabsTrigger value="why_choose_us">Features</TabsTrigger>
             <TabsTrigger value="mission_section">Mission</TabsTrigger>
             <TabsTrigger value="how_it_works">How It Works</TabsTrigger>
             <TabsTrigger value="about_page">About</TabsTrigger>
+            <TabsTrigger value="legal_page">Legal</TabsTrigger>
             <TabsTrigger value="policy_page">Policy</TabsTrigger>
             <TabsTrigger value="terms_page">Terms</TabsTrigger>
           </TabsList>
@@ -474,6 +475,32 @@ const AdminContentEditor = () => {
                 <Save className="h-4 w-4" />
                 Save About Page
               </Button>
+            </Card>
+          </TabsContent>
+
+          {/* Legal Page */}
+          <TabsContent value="legal_page" className="space-y-6">
+            <Card className="p-6">
+              <h2 className="text-2xl font-bold mb-4">Legal Information Page</h2>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground mb-4">
+                  This page displays all legal information sections. The content is managed by the LegalContent component which displays all sections with expandable/collapsible functionality.
+                </p>
+                <div>
+                  <label className="block text-sm font-semibold mb-2">Legal Page Status</label>
+                  <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+                    <p className="text-sm text-green-700 dark:text-green-300">
+                      ✅ Legal page is active and displaying all sections (Privacy Policy, Terms & Conditions, Disclaimer, Safety Warning, EEO, Footer Disclaimer)
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2">Note</label>
+                  <p className="text-sm text-muted-foreground">
+                    To edit individual legal sections, use the <strong>Policy</strong> tab for Privacy Policy and <strong>Terms</strong> tab for Terms & Conditions. The other sections are built into the component and will be made separately editable in future updates.
+                  </p>
+                </div>
+              </div>
             </Card>
           </TabsContent>
 
