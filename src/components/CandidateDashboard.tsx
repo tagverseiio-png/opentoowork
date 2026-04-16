@@ -874,11 +874,11 @@ const CandidateDashboard = () => {
                            <Button 
                              variant="outline" 
                              size="sm" 
-                             className="h-7 text-[9px] font-black uppercase tracking-widest gap-2 bg-primary/5 hover:bg-primary/10 border-primary/20"
+                             className="h-auto py-1.5 px-3 text-[9px] font-black uppercase tracking-widest gap-2 bg-primary/5 hover:bg-primary/10 border-primary/20 whitespace-normal text-left max-w-[200px]"
                              disabled={extractingSkills}
                              onClick={async () => {
                                 if (!editResumeText.trim()) {
-                                  toast({ title: "No resume text", description: "Paste your resume content first, then click Auto-Extract.", variant: "destructive" });
+                                  toast({ title: "No resume text", description: "Copy and paste the resume to extract the skills.", variant: "destructive" });
                                   return;
                                 }
                                 setExtractingSkills(true);
@@ -1052,7 +1052,7 @@ const CandidateDashboard = () => {
                                 setExtractingSkills(false);
                              }}
                            >
-                              <Target className="h-3 w-3 text-primary" /> {extractingSkills ? 'Scanning...' : 'Auto-Extract'}
+                              <Target className="h-3 w-3 text-primary" /> {extractingSkills ? 'Scanning...' : 'Copy and paste the resume to extract the skills'}
                            </Button>
                         </div>
                         <Textarea 
@@ -1174,18 +1174,18 @@ const CandidateDashboard = () => {
                       <Plus className="h-3.5 w-3.5" /> Append
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[400px] border-none shadow-2xl rounded-2xl">
-                    <DialogHeader className="flex flex-row items-center justify-between">
+                  <DialogContent className="sm:max-w-[450px] border-none shadow-2xl rounded-2xl">
+                    <DialogHeader className="flex flex-col items-start gap-4">
                       <DialogTitle className="font-black uppercase tracking-tighter">{editingSkillId ? "Edit Competency" : "Add Competency"}</DialogTitle>
                       {!editingSkillId && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-9 gap-2 font-bold text-[9px] uppercase border-primary/30 hover:bg-primary/5 rounded-full px-4"
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-auto py-2 gap-2 font-bold text-[9px] uppercase border-primary/30 hover:bg-primary/5 rounded-xl px-4 whitespace-normal text-left sm:w-full"
                           onClick={() => setExtractDialogOpen(true)}
                           disabled={extractingSkills}
                         >
-                          <Target className="h-3.5 w-3.5" /> {extractingSkills ? 'Scanning...' : 'Auto-Extract'}
+                          <Target className="h-3.5 w-3.5" /> {extractingSkills ? 'Scanning...' : 'Copy and paste the resume to extract the skills'}
                         </Button>
                       )}
                     </DialogHeader>
@@ -1312,10 +1312,10 @@ const CandidateDashboard = () => {
 
                             setExtractDialogOpen(false);
                           }}
-                          className="font-black uppercase text-xs"
+                          className="font-black uppercase text-xs h-auto py-3 whitespace-normal"
                         >
                           <Target className="h-3 w-3 mr-2" />
-                          Auto-Extract Skills
+                          Copy and paste the resume to extract the skills
                         </Button>
                       </div>
                     </div>

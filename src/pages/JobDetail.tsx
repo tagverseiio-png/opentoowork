@@ -19,13 +19,13 @@ const JobDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [job, setJob] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isApplying, setIsApplying] = useState(false);
   const [coverLetter, setCoverLetter] = useState("");
   const [hasApplied, setHasApplied] = useState(false);
-  
+
   // User state
   const [user, setUser] = useState<any>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -47,7 +47,7 @@ const JobDetail = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       setUser(session.user);
-      
+
       // Fetch role
       const { data: profile } = await supabase
         .from("profiles")
@@ -57,7 +57,7 @@ const JobDetail = () => {
 
       if (profile) {
         setUserRole(profile.role);
-        
+
         // If candidate, fetch candidate profile and check application status
         if (profile.role === "candidate") {
           const { data: candidateData } = await supabase
@@ -65,7 +65,7 @@ const JobDetail = () => {
             .select("*")
             .eq("user_id", session.user.id)
             .single();
-          
+
           setCandidateProfile(candidateData);
 
           if (candidateData && id) {
@@ -92,7 +92,7 @@ const JobDetail = () => {
       .eq("job_id", jobId)
       .eq("candidate_id", candidateId)
       .maybeSingle();
-    
+
     if (data) {
       setHasApplied(true);
     }
@@ -105,7 +105,7 @@ const JobDetail = () => {
         job_id: jobId,
         viewer_id: session?.user?.id || null
       });
-    } catch {}
+    } catch { }
   };
 
   const fetchJob = async () => {
@@ -276,11 +276,11 @@ const JobDetail = () => {
         job.id
       );
 
-      toast({ 
-        title: userRole === 'employer' ? "Candidate Submitted!" : "Referral Sent!", 
-        description: `We've notified ${referralEmail} and added them to the job's pipeline.` 
+      toast({
+        title: userRole === 'employer' ? "Candidate Submitted!" : "Referral Sent!",
+        description: `We've notified ${referralEmail} and added them to the job's pipeline.`
       });
-      
+
       // Reset
       setReferralEmail("");
       setReferralName("");
@@ -325,7 +325,7 @@ const JobDetail = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-primary-light/10">
       <Navbar />
-      
+
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
           <Card className="p-8 shadow-xl border-border/50">
@@ -364,22 +364,22 @@ const JobDetail = () => {
                     </span>
                   )}
                 </div>
-                
-                 {matchScore > 0 && !isJobExpired && (
-                   <div className="mt-6 p-4 bg-primary/5 border border-primary/20 rounded-2xl flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                         <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                            <Target className="h-6 w-6 text-primary" />
-                         </div>
-                         <div>
-                            <div className="text-sm font-black uppercase tracking-widest text-primary">Your Match Score</div>
-                            <div className="text-xs text-muted-foreground font-medium">Based on your expertise and job requirements</div>
-                         </div>
+
+                {matchScore > 0 && !isJobExpired && (
+                  <div className="mt-6 p-4 bg-primary/5 border border-primary/20 rounded-2xl flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                        <Target className="h-6 w-6 text-primary" />
                       </div>
-                      <div className="text-3xl font-black text-primary tabular-nums">
-                         {matchScore}%
+                      <div>
+                        <div className="text-sm font-black uppercase tracking-widest text-primary">Your Match Score</div>
+                        <div className="text-xs text-muted-foreground font-medium">Based on your expertise and job requirements</div>
                       </div>
-                   </div>
+                    </div>
+                    <div className="text-3xl font-black text-primary tabular-nums">
+                      {matchScore}%
+                    </div>
+                  </div>
                 )}
 
                 {isJobExpired && (
@@ -394,43 +394,43 @@ const JobDetail = () => {
               </div>
 
               <div className="flex flex-col md:flex-row gap-4">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className="flex-1 h-12 gap-2 font-black uppercase tracking-widest text-[10px] border-primary/20 hover:bg-primary/5">
-                        <Share2 className="h-4 w-4" /> Share Job
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle className="uppercase font-black italic tracking-tighter">Share Opportunity</DialogTitle>
-                        <DialogDescription className="sr-only">Copy the job link to share this opportunity with your professional network.</DialogDescription>
-                      </DialogHeader>
-                      <div className="flex items-center space-x-2 py-4">
-                        <div className="grid flex-1 gap-2">
-                          <Label htmlFor="link" className="sr-only">Link</Label>
-                          <Input
-                            id="link"
-                            defaultValue={window.location.href}
-                            readOnly
-                            className="h-11 font-mono text-[10px]"
-                          />
-                        </div>
-                        <Button 
-                          type="submit" 
-                          size="sm" 
-                          className="px-6 h-11 font-black uppercase text-[10px]"
-                          onClick={() => {
-                            navigator.clipboard.writeText(window.location.href);
-                            toast({ title: "Link Copied!", description: "Share it with your network." });
-                          }}
-                        >
-                          Copy
-                        </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="flex-1 h-12 gap-2 font-black uppercase tracking-widest text-[10px] border-primary/20 hover:bg-primary/5">
+                      <Share2 className="h-4 w-4" /> Share Job
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle className="uppercase font-black italic tracking-tighter">Share Opportunity</DialogTitle>
+                      <DialogDescription className="sr-only">Copy the job link to share this opportunity with your professional network.</DialogDescription>
+                    </DialogHeader>
+                    <div className="flex items-center space-x-2 py-4">
+                      <div className="grid flex-1 gap-2">
+                        <Label htmlFor="link" className="sr-only">Link</Label>
+                        <Input
+                          id="link"
+                          defaultValue={window.location.href}
+                          readOnly
+                          className="h-11 font-mono text-[10px]"
+                        />
                       </div>
-                    </DialogContent>
-                  </Dialog>
+                      <Button
+                        type="submit"
+                        size="sm"
+                        className="px-6 h-11 font-black uppercase text-[10px]"
+                        onClick={() => {
+                          navigator.clipboard.writeText(window.location.href);
+                          toast({ title: "Link Copied!", description: "Share it with your network." });
+                        }}
+                      >
+                        Copy
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
 
-                  {/* <Dialog open={isReferralDialogOpen} onOpenChange={setIsReferralDialogOpen}>
+                {/* <Dialog open={isReferralDialogOpen} onOpenChange={setIsReferralDialogOpen}>
                     <DialogTrigger asChild>
                       <Button variant="outline" className="flex-1 h-12 gap-2 font-black uppercase tracking-widest text-[10px] border-primary/20 hover:bg-primary/5">
                         <Users className="h-4 w-4" /> {userRole === 'employer' ? "Submit Candidate" : "Refer Talent"}
@@ -501,12 +501,11 @@ const JobDetail = () => {
 
               {(job.salary_min || job.salary_max) && (
                 <div className="flex items-center gap-3 text-lg font-semibold text-success bg-success/10 rounded-xl p-4">
-                  <DollarSign className="h-6 w-6" />
                   ${job.salary_min?.toLocaleString()} - ${job.salary_max?.toLocaleString()}
                   <span className="text-sm opacity-70 ml-1">/ {
-                    job.salary_period === 'Hourly' ? 'hour' : 
-                    job.salary_period === 'Monthly' ? 'month' : 
-                    'year'
+                    job.salary_period === 'Hourly' ? 'hour' :
+                      job.salary_period === 'Monthly' ? 'month' :
+                        'year'
                   }</span>
                 </div>
               )}
@@ -564,7 +563,7 @@ const JobDetail = () => {
               )}
 
               {/* === ACTION AREA === */}
-              
+
               {userRole === 'admin' ? (
                 // 1. Restricted View for Admin
                 <div className="flex flex-col items-center justify-center p-6 bg-muted/30 rounded-xl border border-border border-dashed">
@@ -577,22 +576,22 @@ const JobDetail = () => {
                   </p>
                 </div>
               ) : userRole === 'employer' ? (
-                 null
-                 /* 
-                 // 1b. Support for Employers submitting candidates
-                 <div className="w-full space-y-3">
-                   <Button 
-                     size="lg" 
-                     className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg text-lg h-14 font-black uppercase tracking-widest"
-                     onClick={() => setIsReferralDialogOpen(true)}
-                   >
-                     Submit Your Candidate
-                   </Button>
-                   <p className="text-[9px] text-center text-muted-foreground font-black uppercase tracking-widest">
-                     As an employer/representative, you can submit talent profiles directly to this hiring partner
-                   </p>
-                 </div>
-                 */
+                null
+                /* 
+                // 1b. Support for Employers submitting candidates
+                <div className="w-full space-y-3">
+                  <Button 
+                    size="lg" 
+                    className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg text-lg h-14 font-black uppercase tracking-widest"
+                    onClick={() => setIsReferralDialogOpen(true)}
+                  >
+                    Submit Your Candidate
+                  </Button>
+                  <p className="text-[9px] text-center text-muted-foreground font-black uppercase tracking-widest">
+                    As an employer/representative, you can submit talent profiles directly to this hiring partner
+                  </p>
+                </div>
+                */
               ) : hasApplied ? (
                 // 2. Already Applied State
                 <div className="w-full">
@@ -608,13 +607,13 @@ const JobDetail = () => {
                 // 3. Apply Button (Candidates Only)
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button 
-                        size="lg" 
-                        disabled={isJobExpired}
-                        className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg text-lg h-14 font-black uppercase tracking-widest"
-                     >
-                       {isJobExpired ? "Opportunity Closed" : "Apply Now"}
-                     </Button>
+                    <Button
+                      size="lg"
+                      disabled={isJobExpired}
+                      className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg text-lg h-14 font-black uppercase tracking-widest"
+                    >
+                      {isJobExpired ? "Opportunity Closed" : "Apply Now"}
+                    </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
@@ -631,8 +630,8 @@ const JobDetail = () => {
                           placeholder="Tell the employer why you're a great fit..."
                         />
                       </div>
-                      <Button 
-                        onClick={handleApply} 
+                      <Button
+                        onClick={handleApply}
                         disabled={isApplying}
                         className="w-full h-12 font-black uppercase text-[10px]"
                       >
