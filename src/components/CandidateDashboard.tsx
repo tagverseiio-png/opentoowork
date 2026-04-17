@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import usaCities from "@/lib/usa_cities_cleaned.json";
@@ -115,6 +115,31 @@ const CandidateDashboard = () => {
   const [locationOpen, setLocationOpen] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
 
+  // Certifications State
+  const [certifications, setCertifications] = useState<any[]>([]);
+  const [newCertName, setNewCertName] = useState("");
+  const [newCertOrganization, setNewCertOrganization] = useState("");
+  const [newCertIssueDate, setNewCertIssueDate] = useState("");
+  const [newCertExpiryDate, setNewCertExpiryDate] = useState("");
+  const [newCertCredentialId, setNewCertCredentialId] = useState("");
+  const [newCertCredentialUrl, setNewCertCredentialUrl] = useState("");
+  const [newCertDescription, setNewCertDescription] = useState("");
+  const [addingCert, setAddingCert] = useState(false);
+  const [editingCertId, setEditingCertId] = useState<string | null>(null);
+  const [certDialogOpen, setCertDialogOpen] = useState(false);
+  const [scrollToResume, setScrollToResume] = useState(false);
+  const resumeSectionRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to resume section when flag is set
+  useEffect(() => {
+    if (scrollToResume && resumeSectionRef.current) {
+      setTimeout(() => {
+        resumeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setScrollToResume(false);
+      }, 100);
+    }
+  }, [scrollToResume]);
+
   const handleLinkedInImport = async () => {
     setImportingLinkedin(true);
     toast({ 
@@ -158,6 +183,7 @@ const CandidateDashboard = () => {
     fetchProfile();
     fetchApplications();
     fetchSkills();
+    fetchCertifications();
     fetchRecommendations();
   }, []);
 
@@ -252,6 +278,26 @@ const CandidateDashboard = () => {
         .eq("candidate_id", cp.id)
         .order("years_experience", { ascending: false });
       setSkills(data || []);
+    }
+  };
+
+  const fetchCertifications = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data: cp } = await supabase
+      .from("candidate_profiles")
+      .select("id")
+      .eq("user_id", session.user.id)
+      .maybeSingle();
+
+    if (cp) {
+      const { data } = await supabase
+        .from("candidate_certifications")
+        .select("*")
+        .eq("candidate_id", cp.id)
+        .order("issue_date", { ascending: false });
+      setCertifications(data || []);
     }
   };
 
@@ -557,6 +603,72 @@ const CandidateDashboard = () => {
       toast({ title: "Skill removed" });
       fetchSkills();
       fetchRecommendations();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleAddCertification = async () => {
+    if (!newCertName.trim() || !newCertOrganization.trim() || !profile) return;
+    try {
+      if (editingCertId) {
+        const { error } = await supabase
+          .from("candidate_certifications")
+          .update({
+            certification_name: newCertName.trim(),
+            issuing_organization: newCertOrganization.trim(),
+            issue_date: newCertIssueDate || null,
+            expiry_date: newCertExpiryDate || null,
+            credential_id: newCertCredentialId.trim() || null,
+            credential_url: newCertCredentialUrl.trim() || null,
+            description: newCertDescription.trim() || null
+          })
+          .eq("id", editingCertId);
+        if (error) throw error;
+        toast({ title: "Certification updated!" });
+      } else {
+        const { error } = await supabase
+          .from("candidate_certifications")
+          .insert({
+            candidate_id: profile.id,
+            certification_name: newCertName.trim(),
+            issuing_organization: newCertOrganization.trim(),
+            issue_date: newCertIssueDate || null,
+            expiry_date: newCertExpiryDate || null,
+            credential_id: newCertCredentialId.trim() || null,
+            credential_url: newCertCredentialUrl.trim() || null,
+            description: newCertDescription.trim() || null
+          });
+        if (error) throw error;
+        toast({ title: "Certification added!" });
+      }
+
+      setAddingCert(false);
+      setEditingCertId(null);
+      setNewCertName("");
+      setNewCertOrganization("");
+      setNewCertIssueDate("");
+      setNewCertExpiryDate("");
+      setNewCertCredentialId("");
+      setNewCertCredentialUrl("");
+      setNewCertDescription("");
+      setCertDialogOpen(false);
+      fetchCertifications();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleDeleteCertification = async (certId: string) => {
+    try {
+      const { error } = await supabase
+        .from("candidate_certifications")
+        .delete()
+        .eq("id", certId);
+
+      if (error) throw error;
+      toast({ title: "Certification removed" });
+      fetchCertifications();
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
@@ -868,7 +980,7 @@ const CandidateDashboard = () => {
                         </Select>
                       </div>
 
-                      <div className="space-y-4 pt-4 border-t border-dashed">
+                      <div className="space-y-4 pt-4 border-t border-dashed" ref={resumeSectionRef}>
                          <div className="flex items-center justify-between">
                            <Label className="text-[10px] uppercase font-black tracking-widest text-primary">Copy and Paste Resume</Label>
                            <Button 
@@ -884,6 +996,7 @@ const CandidateDashboard = () => {
                                 setExtractingSkills(true);
                                 toast({ title: "Scanning Resume...", description: "Extracting skills from your resume text." });
                                 await new Promise(r => setTimeout(r, 800));
+                                
 
                                 // ── Real skill extractor ──
                                 // Comprehensive skill dictionary categorized by domain
@@ -1182,10 +1295,13 @@ const CandidateDashboard = () => {
                             variant="outline" 
                             size="sm" 
                             className="h-auto py-2 gap-2 font-bold text-[9px] uppercase border-primary/30 hover:bg-primary/5 rounded-xl px-4 whitespace-normal text-left sm:w-full"
-                          onClick={() => setExtractDialogOpen(true)}
-                          disabled={extractingSkills}
-                        >
-                          <Target className="h-3.5 w-3.5" /> {extractingSkills ? 'Scanning...' : 'Copy and paste the resume to extract the skills'}
+                            onClick={() => {
+                              setAddingSkill(false);
+                              setIsEditing(true);
+                              setScrollToResume(true);
+                            }}
+                          >
+                            <Target className="h-3.5 w-3.5" /> Copy and paste the resume to extract the skills
                         </Button>
                       )}
                     </DialogHeader>
@@ -1258,69 +1374,7 @@ const CandidateDashboard = () => {
                   </DialogContent>
                 </Dialog>
 
-                {/* Extract Dialog */}
-                <Dialog open={extractDialogOpen} onOpenChange={setExtractDialogOpen}>
-                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto rounded-[1.5rem]">
-                    <DialogHeader>
-                      <DialogTitle className="text-xl font-black uppercase tracking-wider">Extract Skills From Resume</DialogTitle>
-                      <DialogDescription>Paste your resume text to automatically extract relevant skills</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest">Resume Text</Label>
-                        <Textarea
-                          placeholder="Paste your resume content here..."
-                          value={extractResumeText}
-                          onChange={(e) => setExtractResumeText(e.target.value)}
-                          className="min-h-[200px] rounded-xl text-sm"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          onClick={() => setExtractDialogOpen(false)}
-                          className="font-black uppercase text-xs"
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          onClick={async () => {
-                            if (!extractResumeText.trim()) return;
 
-                            const KNOWN_SKILLS = ['JavaScript', 'TypeScript', 'React', 'Vue', 'Angular', 'Node.js', 'Python', 'Java', 'C#', 'C++', 'SQL', 'MongoDB', 'PostgreSQL', 'GraphQL', 'REST API', 'AWS', 'Azure', 'Docker', 'Kubernetes', 'Git', 'Agile', 'Scrum', 'HTML', 'CSS', 'Tailwind', 'Next.js', 'Express', 'Django', 'FastAPI', 'Spring Boot', 'Git', 'GitHub', 'GitLab', 'Jira', 'Linux', 'MacOS', 'Windows', 'DevOps', 'CI/CD', 'Jenkins', 'GitHub Actions', 'Terraform', 'Ansible', 'Nginx', 'Apache', 'Redis', 'Elasticsearch', 'Kafka', 'RabbitMQ', 'Firebase', 'Jest', 'Cypress', 'Webpack', 'Vite', 'Babel'];
-
-                            const extractedSkillsSet = new Set<string>();
-                            const lowerText = extractResumeText.toLowerCase();
-
-                            for (const skill of KNOWN_SKILLS) {
-                              const skillRegex = new RegExp(`\\b${skill.replace(/[+]/g, '\\+')}\\b`, 'gi');
-                              if (skillRegex.test(lowerText)) {
-                                extractedSkillsSet.add(skill);
-                              }
-                            }
-
-                            const extractedSkills = Array.from(extractedSkillsSet).slice(0, 10);
-
-                            if (extractedSkills.length > 0) {
-                              // Auto-populate the first skill into the input
-                              setNewSkillName(extractedSkills[0]);
-                              // Show remaining skills in suggestions
-                              setSkillSuggestions(extractedSkills.slice(1));
-                              // Update both extract and edit resume text
-                              setEditResumeText(extractResumeText);
-                            }
-
-                            setExtractDialogOpen(false);
-                          }}
-                          className="font-black uppercase text-xs h-auto py-3 whitespace-normal"
-                        >
-                          <Target className="h-3 w-3 mr-2" />
-                          Copy and paste the resume to extract the skills
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
              </div>
 
              <ScrollArea className="h-[220px] sm:h-[280px]">
@@ -1393,6 +1447,212 @@ const CandidateDashboard = () => {
                   </Table>
                 )}
              </ScrollArea>
+          </Card>
+
+          {/* Certifications Card */}
+          <Card className="p-3 sm:p-6 border shadow-sm bg-card overflow-hidden">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-black uppercase tracking-tighter flex items-center gap-2 truncate">
+                <Award className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" /> <span className="truncate">Certifications</span>
+              </h2>
+              
+              <Dialog open={certDialogOpen} onOpenChange={setCertDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 hover:bg-muted"
+                    onClick={() => {
+                      setEditingCertId(null);
+                      setNewCertName("");
+                      setNewCertOrganization("");
+                      setNewCertIssueDate("");
+                      setNewCertExpiryDate("");
+                      setNewCertCredentialId("");
+                      setNewCertCredentialUrl("");
+                      setNewCertDescription("");
+                      setCertDialogOpen(true);
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[550px] border-none shadow-2xl rounded-2xl overflow-hidden p-0">
+                  <DialogHeader className="p-8 border-b bg-muted/10">
+                    <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
+                      {editingCertId ? "Edit Certification" : "Add Certification"}
+                    </DialogTitle>
+                    <DialogDescription className="sr-only">
+                      {editingCertId ? "Update your certification details." : "Add a new professional certification."}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <ScrollArea className="max-h-[60vh] p-8">
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest">Certification Name *</Label>
+                        <Input 
+                          placeholder="e.g. AWS Solutions Architect" 
+                          className="h-11 rounded-xl"
+                          value={newCertName} 
+                          onChange={(e) => setNewCertName(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest">Issuing Organization *</Label>
+                        <Input 
+                          placeholder="e.g. Amazon Web Services" 
+                          className="h-11 rounded-xl"
+                          value={newCertOrganization} 
+                          onChange={(e) => setNewCertOrganization(e.target.value)}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest">Issue Date</Label>
+                          <Input 
+                            type="date" 
+                            className="h-11 rounded-xl"
+                            value={newCertIssueDate} 
+                            onChange={(e) => setNewCertIssueDate(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest">Expiry Date</Label>
+                          <Input 
+                            type="date" 
+                            className="h-11 rounded-xl"
+                            value={newCertExpiryDate} 
+                            onChange={(e) => setNewCertExpiryDate(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest">Credential ID</Label>
+                        <Input 
+                          placeholder="e.g. AWS-SAA-2024-12345" 
+                          className="h-11 rounded-xl"
+                          value={newCertCredentialId} 
+                          onChange={(e) => setNewCertCredentialId(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest">Credential URL</Label>
+                        <Input 
+                          placeholder="https://credentials.example.com/verify/..." 
+                          className="h-11 rounded-xl"
+                          value={newCertCredentialUrl} 
+                          onChange={(e) => setNewCertCredentialUrl(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest">Description</Label>
+                        <Textarea 
+                          placeholder="Brief description of the certification..." 
+                          className="rounded-xl min-h-20"
+                          value={newCertDescription} 
+                          onChange={(e) => setNewCertDescription(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </ScrollArea>
+                  <DialogFooter className="p-8 border-t bg-muted/5">
+                    <Button variant="ghost" onClick={() => setCertDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleAddCertification} className="font-black h-11 px-8 uppercase text-xs">
+                      {editingCertId ? "Update Certification" : "Add Certification"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            <ScrollArea className="h-[220px] sm:h-[280px]">
+              {certifications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Award className="h-12 w-12 text-muted/20 mb-3" />
+                  <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest opacity-50">No certifications yet</p>
+                </div>
+              ) : (
+                <Table className="w-full text-left border-collapse table-fixed">
+                  <TableHeader>
+                    <TableRow className="bg-muted/10 hover:bg-muted/10 border-b border-border/50">
+                      <TableHead className="h-7 text-[10px] font-black uppercase tracking-widest w-[40%]">Certification</TableHead>
+                      <TableHead className="h-7 text-[10px] font-black uppercase tracking-widest w-[35%]">Organization</TableHead>
+                      <TableHead className="h-7 w-[25%] text-right pr-4 text-[10px] font-black uppercase tracking-widest">Act</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {certifications.map((cert) => (
+                      <TableRow key={cert.id} className="group hover:bg-muted/10 transition-colors border-b border-border/50 last:border-0 h-12">
+                        <TableCell className="py-2 overflow-hidden">
+                          <div className="flex flex-col">
+                            <span className="text-xs font-black uppercase tracking-tight text-foreground line-clamp-1">{cert.certification_name}</span>
+                            {cert.issue_date && (
+                              <span className="text-[9px] text-muted-foreground">
+                                {new Date(cert.issue_date).toLocaleDateString()}
+                                {cert.expiry_date && ` - ${new Date(cert.expiry_date).toLocaleDateString()}`}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-2 overflow-hidden">
+                          <span className="text-[10px] font-bold text-primary line-clamp-1">{cert.issuing_organization}</span>
+                        </TableCell>
+                        <TableCell className="py-2 text-right pr-2">
+                          <div className="flex items-center justify-end gap-1">
+                            {cert.credential_url && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                type="button"
+                                className="h-7 w-7 text-blue-600 hover:bg-blue-500/20 rounded-md shrink-0 flex items-center justify-center"
+                                title="View Credential"
+                                onClick={() => window.open(cert.credential_url, "_blank")}
+                              >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              type="button"
+                              className="h-7 w-7 text-primary hover:bg-primary/20 rounded-md shrink-0 flex items-center justify-center"
+                              onClick={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                setEditingCertId(cert.id);
+                                setNewCertName(cert.certification_name);
+                                setNewCertOrganization(cert.issuing_organization);
+                                setNewCertIssueDate(cert.issue_date || "");
+                                setNewCertExpiryDate(cert.expiry_date || "");
+                                setNewCertCredentialId(cert.credential_id || "");
+                                setNewCertCredentialUrl(cert.credential_url || "");
+                                setNewCertDescription(cert.description || "");
+                                setCertDialogOpen(true);
+                              }}
+                            >
+                              <Edit className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              type="button"
+                              className="h-7 w-7 text-destructive hover:bg-destructive/20 rounded-md shrink-0 flex items-center justify-center"
+                              onClick={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                void handleDeleteCertification(cert.id);
+                              }}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </ScrollArea>
           </Card>
         </div>
 
