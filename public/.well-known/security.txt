@@ -1,0 +1,19 @@
+Contact: security@opentoowork.tech
+Expires: 2027-04-18T00:00:00Z
+Preferred-Languages: en
+Canonical: https://opentoowork.tech/.well-known/security.txt
+
+# OpenTooWork Security Policy
+# For responsible disclosure of security vulnerabilities
+
+# Contact for security reports
+Security-Contact: security@opentoowork.tech
+
+# Acknowledgments page (if available)
+Acknowledgments: https://opentoowork.tech/security/acknowledgments
+
+# Security policy URL
+Policy: https://opentoowork.tech/security-policy
+
+# Bug bounty program (if applicable)
+# Bug-Bounty-Program: https://opentoowork.tech/bug-bounty
