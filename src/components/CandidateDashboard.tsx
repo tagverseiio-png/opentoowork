@@ -129,14 +129,28 @@ const CandidateDashboard = () => {
   const [certDialogOpen, setCertDialogOpen] = useState(false);
   const [scrollToResume, setScrollToResume] = useState(false);
   const resumeSectionRef = useRef<HTMLDivElement>(null);
+  const resumeTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-scroll to resume section when flag is set
   useEffect(() => {
-    if (scrollToResume && resumeSectionRef.current) {
-      setTimeout(() => {
-        resumeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (scrollToResume) {
+      // Set a timeout to allow the Dialog animation to complete and the elements to mount
+      const timer = setTimeout(() => {
+        const target = resumeTextareaRef.current || resumeSectionRef.current;
+        if (target) {
+          // Scroll the element into the center of the viewport
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          
+          // Focus the textarea for immediate typing, preventing native jump so smooth scroll dominates
+          if (target instanceof HTMLTextAreaElement) {
+            // Short delay to ensure it doesn't conflict with smooth scrolling
+            setTimeout(() => target.focus({ preventScroll: true }), 100);
+          }
+        }
         setScrollToResume(false);
-      }, 100);
+      }, 400);
+      
+      return () => clearTimeout(timer);
     }
   }, [scrollToResume]);
 
@@ -1169,6 +1183,7 @@ const CandidateDashboard = () => {
                            </Button>
                         </div>
                         <Textarea 
+                          ref={resumeTextareaRef}
                           placeholder="Manually copy and paste your entire resume here for skill matching..." 
                           className="min-h-[120px] text-xs font-mono bg-muted/20 rounded-xl leading-relaxed"
                           value={editResumeText}
