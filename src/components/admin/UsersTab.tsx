@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,27 @@ import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Filter } from "lucide-react";
+import type { Database } from "@/integrations/supabase/types";
+
+type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+type CandidateProfileRow = Database["public"]["Tables"]["candidate_profiles"]["Row"] & {
+  certifications?: string[];
+};
+type EmployerProfileRow = Database["public"]["Tables"]["employer_profiles"]["Row"];
+type AdminUserDetails = {
+  full_name?: string | null;
+  email?: string | null;
+  location?: string | null;
+  desired_job_title?: string | null;
+  job_title?: string | null;
+  recruiter_job_title?: string | null;
+  phone?: string | null;
+  work_authorization?: string | null;
+  visa_type?: string | null;
+  linkedin_url?: string | null;
+  certifications?: string[];
+};
+type AdminUserRow = ProfileRow & { details: AdminUserDetails };
 
 const FilterHeader = ({ label, filterValue, setFilterValue }: { label: string, filterValue: string, setFilterValue: (val: string) => void }) => (
   <div className="flex items-center gap-2">
@@ -57,7 +78,7 @@ const FilterHeader = ({ label, filterValue, setFilterValue }: { label: string, f
 
 const UsersTab = () => {
   const { toast } = useToast();
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<AdminUserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [nameFilter, setNameFilter] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
@@ -68,37 +89,51 @@ const UsersTab = () => {
   const [filterLocation, setFilterLocation] = useState("");
   const [filterVisa, setFilterVisa] = useState("");
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const [profilesRes, candidatesRes, employersRes] = await Promise.all([
+      const [profilesRes, candidatesRes, employersRes, certificationsRes] = await Promise.all([
         supabase.from("profiles").select("*").order("created_at", { ascending: false }),
         supabase.from("candidate_profiles").select("*"),
-        supabase.from("employer_profiles").select("*")
+        supabase.from("employer_profiles").select("*"),
+        supabase.from("candidate_certifications").select("*")
       ]);
 
       if (profilesRes.error) throw profilesRes.error;
       
-      const candidatesMap = (candidatesRes.data || []).reduce((acc: any, c: any) => ({ ...acc, [c.user_id]: c }), {});
-      const employersMap = (employersRes.data || []).reduce((acc: any, e: any) => ({ ...acc, [e.user_id]: e }), {});
+      const certsByCandidateId = (certificationsRes.data || []).reduce<Record<string, string[]>>((acc, cert) => {
+        if (!acc[cert.candidate_id]) acc[cert.candidate_id] = [];
+        acc[cert.candidate_id].push(cert.certification_name);
+        return acc;
+      }, {});
 
-      const merged = (profilesRes.data || []).map((p: any) => {
-        let details = {};
-        if (p.role === 'candidate') details = candidatesMap[p.id] || {};
-        if (p.role === 'employer') details = employersMap[p.id] || {};
-        return { ...p, details };
-      });
+      const candidatesMap = (candidatesRes.data || []).reduce<Record<string, CandidateProfileRow>>((acc, candidate) => {
+        acc[candidate.user_id] = { ...candidate, certifications: certsByCandidateId[candidate.id] || [] };
+        return acc;
+      }, {});
+      const employersMap = (employersRes.data || []).reduce<Record<string, EmployerProfileRow>>((acc, employer) => {
+        acc[employer.user_id] = employer;
+        return acc;
+      }, {});
+
+      const merged = (profilesRes.data || []).map((profile) => {
+        let details: AdminUserDetails = {};
+        if (profile.role === 'candidate') details = candidatesMap[profile.id] || {};
+        if (profile.role === 'employer') details = employersMap[profile.id] || {};
+        return { ...profile, details };
+      }) as AdminUserRow[];
       
       setUsers(merged);
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message || "Failed to fetch users", variant: "destructive" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to fetch users";
+      toast({ title: "Error", description: message, variant: "destructive" });
     }
     setLoading(false);
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleDeleteUser = async (userId: string) => {
     // Note: This ideally uses a service role or edge function. 
@@ -122,9 +157,22 @@ const UsersTab = () => {
     };
   };
 
+  const normalizeText = (value?: string | null) => value?.trim().toLowerCase() || "";
+
+  const getDisplayName = (user: AdminUserRow) => {
+    const profileName = user.full_name?.trim() || "";
+    const detailName = user.details?.full_name?.trim() || "";
+    const emailPrefix = user.email?.trim()?.split("@")[0] || "";
+
+    return profileName || detailName || emailPrefix || `${user.role || "user"} profile`;
+  };
+
+  const getDisplayEmail = (user: AdminUserRow) => user.email?.trim() || user.details?.email?.trim() || "No email";
+
   const filteredUsers = users.filter((user) => {
-    const matchesName = (user.full_name?.toLowerCase().includes(nameFilter.toLowerCase()) || 
-                        user.email?.toLowerCase().includes(nameFilter.toLowerCase()));
+    const searchTerm = normalizeText(nameFilter);
+    const displayName = getDisplayName(user);
+    const displayEmail = getDisplayEmail(user);
     const matchesRole = roleFilter === "all" || user.role === roleFilter;
 
     // Advanced column filters
@@ -135,11 +183,15 @@ const UsersTab = () => {
     const userTitle = (user.role === 'candidate' ? user.details?.desired_job_title : (user.details?.job_title || user.details?.recruiter_job_title)) || '';
     const userVisa = user.details?.work_authorization || user.details?.visa_type || '';
     const userContactInfo = user.details?.phone || user.phone || '';
+    const userLinkedIn = user.details?.linkedin_url || '';
+    const userCertifications = (user.details?.certifications || []).join(' ');
 
-    const matchesTitle = userTitle.toLowerCase().includes(filterTitle.toLowerCase());
-    const matchesContact = userContactInfo.toLowerCase().includes(filterContact.toLowerCase());
-    const matchesLoc = userLocationStr.includes(filterLocation.toLowerCase());
-    const matchesVisa = userVisa.toLowerCase().includes(filterVisa.toLowerCase());
+    const matchesName = !searchTerm || [displayName, displayEmail, userTitle, userContactInfo, userLocationStr, userVisa, userLinkedIn, userCertifications]
+      .some((value) => normalizeText(value).includes(searchTerm));
+    const matchesTitle = normalizeText(userTitle).includes(normalizeText(filterTitle));
+    const matchesContact = normalizeText(userContactInfo).includes(normalizeText(filterContact));
+    const matchesLoc = userLocationStr.includes(normalizeText(filterLocation));
+    const matchesVisa = normalizeText(userVisa).includes(normalizeText(filterVisa));
 
     return matchesName && matchesRole && matchesTitle && matchesContact && matchesLoc && matchesVisa;
   });
@@ -153,7 +205,8 @@ const UsersTab = () => {
       "Contact Info",
       "Location",
       "Visa Type",
-      "LinkedIn"
+      "LinkedIn",
+      "Certifications"
     ];
 
     const csvData = filteredUsers.map(user => {
@@ -163,6 +216,7 @@ const UsersTab = () => {
       const { city, state } = splitLocation(user.details?.location);
       const userLocation = city !== '-' || state !== '-' ? `${city}, ${state}` : '';
       const linkedin = user.details?.linkedin_url || '';
+      const certifications = (user.details?.certifications || []).join('; ');
 
       const escapeField = (field: string) => `"${field.replace(/"/g, '""')}"`;
 
@@ -174,7 +228,8 @@ const UsersTab = () => {
         escapeField(userContactInfo),
         escapeField(userLocation),
         escapeField(userVisa),
-        escapeField(linkedin)
+        escapeField(linkedin),
+        escapeField(certifications)
       ].join(',');
     });
 
@@ -211,10 +266,11 @@ const UsersTab = () => {
                 </TableHead>
                 <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] py-5 text-muted-foreground whitespace-nowrap">LinkedIn</TableHead>
                 <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] py-5 text-muted-foreground whitespace-nowrap">Access Layer</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] py-5 text-muted-foreground whitespace-nowrap">Certifications</TableHead>
                 <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.2em] px-6 py-5 text-muted-foreground whitespace-nowrap">Governance</TableHead>
               </TableRow>
               <TableRow className="hover:bg-transparent border-border/40">
-                <TableHead colSpan={8} className="px-6 py-4 bg-card">
+                <TableHead colSpan={9} className="px-6 py-4 bg-card">
                   <div className="flex flex-col md:flex-row gap-4">
                     <div className="relative flex-1">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -246,7 +302,7 @@ const UsersTab = () => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-24">
+                <TableCell colSpan={9} className="text-center py-24">
                   <div className="flex flex-col items-center gap-3">
                     <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
                     <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Synchronizing Registry...</span>
@@ -255,7 +311,7 @@ const UsersTab = () => {
               </TableRow>
             ) : filteredUsers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-24 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-24 text-muted-foreground">
                   <div className="flex flex-col items-center gap-2">
                     <Search className="h-8 w-8 opacity-20" />
                     <span className="text-sm font-bold opacity-40">No entities found in this sector.</span>
@@ -265,30 +321,33 @@ const UsersTab = () => {
             ) : (
               filteredUsers.map((user) => {
                 const { city, state } = splitLocation(user.details?.location);
+                 const displayName = getDisplayName(user);
+                 const displayEmail = getDisplayEmail(user);
+                 const displayInitials = displayName.substring(0, 2).toUpperCase();
                 return (
                 <TableRow key={user.id} className="group border-border/40 hover:bg-muted/10 transition-colors">
                   <TableCell className="px-6 py-4 max-w-[200px]">
                      <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-center font-black text-primary text-xs tracking-tighter shrink-0 shadow-sm group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
-                           {user.full_name?.substring(0, 2).toUpperCase() || '-'}
+                        {displayInitials || '??'}
                         </div>
                         <div className="flex flex-col min-w-0">
-                           <span className="font-black text-sm tracking-tight truncate uppercase">{user.full_name || '-'}</span>
-                           <span className="text-[11px] text-muted-foreground font-medium truncate">{user.email || '-'}</span>
+                        <span className="font-black text-sm tracking-tight truncate uppercase">{displayName}</span>
+                        <span className="text-[11px] text-muted-foreground font-medium truncate">{displayEmail}</span>
                         </div>
                      </div>
                   </TableCell>
                   
                   <TableCell className="py-4 whitespace-nowrap">
                     <span className="text-xs font-medium text-foreground">
-                      {user.role === 'candidate' ? user.details?.desired_job_title || '-' : 
-                       user.role === 'employer' ? user.details?.job_title || user.details?.recruiter_job_title || '-' : '-'}
+                      {user.role === 'candidate' ? user.details?.desired_job_title || 'N/A' : 
+                       user.role === 'employer' ? user.details?.job_title || user.details?.recruiter_job_title || 'N/A' : 'N/A'}
                     </span>
                   </TableCell>
                   
                   <TableCell className="py-4 whitespace-nowrap">
                      <div className="flex flex-col">
-                       <span className="text-[11px] text-muted-foreground truncate">{user.details?.phone || user.phone || '-'}</span>
+                       <span className="text-[11px] text-muted-foreground truncate">{user.details?.phone || user.phone || 'N/A'}</span>
                      </div>
                   </TableCell>
 
@@ -296,7 +355,7 @@ const UsersTab = () => {
                      {(city !== '-' || state !== '-') ? (
                        <span className="text-xs font-medium truncate">{city}, {state}</span>
                      ) : (
-                       <span className="text-xs text-muted-foreground">-</span>
+                       <span className="text-[11px] text-muted-foreground/50 italic">N/A</span>
                      )}
                   </TableCell>
 
@@ -306,7 +365,7 @@ const UsersTab = () => {
                         {user.details.work_authorization || user.details?.visa_type}
                         </span>
                     ) : (
-                        <span className="text-[11px] text-muted-foreground">-</span>
+                        <span className="text-[11px] text-muted-foreground/50 italic">N/A</span>
                     )}
                   </TableCell>
                   
@@ -317,7 +376,7 @@ const UsersTab = () => {
                            <ExternalLink className="h-4 w-4" />
                          </a>
                        ) : (
-                         <span className="text-xs text-muted-foreground">-</span>
+                         <span className="text-[11px] text-muted-foreground/50 italic">N/A</span>
                        )}
                     </div>
                   </TableCell>
@@ -326,6 +385,16 @@ const UsersTab = () => {
                      <Badge variant={user.role === 'admin' ? 'destructive' : 'secondary'} className="text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 border-transparent shadow-sm">
                         {user.role}
                      </Badge>
+                  </TableCell>
+
+                  <TableCell className="py-4 whitespace-nowrap max-w-[150px] truncate" title={(user.details?.certifications || []).join(', ')}>
+                     {(user.details?.certifications || []).length > 0 ? (
+                       <span className="text-xs font-medium text-foreground">
+                         {(user.details.certifications).join(', ')}
+                       </span>
+                     ) : (
+                       <span className="text-[11px] text-muted-foreground/50 italic">N/A</span>
+                     )}
                   </TableCell>
 
                   <TableCell className="text-right px-6 py-4 text-muted-foreground tabular-nums whitespace-nowrap">
