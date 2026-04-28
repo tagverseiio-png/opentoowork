@@ -1004,7 +1004,7 @@ const CandidateDashboard = () => {
                              disabled={extractingSkills}
                              onClick={async () => {
                                 if (!editResumeText.trim()) {
-                                  toast({ title: "No resume text", description: "Copy and paste the resume to extract the skills.", variant: "destructive" });
+                                  toast({ title: "No resume text", description: "Click to Extract the skills.", variant: "destructive" });
                                   return;
                                 }
                                 setExtractingSkills(true);
@@ -1179,7 +1179,7 @@ const CandidateDashboard = () => {
                                 setExtractingSkills(false);
                              }}
                            >
-                              <Target className="h-3 w-3 text-primary" /> {extractingSkills ? 'Scanning...' : 'Copy and paste the resume to extract the skills'}
+                              <Target className="h-3 w-3 text-primary" /> {extractingSkills ? 'Scanning...' : 'Click to Extract the skills'}
                            </Button>
                         </div>
                         <Textarea 
@@ -1316,7 +1316,7 @@ const CandidateDashboard = () => {
                               setScrollToResume(true);
                             }}
                           >
-                            <Target className="h-3.5 w-3.5" /> Copy and paste the resume to extract the skills
+                            <Target className="h-3.5 w-3.5" /> Click to Extract the skills
                         </Button>
                       )}
                     </DialogHeader>
