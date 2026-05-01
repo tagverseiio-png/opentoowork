@@ -13,7 +13,7 @@ const AdminContentEditor = () => {
   const [sections, setSections] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [editingForm, setEditingForm] = useState<any>({});
-  const [activeTab, setActiveTab] = useState("hero_section");
+  const [activeTab, setActiveTab] = useState("homepage_hero_section");
 
   useEffect(() => {
     fetchAllContent();
@@ -75,9 +75,18 @@ const AdminContentEditor = () => {
 
   const updateNestedField = (sectionKey: string, path: string[], value: any) => {
     const updated = { ...editingForm };
+    
+    // Initialize section if it doesn't exist
+    if (!updated[sectionKey]) {
+      updated[sectionKey] = {};
+    }
+    
     let current = updated[sectionKey];
     
     for (let i = 0; i < path.length - 1; i++) {
+      if (!current[path[i]]) {
+        current[path[i]] = {};
+      }
       current = current[path[i]];
     }
     current[path[path.length - 1]] = value;
@@ -87,10 +96,19 @@ const AdminContentEditor = () => {
 
   const addArrayItem = (sectionKey: string, arrayPath: string[], template: any) => {
     const updated = { ...editingForm };
+    
+    // Initialize section if it doesn't exist
+    if (!updated[sectionKey]) {
+      updated[sectionKey] = {};
+    }
+    
     const path = arrayPath.slice(0, -1);
     let current = updated[sectionKey];
     
     for (let i = 0; i < path.length; i++) {
+      if (!current[path[i]]) {
+        current[path[i]] = {};
+      }
       current = current[path[i]];
     }
     
@@ -104,15 +122,26 @@ const AdminContentEditor = () => {
 
   const removeArrayItem = (sectionKey: string, arrayPath: string[], index: number) => {
     const updated = { ...editingForm };
+    
+    if (!updated[sectionKey]) {
+      return; // Nothing to remove
+    }
+    
     const path = arrayPath.slice(0, -1);
     let current = updated[sectionKey];
     
     for (let i = 0; i < path.length; i++) {
+      if (!current[path[i]]) {
+        return; // Path doesn't exist
+      }
       current = current[path[i]];
     }
     
-    current[arrayPath[arrayPath.length - 1]].splice(index, 1);
-    setEditingForm(updated);
+    const arrayField = arrayPath[arrayPath.length - 1];
+    if (Array.isArray(current[arrayField]) && index >= 0 && index < current[arrayField].length) {
+      current[arrayField].splice(index, 1);
+      setEditingForm(updated);
+    }
   };
 
   if (loading) {
@@ -133,10 +162,10 @@ const AdminContentEditor = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-8">
-            <TabsTrigger value="hero_section">Hero</TabsTrigger>
-            <TabsTrigger value="why_choose_us">Features</TabsTrigger>
-            <TabsTrigger value="mission_section">Mission</TabsTrigger>
-            <TabsTrigger value="how_it_works">How It Works</TabsTrigger>
+            <TabsTrigger value="homepage_hero_section">Hero</TabsTrigger>
+            <TabsTrigger value="homepage_why_choose_us">Features</TabsTrigger>
+            <TabsTrigger value="about_mission_section">Mission</TabsTrigger>
+            <TabsTrigger value="homepage_how_it_works">How It Works</TabsTrigger>
             <TabsTrigger value="about_page">About</TabsTrigger>
             <TabsTrigger value="legal_page">Legal</TabsTrigger>
             <TabsTrigger value="policy_page">Policy</TabsTrigger>
@@ -144,37 +173,37 @@ const AdminContentEditor = () => {
           </TabsList>
 
           {/* Hero Section */}
-          <TabsContent value="hero_section" className="space-y-6">
+          <TabsContent value="homepage_hero_section" className="space-y-6">
             <Card className="p-6">
               <h2 className="text-2xl font-bold mb-4">Hero Section</h2>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold mb-2">Main Title</label>
                   <Input
-                    value={editingForm.hero_section?.title || ""}
-                    onChange={(e) => updateNestedField("hero_section", ["title"], e.target.value)}
+                    value={editingForm.homepage_hero_section?.title || ""}
+                    onChange={(e) => updateNestedField("homepage_hero_section", ["title"], e.target.value)}
                     placeholder="e.g. Unlock Your Next Great Opportunity"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2">Subtitle</label>
                   <Input
-                    value={editingForm.hero_section?.subtitle || ""}
-                    onChange={(e) => updateNestedField("hero_section", ["subtitle"], e.target.value)}
+                    value={editingForm.homepage_hero_section?.subtitle || ""}
+                    onChange={(e) => updateNestedField("homepage_hero_section", ["subtitle"], e.target.value)}
                     placeholder="e.g. Search. Apply. Grow. Your journey starts now."
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2">Description</label>
                   <Textarea
-                    value={editingForm.hero_section?.description || ""}
-                    onChange={(e) => updateNestedField("hero_section", ["description"], e.target.value)}
+                    value={editingForm.homepage_hero_section?.description || ""}
+                    onChange={(e) => updateNestedField("homepage_hero_section", ["description"], e.target.value)}
                     placeholder="Brief platform description..."
                     rows={3}
                   />
                 </div>
                 <Button
-                  onClick={() => handleSaveSection("hero_section")}
+                  onClick={() => handleSaveSection("homepage_hero_section")}
                   className="gap-2 bg-primary"
                 >
                   <Save className="h-4 w-4" />
@@ -185,12 +214,12 @@ const AdminContentEditor = () => {
           </TabsContent>
 
           {/* Why Choose Us */}
-          <TabsContent value="why_choose_us" className="space-y-6">
+          <TabsContent value="homepage_why_choose_us" className="space-y-6">
             <Card className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Features / Why Choose Us</h2>
                 <Button
-                  onClick={() => addArrayItem("why_choose_us", ["items"], { title: "New Feature", description: "" })}
+                  onClick={() => addArrayItem("homepage_why_choose_us", ["items"], { title: "New Feature", description: "" })}
                   variant="outline"
                   size="sm"
                   className="gap-2"
@@ -204,20 +233,20 @@ const AdminContentEditor = () => {
                 <div>
                   <label className="block text-sm font-semibold mb-2">Section Title</label>
                   <Input
-                    value={editingForm.why_choose_us?.title || ""}
-                    onChange={(e) => updateNestedField("why_choose_us", ["title"], e.target.value)}
+                    value={editingForm.homepage_why_choose_us?.title || ""}
+                    onChange={(e) => updateNestedField("homepage_why_choose_us", ["title"], e.target.value)}
                     placeholder="e.g. Why Choose Open Too Work"
                   />
                 </div>
               </div>
 
               <div className="space-y-4">
-                {(editingForm.why_choose_us?.items || []).map((item: any, idx: number) => (
+                {(editingForm.homepage_why_choose_us?.items || []).map((item: any, idx: number) => (
                   <Card key={idx} className="p-4 bg-card/50">
                     <div className="flex justify-between items-start mb-3">
                       <h3 className="font-semibold">Feature {idx + 1}</h3>
                       <Button
-                        onClick={() => removeArrayItem("why_choose_us", ["items"], idx)}
+                        onClick={() => removeArrayItem("homepage_why_choose_us", ["items"], idx)}
                         variant="ghost"
                         size="sm"
                         className="text-destructive"
@@ -229,18 +258,18 @@ const AdminContentEditor = () => {
                       <Input
                         value={item.title || ""}
                         onChange={(e) => {
-                          const items = [...editingForm.why_choose_us.items];
+                          const items = [...editingForm.homepage_why_choose_us.items];
                           items[idx].title = e.target.value;
-                          updateNestedField("why_choose_us", ["items"], items);
+                          updateNestedField("homepage_why_choose_us", ["items"], items);
                         }}
                         placeholder="Feature title"
                       />
                       <Textarea
                         value={item.description || ""}
                         onChange={(e) => {
-                          const items = [...editingForm.why_choose_us.items];
+                          const items = [...editingForm.homepage_why_choose_us.items];
                           items[idx].description = e.target.value;
-                          updateNestedField("why_choose_us", ["items"], items);
+                          updateNestedField("homepage_why_choose_us", ["items"], items);
                         }}
                         placeholder="Feature description"
                         rows={3}
@@ -251,7 +280,7 @@ const AdminContentEditor = () => {
               </div>
 
               <Button
-                onClick={() => handleSaveSection("why_choose_us")}
+                onClick={() => handleSaveSection("homepage_why_choose_us")}
                 className="gap-2 bg-primary mt-6"
               >
                 <Save className="h-4 w-4" />
@@ -261,29 +290,29 @@ const AdminContentEditor = () => {
           </TabsContent>
 
           {/* Mission Section */}
-          <TabsContent value="mission_section" className="space-y-6">
+          <TabsContent value="about_mission_section" className="space-y-6">
             <Card className="p-6">
               <h2 className="text-2xl font-bold mb-4">Mission Section</h2>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold mb-2">Mission Title</label>
                   <Input
-                    value={editingForm.mission_section?.title || ""}
-                    onChange={(e) => updateNestedField("mission_section", ["title"], e.target.value)}
+                    value={editingForm.about_mission_section?.title || ""}
+                    onChange={(e) => updateNestedField("about_mission_section", ["title"], e.target.value)}
                     placeholder="e.g. Our Mission"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2">Mission Statement</label>
                   <Textarea
-                    value={editingForm.mission_section?.subtitle || ""}
-                    onChange={(e) => updateNestedField("mission_section", ["subtitle"], e.target.value)}
+                    value={editingForm.about_mission_section?.subtitle || ""}
+                    onChange={(e) => updateNestedField("about_mission_section", ["subtitle"], e.target.value)}
                     placeholder="Your mission statement..."
                     rows={4}
                   />
                 </div>
                 <Button
-                  onClick={() => handleSaveSection("mission_section")}
+                  onClick={() => handleSaveSection("about_mission_section")}
                   className="gap-2 bg-primary"
                 >
                   <Save className="h-4 w-4" />
@@ -294,14 +323,14 @@ const AdminContentEditor = () => {
           </TabsContent>
 
           {/* How It Works */}
-          <TabsContent value="how_it_works" className="space-y-6">
+          <TabsContent value="homepage_how_it_works" className="space-y-6">
             <Card className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">How It Works</h2>
                 <Button
                   onClick={() =>
-                    addArrayItem("how_it_works", ["steps"], {
-                      number: (editingForm.how_it_works?.steps?.length || 0) + 1,
+                    addArrayItem("homepage_how_it_works", ["steps"], {
+                      number: (editingForm.homepage_how_it_works?.steps?.length || 0) + 1,
                       title: "New Step",
                       description: ""
                     })
@@ -319,28 +348,28 @@ const AdminContentEditor = () => {
                 <div>
                   <label className="block text-sm font-semibold mb-2">Section Title</label>
                   <Input
-                    value={editingForm.how_it_works?.title || ""}
-                    onChange={(e) => updateNestedField("how_it_works", ["title"], e.target.value)}
+                    value={editingForm.homepage_how_it_works?.title || ""}
+                    onChange={(e) => updateNestedField("homepage_how_it_works", ["title"], e.target.value)}
                     placeholder="e.g. How It Works"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2">Subtitle</label>
                   <Input
-                    value={editingForm.how_it_works?.subtitle || ""}
-                    onChange={(e) => updateNestedField("how_it_works", ["subtitle"], e.target.value)}
+                    value={editingForm.homepage_how_it_works?.subtitle || ""}
+                    onChange={(e) => updateNestedField("homepage_how_it_works", ["subtitle"], e.target.value)}
                     placeholder="e.g. Your path to amazing opportunities starts here"
                   />
                 </div>
               </div>
 
               <div className="space-y-4">
-                {(editingForm.how_it_works?.steps || []).map((step: any, idx: number) => (
+                {(editingForm.homepage_how_it_works?.steps || []).map((step: any, idx: number) => (
                   <Card key={idx} className="p-4 bg-card/50">
                     <div className="flex justify-between items-start mb-3">
                       <h3 className="font-semibold">Step {idx + 1}</h3>
                       <Button
-                        onClick={() => removeArrayItem("how_it_works", ["steps"], idx)}
+                        onClick={() => removeArrayItem("homepage_how_it_works", ["steps"], idx)}
                         variant="ghost"
                         size="sm"
                         className="text-destructive"
@@ -352,18 +381,18 @@ const AdminContentEditor = () => {
                       <Input
                         value={step.title || ""}
                         onChange={(e) => {
-                          const steps = [...editingForm.how_it_works.steps];
+                          const steps = [...editingForm.homepage_how_it_works.steps];
                           steps[idx].title = e.target.value;
-                          updateNestedField("how_it_works", ["steps"], steps);
+                          updateNestedField("homepage_how_it_works", ["steps"], steps);
                         }}
                         placeholder="Step title"
                       />
                       <Textarea
                         value={step.description || ""}
                         onChange={(e) => {
-                          const steps = [...editingForm.how_it_works.steps];
+                          const steps = [...editingForm.homepage_how_it_works.steps];
                           steps[idx].description = e.target.value;
-                          updateNestedField("how_it_works", ["steps"], steps);
+                          updateNestedField("homepage_how_it_works", ["steps"], steps);
                         }}
                         placeholder="Step description"
                         rows={3}
@@ -374,7 +403,7 @@ const AdminContentEditor = () => {
               </div>
 
               <Button
-                onClick={() => handleSaveSection("how_it_works")}
+                onClick={() => handleSaveSection("homepage_how_it_works")}
                 className="gap-2 bg-primary mt-6"
               >
                 <Save className="h-4 w-4" />

@@ -41,7 +41,15 @@ const About = () => {
       if (data) {
         const contentMap: any = {};
         data.forEach((item) => {
-          contentMap[item.section_key] = item.content;
+          const content = item.content || {};
+          // Ensure items/steps arrays are always arrays
+          if (!Array.isArray(content.items)) {
+            content.items = [];
+          }
+          if (!Array.isArray(content.steps)) {
+            content.steps = [];
+          }
+          contentMap[item.section_key] = content;
         });
         setContent(contentMap);
       }

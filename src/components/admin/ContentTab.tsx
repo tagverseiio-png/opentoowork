@@ -32,7 +32,15 @@ const ContentTab = () => {
       if (data) {
         const contentMap: any = {};
         data.forEach((item) => {
-          contentMap[item.section_key] = item.content;
+          const content = item.content || {};
+          // Ensure items/steps arrays are always arrays
+          if (!Array.isArray(content.items)) {
+            content.items = [];
+          }
+          if (!Array.isArray(content.steps)) {
+            content.steps = [];
+          }
+          contentMap[item.section_key] = content;
         });
         setContent(contentMap);
       }
@@ -41,9 +49,12 @@ const ContentTab = () => {
     }
   };
 
-  const handleSave = async (sectionKey: string, sectionContent: any) => {
+  const handleSave = async (sectionKey: string) => {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
+
+    // Get the CURRENT content from state, not a stale local variable
+    const sectionContent = content[sectionKey] || {};
 
     const { error } = await supabase
       .from("site_content")
@@ -61,41 +72,61 @@ const ContentTab = () => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: `${sectionKey} updated successfully!` });
-      setContent((prev) => ({ ...prev, [sectionKey]: sectionContent }));
     }
     setLoading(false);
   };
 
   const handleChange = (section: string, field: string, value: any) => {
-    setContent((prev) => ({
-      ...prev,
-      [section]: { ...prev[section], [field]: value }
-    }));
+    setContent((prev) => {
+      const updated = { ...prev };
+      if (!updated[section]) {
+        updated[section] = {};
+      }
+      updated[section] = { ...updated[section], [field]: value };
+      return updated;
+    });
   };
 
   const handleArrayItemChange = (section: string, arrayField: string, index: number, field: string, value: any) => {
     setContent((prev) => {
-      const newContent = { ...prev[section] };
-      if (!newContent[arrayField]) newContent[arrayField] = [];
-      newContent[arrayField][index] = { ...newContent[arrayField][index], [field]: value };
-      return { ...prev, [section]: newContent };
+      const updated = { ...prev };
+      if (!updated[section]) {
+        updated[section] = {};
+      }
+      if (!Array.isArray(updated[section][arrayField])) {
+        updated[section][arrayField] = [];
+      }
+      if (index >= 0 && index < updated[section][arrayField].length) {
+        updated[section][arrayField][index] = { 
+          ...updated[section][arrayField][index], 
+          [field]: value 
+        };
+      }
+      return updated;
     });
   };
 
   const handleAddArrayItem = (section: string, arrayField: string, newItem: any) => {
     setContent((prev) => {
-      const newContent = { ...prev[section] };
-      if (!newContent[arrayField]) newContent[arrayField] = [];
-      newContent[arrayField].push(newItem);
-      return { ...prev, [section]: newContent };
+      const updated = { ...prev };
+      if (!updated[section]) {
+        updated[section] = {};
+      }
+      if (!Array.isArray(updated[section][arrayField])) {
+        updated[section][arrayField] = [];
+      }
+      updated[section][arrayField].push(newItem);
+      return updated;
     });
   };
 
   const handleRemoveArrayItem = (section: string, arrayField: string, index: number) => {
     setContent((prev) => {
-      const newContent = { ...prev[section] };
-      newContent[arrayField].splice(index, 1);
-      return { ...prev, [section]: newContent };
+      const updated = { ...prev };
+      if (updated[section] && Array.isArray(updated[section][arrayField])) {
+        updated[section][arrayField].splice(index, 1);
+      }
+      return updated;
     });
   };
 
@@ -200,12 +231,22 @@ const ContentTab = () => {
       subtitle: "",
       items: []
     };
+    
+    // Ensure items is always an array
+    if (!Array.isArray(whyChooseUs.items)) {
+      whyChooseUs.items = [];
+    }
 
     const howItWorks = content.homepage_how_it_works || {
       title: "",
       subtitle: "",
       steps: []
     };
+    
+    // Ensure steps is always an array
+    if (!Array.isArray(howItWorks.steps)) {
+      howItWorks.steps = [];
+    }
 
     return (
       <div className="space-y-6 max-w-6xl">
@@ -293,7 +334,7 @@ const ContentTab = () => {
                 </div>
 
                 <Button
-                  onClick={() => handleSave("homepage_hero_section", heroSection)}
+                  onClick={() => handleSave("homepage_hero_section")}
                   disabled={loading}
                   className="gap-2 bg-primary"
                 >
@@ -400,7 +441,7 @@ const ContentTab = () => {
                 </div>
 
                 <Button
-                  onClick={() => handleSave("homepage_why_choose_us", whyChooseUs)}
+                  onClick={() => handleSave("homepage_why_choose_us")}
                   disabled={loading}
                   className="gap-2 bg-primary"
                 >
@@ -508,7 +549,7 @@ const ContentTab = () => {
                 </div>
 
                 <Button
-                  onClick={() => handleSave("homepage_how_it_works", howItWorks)}
+                  onClick={() => handleSave("homepage_how_it_works")}
                   disabled={loading}
                   className="gap-2 bg-primary"
                 >
@@ -536,6 +577,11 @@ const ContentTab = () => {
       items: []
     };
 
+    // Ensure items is always an array
+    if (!Array.isArray(whyChooseUs.items)) {
+      whyChooseUs.items = [];
+    }
+
     const missionSection = content.about_mission_section || {
       mission_title: "",
       mission_body: ""
@@ -546,6 +592,11 @@ const ContentTab = () => {
       subtitle: "",
       steps: []
     };
+
+    // Ensure steps is always an array
+    if (!Array.isArray(howItWorks.steps)) {
+      howItWorks.steps = [];
+    }
 
     const contactSection = content.about_contact_section || {
       contact_email: "",
@@ -600,7 +651,7 @@ const ContentTab = () => {
                 </div>
 
                 <Button
-                  onClick={() => handleSave("about_hero_section", heroSection)}
+                  onClick={() => handleSave("about_hero_section")}
                   disabled={loading}
                   className="gap-2 bg-primary"
                 >
@@ -707,7 +758,7 @@ const ContentTab = () => {
                 </div>
 
                 <Button
-                  onClick={() => handleSave("about_why_choose_us", whyChooseUs)}
+                  onClick={() => handleSave("about_why_choose_us")}
                   disabled={loading}
                   className="gap-2 bg-primary"
                 >
@@ -747,7 +798,7 @@ const ContentTab = () => {
                 </div>
 
                 <Button
-                  onClick={() => handleSave("about_mission_section", missionSection)}
+                  onClick={() => handleSave("about_mission_section")}
                   disabled={loading}
                   className="gap-2 bg-primary"
                 >
@@ -855,7 +906,7 @@ const ContentTab = () => {
                 </div>
 
                 <Button
-                  onClick={() => handleSave("about_how_it_works", howItWorks)}
+                  onClick={() => handleSave("about_how_it_works")}
                   disabled={loading}
                   className="gap-2 bg-primary"
                 >
@@ -896,7 +947,7 @@ const ContentTab = () => {
                 </div>
 
                 <Button
-                  onClick={() => handleSave("about_contact_section", contactSection)}
+                  onClick={() => handleSave("about_contact_section")}
                   disabled={loading}
                   className="gap-2 bg-primary"
                 >

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +25,12 @@ const EditableSection = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<any>(JSON.parse(JSON.stringify(content)));
   const [saving, setSaving] = useState(false);
+
+  // Sync content prop to editForm whenever content changes
+  useEffect(() => {
+    console.log(`EditableSection [${sectionKey}] - content prop updated:`, content);
+    setEditForm(JSON.parse(JSON.stringify(content)));
+  }, [content, sectionKey]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -168,6 +174,13 @@ function renderEditFields(
   removeArrayItem: (path: string[], index: number) => void
 ): React.ReactNode {
   const fields: React.ReactNode[] = [];
+  
+  console.log(`=== renderEditFields called ===`);
+  console.log(`sectionKey: ${sectionKey}`);
+  console.log(`data received:`, data);
+  console.log(`data.items:`, data?.items);
+  console.log(`Is items array?`, Array.isArray(data?.items));
+  console.log(`Items length:`, data?.items?.length);
 
   // Homepage hero section
   if (sectionKey === "hero_section" || sectionKey === "homepage_hero_section") {

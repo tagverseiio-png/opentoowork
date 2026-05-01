@@ -48,14 +48,29 @@ const Index = () => {
         .select("section_key, content")
         .in("section_key", ["homepage_hero_section", "homepage_why_choose_us", "homepage_how_it_works"]);
 
+      console.log("Fetched site_content data:", data);
+
       if (data) {
         data.forEach((item) => {
+          console.log(`Processing ${item.section_key}:`, item.content);
+          const content = item.content || {};
+          // Ensure items/steps arrays are always arrays
+          if (!Array.isArray(content.items)) {
+            content.items = [];
+          }
+          if (!Array.isArray(content.steps)) {
+            content.steps = [];
+          }
+          
+          console.log(`After processing ${item.section_key}:`, content);
+          
           if (item.section_key === "homepage_hero_section") {
-            setHeroContent(item.content);
+            setHeroContent(content);
           } else if (item.section_key === "homepage_why_choose_us") {
-            setWhyChooseUsContent(item.content);
+            console.log("Setting whyChooseUsContent:", content);
+            setWhyChooseUsContent(content);
           } else if (item.section_key === "homepage_how_it_works") {
-            setHowItWorksContent(item.content);
+            setHowItWorksContent(content);
           }
         });
       }
