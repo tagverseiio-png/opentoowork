@@ -68,15 +68,7 @@ const CandidateAuth = () => {
   const handleSignUp = async (e: any) => {
     e.preventDefault();
     
-    // Validate Phone Number for Country Code
-    if (!phone.startsWith("+")) {
-      toast({
-        title: "Invalid Phone Number",
-        description: "Please include your country code (e.g., +1 for USA).",
-        variant: "destructive",
-      });
-      return;
-    }
+
 
     if (!userLocation) {
       toast({
