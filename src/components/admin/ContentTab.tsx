@@ -1005,7 +1005,7 @@ const ContentTab = () => {
             </div>
 
             <Button
-              onClick={() => handleSave("legal_page", legalContent)}
+              onClick={() => handleSave("legal_page")}
               disabled={loading}
               className="gap-2 bg-primary"
             >
@@ -1061,7 +1061,7 @@ const ContentTab = () => {
             </div>
 
             <Button
-              onClick={() => handleSave("policy_page", policyContent)}
+              onClick={() => handleSave("policy_page")}
               disabled={loading}
               className="gap-2 bg-primary"
             >
@@ -1117,7 +1117,7 @@ const ContentTab = () => {
             </div>
 
             <Button
-              onClick={() => handleSave("terms_page", termsContent)}
+              onClick={() => handleSave("terms_page")}
               disabled={loading}
               className="gap-2 bg-primary"
             >

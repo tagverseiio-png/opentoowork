@@ -78,6 +78,15 @@ const CandidateAuth = () => {
       return;
     }
 
+    if (!userLocation) {
+      toast({
+        title: "Required Fields Missing",
+        description: "Please select your location.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!desiredJobTitle.trim() || !linkedinUrl.trim()) {
       toast({
         title: "Required Fields Missing",
@@ -386,7 +395,9 @@ const CandidateAuth = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-location">Location</Label>
-                  <Popover open={locationOpen} onOpenChange={setLocationOpen}>
+                  <div className="relative w-full">
+                    <input type="text" required value={userLocation} onChange={() => {}} className="absolute opacity-0 w-1 h-1 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none -z-10" tabIndex={-1} />
+                    <Popover open={locationOpen} onOpenChange={setLocationOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -441,6 +452,7 @@ const CandidateAuth = () => {
                       </Command>
                     </PopoverContent>
                   </Popover>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-title">Job Title</Label>

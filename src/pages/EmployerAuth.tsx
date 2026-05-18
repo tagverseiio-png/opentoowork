@@ -63,6 +63,15 @@ const EmployerAuth = () => {
       return;
     }
 
+    if (!location) {
+      toast({
+        title: "Required Fields Missing",
+        description: "Please select a company location.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!recruiterJobTitle.trim() || !linkedinUrl.trim()) {
       toast({
         title: "Required Fields Missing",
@@ -359,7 +368,9 @@ const EmployerAuth = () => {
                 <Input value={companyWebsite} onChange={(e) => setCompanyWebsite(e.target.value)} placeholder="https://..." required />
 
                 <Label>Company Location</Label>
-                <Popover open={locationOpen} onOpenChange={setLocationOpen}>
+                <div className="relative w-full">
+                  <input type="text" required value={location} onChange={() => {}} className="absolute opacity-0 w-1 h-1 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none -z-10" tabIndex={-1} />
+                  <Popover open={locationOpen} onOpenChange={setLocationOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -414,6 +425,7 @@ const EmployerAuth = () => {
                     </Command>
                   </PopoverContent>
                 </Popover>
+                </div>
 
                 <Label>Contact Phone</Label>
                 <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 (555) 000-0000" required />
