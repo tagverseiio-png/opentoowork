@@ -44,7 +44,6 @@ const WORK_AUTH_OPTIONS = [
 
 
 const ALL_LOCATIONS = [
-  "Remote (US)",
   ...usaCities.map(c => c.state_code ? `${c.city}, ${c.state_code}` : c.city)
 ];
 
@@ -867,7 +866,7 @@ const CandidateDashboard = () => {
                               <div className="flex items-center gap-2 overflow-hidden">
                                 <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
                                 <span className={`truncate ${!editLocation && "text-muted-foreground"}`}>
-                                  {editLocation || "Search U.S. cities / Remote..."}
+                                  {editLocation || "Search U.S. cities..."}
                                 </span>
                               </div>
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

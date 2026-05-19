@@ -61,7 +61,6 @@ const STATUS_OPTIONS = [
 ];
 
 const ALL_LOCATIONS = [
-  "Remote (US)",
   ...usaCities.map(c => c.state_code ? `${c.city}, ${c.state_code}` : c.city)
 ];
 

@@ -9,7 +9,6 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 
 const HERO_LOCATIONS = [
   "all",
-  "Remote (US)",
   ...usaCities.map((c) => (c.state_code ? `${c.city}, ${c.state_code}` : c.city)),
 ];
 

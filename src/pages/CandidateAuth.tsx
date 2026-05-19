@@ -14,7 +14,6 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import ReCAPTCHA from "react-google-recaptcha";
 
 const ALL_LOCATIONS = [
-  "Remote (US)",
   ...usaCities.map(c => c.state_code ? `${c.city}, ${c.state_code}` : c.city)
 ];
 
@@ -400,7 +399,7 @@ const CandidateAuth = () => {
                         <div className="flex items-center gap-2 overflow-hidden">
                           <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
                           <span className={`truncate ${!userLocation && "text-muted-foreground"}`}>
-                            {userLocation || "Search U.S. cities / Remote..."}
+                            {userLocation || "Search U.S. cities..."}
                           </span>
                         </div>
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
